@@ -1,6 +1,6 @@
 # Calorie Tracker
 
-**Version:** 1.1.4  
+**Version:** 1.1.5  
 **Repository:** https://github.com/slimutebal/calorie-tracker
 
 Calorie Tracker is a static, mobile-first **Progressive Web App (PWA)** for daily calorie and macronutrient tracking. It includes a built-in food library covering common **Indonesian, Western, Middle Eastern, and Asian** foods. It has no server, no account system, no telemetry, and no external food API. All personal data stays **only on the device/browser that uses the app**.
@@ -9,13 +9,13 @@ Calorie Tracker is a static, mobile-first **Progressive Web App (PWA)** for dail
 
 ---
 
-## What changed in v1.1.4
+## What changed in v1.1.5
 
-- Redesigned the bottom navigation into an iOS Fitness-inspired pill dock.
-- Kept the center Add (+) action as an integrated button, not a detached floating bubble.
-- Added active tab capsule styling for a more native iOS dock feel.
-- Tuned dock width, height, border, shadow, blur, and bottom safe-area spacing for iPhone PWA use.
-- Bumped the app version to `1.1.4` and the service worker cache to `calorietrack-shell-v7`.
+- Updated the bottom navigation material from a fixed dark dock to adaptive liquid glass.
+- Preserved the v1.1.4 pill dock geometry, bottom safe-area spacing, and integrated center Add (+) button.
+- Added translucent light-mode and dark-mode glass backgrounds with blur, saturation, border highlights, and subtle layered reflections.
+- Improved active tab capsule treatment so the dock blends better with the page background in both Light and Dark mode.
+- Bumped the app version to `1.1.5` and the service worker cache to `calorietrack-shell-v8`.
 
 ---
 
@@ -91,6 +91,76 @@ Alternative Python command on some systems:
 python3 -m http.server 8080
 ```
 
+---
+
+## Deploy to GitHub Pages
+
+Target repository:
+
+```text
+https://github.com/slimutebal/calorie-tracker
+```
+
+### Manual upload method
+
+1. Extract the project `.zip` file.
+2. Open the GitHub repository.
+3. Choose **Add file → Upload files**.
+4. Upload the project files/folders directly into the repository root:
+
+```text
+README.md
+index.html
+manifest.webmanifest
+service-worker.js
+assets/
+```
+
+5. Commit the changes.
+6. Go to **Settings → Pages**.
+7. Set:
+
+```text
+Source: Deploy from a branch
+Branch: main
+Folder: /root
+```
+
+8. Save.
+9. Wait for GitHub Pages to publish.
+
+Expected live URL:
+
+```text
+https://slimutebal.github.io/calorie-tracker/
+```
+
+---
+
+## Updating an existing GitHub Pages/PWA install
+
+This app uses a service worker cache. When you change app files, update the cache version in `service-worker.js`:
+
+```js
+const CACHE_VERSION = 'calorietrack-shell-v8';
+```
+
+For future releases, increase it again, for example:
+
+```js
+const CACHE_VERSION = 'calorietrack-shell-v9';
+```
+
+After uploading an update:
+
+1. Commit the updated files.
+2. Wait for GitHub Pages to redeploy.
+3. On iPhone, close and reopen the app.
+4. If the old layout still appears, open the GitHub Pages URL in Safari once, refresh, then reopen from Home Screen.
+5. As a last resort, remove the Home Screen app and add it again after backing up data.
+
+---
+
 ## Add to Home Screen on iPhone
 
 1. Open this URL in **Safari**:
@@ -106,14 +176,6 @@ https://slimutebal.github.io/calorie-tracker/
 6. Launch it from the Home Screen icon.
 
 The app should open in standalone/full-screen PWA mode and respect the iPhone safe area.
-
----
-
-## If the App have an update:
-
-1. On iPhone, close and reopen the app.
-2. If the old layout still appears, open the GitHub Pages URL in Safari once, refresh, then reopen from Home Screen.
-3. As a last resort, remove the Home Screen app and add it again after backing up data.
 
 ---
 
@@ -187,6 +249,14 @@ Keep backups before clearing Safari data, deleting the PWA, changing devices, or
 ---
 
 ## Release notes
+
+### v1.1.5
+
+- Updated the bottom navigation material to adaptive liquid glass.
+- Preserved the v1.1.4 pill dock geometry, safe-area position, and integrated center Add (+) button.
+- Added light/dark translucent glass backgrounds with blur, saturation, border highlights, and layered reflections.
+- Updated app version to `1.1.5`.
+- Service worker cache bumped to `calorietrack-shell-v8`.
 
 ### v1.1.4
 
