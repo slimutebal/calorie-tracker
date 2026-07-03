@@ -1,6 +1,6 @@
 # Calorie Tracker
 
-**Version:** 1.1.2  
+**Version:** 1.1.4  
 **Repository:** https://github.com/slimutebal/calorie-tracker
 
 Calorie Tracker is a static, mobile-first **Progressive Web App (PWA)** for daily calorie and macronutrient tracking. It includes a built-in food library covering common **Indonesian, Western, Middle Eastern, and Asian** foods. It has no server, no account system, no telemetry, and no external food API. All personal data stays **only on the device/browser that uses the app**.
@@ -9,12 +9,13 @@ Calorie Tracker is a static, mobile-first **Progressive Web App (PWA)** for dail
 
 ---
 
-## What changed in v1.1.2
+## What changed in v1.1.4
 
-- Lowered the iPhone bottom navigation glass dock further to match the intended balanced Home Screen/PWA layout.
-- Reduced the center **Add (+)** button lift so it sits closer to the dock instead of floating too high.
-- Fixed the History date strip behavior so the newest dates/today are shown by default; users can scroll left to view older history.
-- Bumped the app version to `1.1.2` and the service worker cache to `calorietrack-shell-v5`.
+- Redesigned the bottom navigation into an iOS Fitness-inspired pill dock.
+- Kept the center Add (+) action as an integrated button, not a detached floating bubble.
+- Added active tab capsule styling for a more native iOS dock feel.
+- Tuned dock width, height, border, shadow, blur, and bottom safe-area spacing for iPhone PWA use.
+- Bumped the app version to `1.1.4` and the service worker cache to `calorietrack-shell-v7`.
 
 ---
 
@@ -141,13 +142,13 @@ https://slimutebal.github.io/calorie-tracker/
 This app uses a service worker cache. When you change app files, update the cache version in `service-worker.js`:
 
 ```js
-const CACHE_VERSION = 'calorietrack-shell-v5';
+const CACHE_VERSION = 'calorietrack-shell-v7';
 ```
 
 For future releases, increase it again, for example:
 
 ```js
-const CACHE_VERSION = 'calorietrack-shell-v6';
+const CACHE_VERSION = 'calorietrack-shell-v8';
 ```
 
 After uploading an update:
@@ -248,6 +249,22 @@ Keep backups before clearing Safari data, deleting the PWA, changing devices, or
 ---
 
 ## Release notes
+
+### v1.1.4
+
+- Redesigned the bottom navigation as an iOS Fitness-inspired pill dock.
+- Integrated the center Add (+) button into the dock instead of making it feel overly detached.
+- Added active capsule styling for non-Add tabs.
+- Updated app version to `1.1.4`.
+- Service worker cache bumped to `calorietrack-shell-v7`.
+
+### v1.1.3
+
+- Fine-tuned bottom navigation position after v1.1.2.
+- Raised the glass dock slightly so bottom rounded corners are not clipped.
+- Added breathing room above the iOS home indicator.
+- App version updated to `1.1.3`.
+- Service worker cache bumped to `calorietrack-shell-v6`.
 
 ### v1.1.2
 

@@ -34,10 +34,13 @@
   --shadow:0 1px 2px rgba(31,38,135,.06),0 8px 32px rgba(31,38,135,.10);
   --shadow-elevated:0 16px 48px rgba(31,38,135,.18),0 2px 10px rgba(31,38,135,.08);
   --radius:20px; --radius-s:14px;
-  --nav-h:70px;
+  --nav-h:76px;
   --sat:env(safe-area-inset-top,0px); --sab:env(safe-area-inset-bottom,0px);
-  --nav-bottom-gap:max(4px, calc(var(--sab) - 28px));
+  --nav-bottom-gap:max(14px, calc(var(--sab) - 16px));
   --sal:env(safe-area-inset-left,0px); --sar:env(safe-area-inset-right,0px);
+  --dock-bg:rgba(18,18,20,.84); --dock-border:rgba(255,255,255,.18);
+  --dock-active:rgba(255,255,255,.16); --dock-ink:#F8F9FA; --dock-muted:rgba(248,249,250,.70);
+  --dock-accent:#A8FF2A; --dock-shadow:0 18px 42px rgba(0,0,0,.34),0 4px 14px rgba(0,0,0,.20),inset 0 1px 0 rgba(255,255,255,.16);
 }
 [data-theme="dark"]{
   --bg:#000000;
@@ -56,6 +59,9 @@
   --danger-text:#FF8078; --info-text:#4DA3FF; --ok-text:#34C759;
   --shadow:0 1px 2px rgba(0,0,0,.35),0 8px 32px rgba(0,0,0,.45);
   --shadow-elevated:0 18px 52px rgba(0,0,0,.55),0 2px 10px rgba(0,0,0,.35);
+  --dock-bg:rgba(18,18,20,.86); --dock-border:rgba(255,255,255,.18);
+  --dock-active:rgba(255,255,255,.16); --dock-ink:#F8F9FA; --dock-muted:rgba(248,249,250,.72);
+  --dock-accent:#A8FF2A; --dock-shadow:0 18px 42px rgba(0,0,0,.46),0 4px 14px rgba(0,0,0,.28),inset 0 1px 0 rgba(255,255,255,.16);
 }
 /* Backdrop-filter is progressive enhancement only. The colors above are chosen
    to stay readable even where blur isn't supported (older Safari/Firefox). */
@@ -218,21 +224,26 @@ header.appbar{padding:14px 18px;margin:4px 0 14px;display:flex;align-items:flex-
 
 /* ============ NAV ============ */
 nav{position:fixed;z-index:30;
-  left:calc(12px + var(--sal)); right:calc(12px + var(--sar));
+  left:calc(28px + var(--sal)); right:calc(28px + var(--sar));
   bottom:var(--nav-bottom-gap);
-  max-width:600px;margin:0 auto;
-  background:var(--nav-glass);
-  border:1px solid var(--glass-border);
-  border-radius:26px;
-  box-shadow:var(--shadow-elevated);
-  padding:6px 10px}
-.nav-inner{max-width:640px;margin:0 auto;display:flex;align-items:center}
-.tab{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:4px 0;color:var(--ink3);min-height:42px}
-.tab span{font-size:10px;font-weight:700;letter-spacing:.02em}
-.tab.on{color:var(--ink)}
-.tab.tab-add{flex:0 0 70px}
-.tab-add .plus{width:50px;height:50px;border-radius:18px;background:linear-gradient(135deg,var(--kcal1),var(--kcal2));
-  display:flex;align-items:center;justify-content:center;color:#fff;box-shadow:0 8px 20px rgba(255,80,80,.4),0 2px 6px rgba(255,80,80,.25);margin-top:-3px}
+  max-width:590px;margin:0 auto;
+  min-height:var(--nav-h);
+  background:var(--dock-bg);
+  border:1px solid var(--dock-border);
+  border-radius:999px;
+  box-shadow:var(--dock-shadow);
+  padding:7px 8px}
+.nav-inner{height:100%;max-width:640px;margin:0 auto;display:flex;align-items:center;gap:2px}
+.tab{flex:1;height:100%;min-height:60px;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:3px;padding:6px 4px;color:var(--dock-muted);border-radius:999px;transition:background .18s ease,color .18s ease,transform .12s ease}
+.tab svg{width:22px;height:22px}
+.tab span{font-size:10px;font-weight:800;letter-spacing:.01em;line-height:1.05}
+.tab.on:not(.tab-add){background:var(--dock-active);color:var(--dock-accent);box-shadow:inset 0 1px 0 rgba(255,255,255,.14)}
+.tab:active{transform:scale(.96)}
+.tab.tab-add{flex:0 0 66px}
+.tab-add .plus{width:56px;height:56px;border-radius:20px;background:linear-gradient(135deg,var(--kcal1),var(--kcal2));
+  display:flex;align-items:center;justify-content:center;color:#fff;box-shadow:0 10px 24px rgba(255,78,64,.46),0 3px 9px rgba(255,80,80,.24),inset 0 1px 0 rgba(255,255,255,.28);margin-top:0}
+.tab-add.on .plus{box-shadow:0 12px 30px rgba(255,78,64,.56),0 3px 10px rgba(255,80,80,.30),0 0 0 3px rgba(255,255,255,.10),inset 0 1px 0 rgba(255,255,255,.30)}
 .tab-add:active .plus{transform:scale(.94)}
 
 /* ============ CHART ============ */
@@ -612,7 +623,7 @@ nav{position:fixed;z-index:30;
    ================================================================ */
 (function(){
 'use strict';
-var APP_VERSION='1.1.2';
+var APP_VERSION='1.1.4';
 var SCHEMA_VERSION=1;
 var NS='calorietrack_id_';
 var K={settings:NS+'settings',logs:NS+'logs_v1',custom:NS+'customfoods_v1',templates:NS+'templates_v1',quick:NS+'quickaccess_v1'};
