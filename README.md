@@ -91,76 +91,6 @@ Alternative Python command on some systems:
 python3 -m http.server 8080
 ```
 
----
-
-## Deploy to GitHub Pages
-
-Target repository:
-
-```text
-https://github.com/slimutebal/calorie-tracker
-```
-
-### Manual upload method
-
-1. Extract the project `.zip` file.
-2. Open the GitHub repository.
-3. Choose **Add file → Upload files**.
-4. Upload the project files/folders directly into the repository root:
-
-```text
-README.md
-index.html
-manifest.webmanifest
-service-worker.js
-assets/
-```
-
-5. Commit the changes.
-6. Go to **Settings → Pages**.
-7. Set:
-
-```text
-Source: Deploy from a branch
-Branch: main
-Folder: /root
-```
-
-8. Save.
-9. Wait for GitHub Pages to publish.
-
-Expected live URL:
-
-```text
-https://slimutebal.github.io/calorie-tracker/
-```
-
----
-
-## Updating an existing GitHub Pages/PWA install
-
-This app uses a service worker cache. When you change app files, update the cache version in `service-worker.js`:
-
-```js
-const CACHE_VERSION = 'calorietrack-shell-v7';
-```
-
-For future releases, increase it again, for example:
-
-```js
-const CACHE_VERSION = 'calorietrack-shell-v8';
-```
-
-After uploading an update:
-
-1. Commit the updated files.
-2. Wait for GitHub Pages to redeploy.
-3. On iPhone, close and reopen the app.
-4. If the old layout still appears, open the GitHub Pages URL in Safari once, refresh, then reopen from Home Screen.
-5. As a last resort, remove the Home Screen app and add it again after backing up data.
-
----
-
 ## Add to Home Screen on iPhone
 
 1. Open this URL in **Safari**:
@@ -176,6 +106,14 @@ https://slimutebal.github.io/calorie-tracker/
 6. Launch it from the Home Screen icon.
 
 The app should open in standalone/full-screen PWA mode and respect the iPhone safe area.
+
+---
+
+## If the App have an update:
+
+1. On iPhone, close and reopen the app.
+2. If the old layout still appears, open the GitHub Pages URL in Safari once, refresh, then reopen from Home Screen.
+3. As a last resort, remove the Home Screen app and add it again after backing up data.
 
 ---
 
