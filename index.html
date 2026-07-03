@@ -89,7 +89,7 @@ h1,h2,h3{margin:0;font-weight:700}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 
 /* ============ LAYOUT ============ */
-#app{max-width:640px;margin:0 auto;padding:8px 16px calc(var(--nav-h) + var(--sab) + 24px)}
+#app{max-width:640px;margin:0 auto;padding:8px 16px calc(var(--nav-h) + var(--sab) + 18px)}
 header.appbar{padding:14px 18px;margin:4px 0 14px;display:flex;align-items:flex-end;justify-content:space-between;gap:8px;
   background:var(--nav-glass);border:1px solid var(--glass-border);border-radius:22px;box-shadow:var(--shadow)}
 .appbar h1{font-size:30px;letter-spacing:-.03em;font-weight:800}
@@ -218,7 +218,7 @@ header.appbar{padding:14px 18px;margin:4px 0 14px;display:flex;align-items:flex-
 /* ============ NAV ============ */
 nav{position:fixed;z-index:30;
   left:calc(12px + var(--sal)); right:calc(12px + var(--sar));
-  bottom:calc(12px + var(--sab));
+  bottom:calc(6px + var(--sab));
   max-width:600px;margin:0 auto;
   background:var(--nav-glass);
   border:1px solid var(--glass-border);
@@ -231,7 +231,7 @@ nav{position:fixed;z-index:30;
 .tab.on{color:var(--ink)}
 .tab.tab-add{flex:0 0 72px}
 .tab-add .plus{width:50px;height:50px;border-radius:18px;background:linear-gradient(135deg,var(--kcal1),var(--kcal2));
-  display:flex;align-items:center;justify-content:center;color:#fff;box-shadow:0 8px 20px rgba(255,80,80,.4),0 2px 6px rgba(255,80,80,.25);margin-top:-16px}
+  display:flex;align-items:center;justify-content:center;color:#fff;box-shadow:0 8px 20px rgba(255,80,80,.4),0 2px 6px rgba(255,80,80,.25);margin-top:-8px}
 .tab-add:active .plus{transform:scale(.94)}
 
 /* ============ CHART ============ */
@@ -611,7 +611,7 @@ nav{position:fixed;z-index:30;
    ================================================================ */
 (function(){
 'use strict';
-var APP_VERSION='1.1.0';
+var APP_VERSION='1.1.1';
 var SCHEMA_VERSION=1;
 var NS='calorietrack_id_';
 var K={settings:NS+'settings',logs:NS+'logs_v1',custom:NS+'customfoods_v1',templates:NS+'templates_v1',quick:NS+'quickaccess_v1'};
