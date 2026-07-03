@@ -34,8 +34,9 @@
   --shadow:0 1px 2px rgba(31,38,135,.06),0 8px 32px rgba(31,38,135,.10);
   --shadow-elevated:0 16px 48px rgba(31,38,135,.18),0 2px 10px rgba(31,38,135,.08);
   --radius:20px; --radius-s:14px;
-  --nav-h:74px;
+  --nav-h:70px;
   --sat:env(safe-area-inset-top,0px); --sab:env(safe-area-inset-bottom,0px);
+  --nav-bottom-gap:max(4px, calc(var(--sab) - 28px));
   --sal:env(safe-area-inset-left,0px); --sar:env(safe-area-inset-right,0px);
 }
 [data-theme="dark"]{
@@ -89,7 +90,7 @@ h1,h2,h3{margin:0;font-weight:700}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 
 /* ============ LAYOUT ============ */
-#app{max-width:640px;margin:0 auto;padding:8px 16px calc(var(--nav-h) + var(--sab) + 18px)}
+#app{max-width:640px;margin:0 auto;padding:8px 16px calc(var(--nav-h) + var(--nav-bottom-gap) + 26px)}
 header.appbar{padding:14px 18px;margin:4px 0 14px;display:flex;align-items:flex-end;justify-content:space-between;gap:8px;
   background:var(--nav-glass);border:1px solid var(--glass-border);border-radius:22px;box-shadow:var(--shadow)}
 .appbar h1{font-size:30px;letter-spacing:-.03em;font-weight:800}
@@ -218,20 +219,20 @@ header.appbar{padding:14px 18px;margin:4px 0 14px;display:flex;align-items:flex-
 /* ============ NAV ============ */
 nav{position:fixed;z-index:30;
   left:calc(12px + var(--sal)); right:calc(12px + var(--sar));
-  bottom:calc(6px + var(--sab));
+  bottom:var(--nav-bottom-gap);
   max-width:600px;margin:0 auto;
   background:var(--nav-glass);
   border:1px solid var(--glass-border);
   border-radius:26px;
   box-shadow:var(--shadow-elevated);
-  padding:8px 10px}
+  padding:6px 10px}
 .nav-inner{max-width:640px;margin:0 auto;display:flex;align-items:center}
-.tab{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:5px 0;color:var(--ink3);min-height:44px}
+.tab{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:4px 0;color:var(--ink3);min-height:42px}
 .tab span{font-size:10px;font-weight:700;letter-spacing:.02em}
 .tab.on{color:var(--ink)}
-.tab.tab-add{flex:0 0 72px}
+.tab.tab-add{flex:0 0 70px}
 .tab-add .plus{width:50px;height:50px;border-radius:18px;background:linear-gradient(135deg,var(--kcal1),var(--kcal2));
-  display:flex;align-items:center;justify-content:center;color:#fff;box-shadow:0 8px 20px rgba(255,80,80,.4),0 2px 6px rgba(255,80,80,.25);margin-top:-8px}
+  display:flex;align-items:center;justify-content:center;color:#fff;box-shadow:0 8px 20px rgba(255,80,80,.4),0 2px 6px rgba(255,80,80,.25);margin-top:-3px}
 .tab-add:active .plus{transform:scale(.94)}
 
 /* ============ CHART ============ */
@@ -251,7 +252,7 @@ nav{position:fixed;z-index:30;
 .dstile.on{border-color:var(--ink)}
 
 /* ============ TOAST / BANNERS ============ */
-#toast{position:fixed;left:50%;bottom:calc(var(--nav-h) + var(--sab) + 20px);transform:translate(-50%,16px);
+#toast{position:fixed;left:50%;bottom:calc(var(--nav-h) + var(--nav-bottom-gap) + 20px);transform:translate(-50%,16px);
   background:rgba(26,29,31,.92);border:1px solid var(--glass-border);color:#fff;padding:11px 20px;border-radius:99px;font-size:14px;font-weight:600;
   opacity:0;pointer-events:none;transition:all .3s;z-index:70;max-width:86vw;text-align:center}
 [data-theme="dark"] #toast{background:rgba(255,255,255,.94);color:#000}
@@ -611,7 +612,7 @@ nav{position:fixed;z-index:30;
    ================================================================ */
 (function(){
 'use strict';
-var APP_VERSION='1.1.1';
+var APP_VERSION='1.1.2';
 var SCHEMA_VERSION=1;
 var NS='calorietrack_id_';
 var K={settings:NS+'settings',logs:NS+'logs_v1',custom:NS+'customfoods_v1',templates:NS+'templates_v1',quick:NS+'quickaccess_v1'};
@@ -1391,6 +1392,7 @@ function showView(v){
   $('pageTitle').textContent=t(VIEW_KEYS[v]);
   $('pageSub').textContent=v==='today'?fmtLong(todayStr()):(v==='history'?t('sub_history'):'');
   if(v==='add'){renderAddResults($('searchInput').value);}
+  if(v==='history'){renderHistory({scrollLatest:true});}
   window.scrollTo(0,0);
 }
 document.querySelector('nav').addEventListener('click',function(e){
@@ -1633,14 +1635,30 @@ function lastNDates(n,endStr){
 }
 var DAY_ABBR_MAP={id:['Min','Sen','Sel','Rab','Kam','Jum','Sab'],en:['Sun','Mon','Tue','Wed','Thu','Fri','Sat']};
 function DAY_ABBR(){return DAY_ABBR_MAP[L()];}
-function renderHistory(){
+function scrollDateStripToLatest(){
+  var el=$('dateStrip');
+  if(!el)return;
+  // The strip is sometimes rendered while the History view is hidden.
+  // Use two frames so iOS Safari has computed the final scrollWidth first.
+  requestAnimationFrame(function(){requestAnimationFrame(function(){
+    el.scrollLeft=Math.max(0,el.scrollWidth-el.clientWidth);
+  });});
+}
+function renderHistory(opts){
+  opts=opts||{};
+  var strip=$('dateStrip');
+  var keepScroll=strip?strip.scrollLeft:0;
   var days=lastNDates(14);
-  $('dateStrip').innerHTML=days.map(function(ds){
+  strip.innerHTML=days.map(function(ds){
     var d=dateFromStr(ds),has=(S.logs[ds]&&S.logs[ds].entries&&S.logs[ds].entries.length)?' has':'';
     return '<button class="dstile'+(ds===histSel?' on':'')+'" data-day="'+ds+'">'+
       '<div class="d">'+DAY_ABBR()[d.getDay()]+'</div><div class="n num">'+d.getDate()+'</div><div class="dot'+has+'"></div></button>';
   }).join('');
-  requestAnimationFrame(function(){var el=$('dateStrip');el.scrollLeft=el.scrollWidth;});
+  if(opts.scrollLatest){
+    scrollDateStripToLatest();
+  }else{
+    requestAnimationFrame(function(){strip.scrollLeft=keepScroll;});
+  }
   /* selected day summary */
   var tot=dayTotals(histSel),tg=S.settings.targets,d=dayObj(histSel,false);
   var diff=tot.kcal-tg.kcal;

@@ -1,6 +1,6 @@
 # Calorie Tracker
 
-**Version:** 1.1.1  
+**Version:** 1.1.2  
 **Repository:** https://github.com/slimutebal/calorie-tracker
 
 Calorie Tracker is a static, mobile-first **Progressive Web App (PWA)** for daily calorie and macronutrient tracking. It includes a built-in food library covering common **Indonesian, Western, Middle Eastern, and Asian** foods. It has no server, no account system, no telemetry, and no external food API. All personal data stays **only on the device/browser that uses the app**.
@@ -9,12 +9,12 @@ Calorie Tracker is a static, mobile-first **Progressive Web App (PWA)** for dail
 
 ---
 
-## What changed in v1.1.1
+## What changed in v1.1.2
 
-- Adjusted the iPhone bottom navigation spacing so the glass dock sits lower and feels more balanced.
-- Reduced the center **Add (+)** button upward offset so it no longer appears detached from the bottom dock.
-- Preserved the glassmorphism/soft UI design, local storage behavior, food database, and PWA structure.
-- Bumped the service worker cache version to force the updated layout to load on installed PWAs.
+- Lowered the iPhone bottom navigation glass dock further to match the intended balanced Home Screen/PWA layout.
+- Reduced the center **Add (+)** button lift so it sits closer to the dock instead of floating too high.
+- Fixed the History date strip behavior so the newest dates/today are shown by default; users can scroll left to view older history.
+- Bumped the app version to `1.1.2` and the service worker cache to `calorietrack-shell-v5`.
 
 ---
 
@@ -141,13 +141,13 @@ https://slimutebal.github.io/calorie-tracker/
 This app uses a service worker cache. When you change app files, update the cache version in `service-worker.js`:
 
 ```js
-const CACHE_VERSION = 'calorietrack-shell-v4';
+const CACHE_VERSION = 'calorietrack-shell-v5';
 ```
 
 For future releases, increase it again, for example:
 
 ```js
-const CACHE_VERSION = 'calorietrack-shell-v5';
+const CACHE_VERSION = 'calorietrack-shell-v6';
 ```
 
 After uploading an update:
@@ -248,6 +248,13 @@ Keep backups before clearing Safari data, deleting the PWA, changing devices, or
 ---
 
 ## Release notes
+
+### v1.1.2
+
+- Lowered bottom navigation dock positioning for iPhone PWA.
+- Adjusted center Add button alignment.
+- Fixed History date strip default scroll so the newest date appears first/rightmost.
+- Service worker cache bumped to `calorietrack-shell-v5`.
 
 ### v1.1.1
 
