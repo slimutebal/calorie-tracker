@@ -1,0 +1,1811 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>Calorie Tracker</title>
+<meta name="description" content="Daily calorie and macro tracker with Indonesian and global foods. Data stays local on your device." id="metaDesc">
+<meta name="theme-color" content="#F5F3EF" id="metaTheme">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Calorie Tracker">
+<style>
+/* ============ TOKENS ============ */
+:root{
+  --bg:#F5F3EF;
+  --bg-gradient:
+    radial-gradient(circle at 10% 8%, rgba(255,159,10,.20), transparent 42%),
+    radial-gradient(circle at 90% 4%, rgba(191,90,242,.16), transparent 40%),
+    radial-gradient(circle at 94% 62%, rgba(10,132,255,.14), transparent 45%),
+    radial-gradient(circle at 6% 78%, rgba(255,55,95,.14), transparent 42%),
+    radial-gradient(circle at 55% 96%, rgba(59,178,230,.12), transparent 40%);
+  --card:rgba(255,255,255,.70); --card2:rgba(255,255,255,.46);
+  --input-glass:rgba(255,255,255,.85); --nav-glass:rgba(255,255,255,.64);
+  --glass-border:rgba(255,255,255,.85); --glass-blur:20px;
+  --ink:#1A1D1F; --ink2:#5C6167; --ink3:#6C6E70;
+  --line:rgba(26,29,31,.08);
+  --kcal1:#FF9F0A; --kcal2:#FF375F;
+  --prot:#0A84FF; --carb:#FF9F0A; --fat:#BF5AF2; --water:#3BB2E6;
+  --ok:#34C759; --danger:#FF3B30;
+  --danger-text:#B8221A; --info-text:#0A5AB8; --ok-text:#188238;
+  --shadow:0 1px 2px rgba(31,38,135,.06),0 8px 32px rgba(31,38,135,.10);
+  --shadow-elevated:0 16px 48px rgba(31,38,135,.18),0 2px 10px rgba(31,38,135,.08);
+  --radius:20px; --radius-s:14px;
+  --nav-h:74px;
+  --sat:env(safe-area-inset-top,0px); --sab:env(safe-area-inset-bottom,0px);
+  --sal:env(safe-area-inset-left,0px); --sar:env(safe-area-inset-right,0px);
+}
+[data-theme="dark"]{
+  --bg:#000000;
+  --bg-gradient:
+    radial-gradient(circle at 10% 8%, rgba(255,159,10,.11), transparent 45%),
+    radial-gradient(circle at 90% 4%, rgba(191,90,242,.13), transparent 42%),
+    radial-gradient(circle at 94% 62%, rgba(10,132,255,.11), transparent 48%),
+    radial-gradient(circle at 6% 78%, rgba(255,55,95,.10), transparent 45%),
+    radial-gradient(circle at 55% 96%, rgba(100,210,255,.09), transparent 42%);
+  --card:rgba(32,32,38,.64); --card2:rgba(255,255,255,.07);
+  --input-glass:rgba(255,255,255,.10); --nav-glass:rgba(22,22,26,.62);
+  --glass-border:rgba(255,255,255,.14); --glass-blur:22px;
+  --ink:#F2F2F7; --ink2:#C7C7CE; --ink3:#93939B;
+  --line:rgba(242,242,247,.10);
+  --water:#64D2FF;
+  --danger-text:#FF8078; --info-text:#4DA3FF; --ok-text:#34C759;
+  --shadow:0 1px 2px rgba(0,0,0,.35),0 8px 32px rgba(0,0,0,.45);
+  --shadow-elevated:0 18px 52px rgba(0,0,0,.55),0 2px 10px rgba(0,0,0,.35);
+}
+/* Backdrop-filter is progressive enhancement only. The colors above are chosen
+   to stay readable even where blur isn't supported (older Safari/Firefox). */
+@supports (backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px)){
+  .card,.sheet,.modal,nav,header.appbar,.search,.seg,.input,#toast,.dstile{
+    -webkit-backdrop-filter:blur(var(--glass-blur)) saturate(1.5);
+    backdrop-filter:blur(var(--glass-blur)) saturate(1.5);
+  }
+}
+/* ============ BASE ============ */
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{height:100%}
+body{
+  margin:0;min-height:100%;background:var(--bg);color:var(--ink);
+  font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,sans-serif;
+  font-size:16px;line-height:1.45;
+  -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;
+  overscroll-behavior-y:none;
+  padding:calc(var(--sat)) var(--sar) 0 var(--sal);
+  transition:background .25s ease;
+}
+body::before{
+  content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;
+  background-color:var(--bg);background-image:var(--bg-gradient);
+}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer;border:none;background:none;padding:0;touch-action:manipulation}
+input,select,textarea{touch-action:manipulation}
+h1,h2,h3{margin:0;font-weight:700}
+.num{font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+:focus-visible{outline:2px solid var(--prot);outline-offset:2px;border-radius:8px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+
+/* ============ LAYOUT ============ */
+#app{max-width:640px;margin:0 auto;padding:8px 16px calc(var(--nav-h) + var(--sab) + 24px)}
+header.appbar{padding:14px 18px;margin:4px 0 14px;display:flex;align-items:flex-end;justify-content:space-between;gap:8px;
+  background:var(--nav-glass);border:1px solid var(--glass-border);border-radius:22px;box-shadow:var(--shadow)}
+.appbar h1{font-size:30px;letter-spacing:-.03em;font-weight:800}
+.appbar .sub{font-size:14px;color:var(--ink2);font-weight:600;margin-top:2px}
+.view{display:none;animation:fadeIn .22s ease}
+.view.active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+
+.card{background:var(--card);border:1px solid var(--glass-border);border-radius:var(--radius);box-shadow:var(--shadow);padding:16px;margin-bottom:14px}
+.card h3{font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink3);font-weight:700;margin-bottom:10px}
+.row{display:flex;align-items:center;gap:10px}
+.spread{justify-content:space-between}
+.muted{color:var(--ink2)} .tiny{font-size:12px;color:var(--ink3)}
+.chip{display:inline-flex;align-items:center;gap:6px;background:var(--card2);border:1px solid var(--glass-border);
+  border-radius:999px;padding:9px 14px;font-size:14px;font-weight:600;white-space:nowrap}
+.chip:active{transform:scale(.96)}
+.chip.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+[data-theme="dark"] .chip.on{background:#fff;color:#000;border-color:#fff}
+.badge-cuisine{margin-left:6px}
+.chips{display:flex;gap:8px;overflow-x:auto;padding:2px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.chips::-webkit-scrollbar{display:none}
+.badge-est{font-size:10px;font-weight:700;letter-spacing:.08em;color:var(--ink3);background:var(--card2);border:1px solid var(--glass-border);border-radius:6px;padding:2px 6px;text-transform:uppercase}
+
+/* ============ RING HERO ============ */
+.hero{display:flex;gap:18px;align-items:center}
+.ringwrap{position:relative;width:150px;height:150px;flex:none}
+.ringwrap svg{transform:rotate(-90deg)}
+.ring-bg{stroke:var(--line);fill:none}
+.ring-fg{fill:none;stroke:url(#gradKcal);stroke-linecap:round;transition:stroke-dashoffset .6s cubic-bezier(.22,1,.36,1)}
+.ring-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center}
+.ring-center .big{font-size:34px;font-weight:800;letter-spacing:-.04em;line-height:1}
+.ring-center .lbl{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink3);margin-top:4px}
+.ring-center.over .big{color:var(--danger-text)}
+.hero-stats{flex:1;min-width:0}
+.hstat{display:flex;justify-content:space-between;align-items:baseline;padding:7px 0;border-bottom:1px solid var(--line)}
+.hstat:last-child{border-bottom:none}
+.hstat .v{font-weight:700}
+
+/* ============ MACROS ============ */
+.macros{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+.macro{background:var(--card2);border:1px solid var(--glass-border);border-radius:var(--radius-s);padding:12px}
+.macro .name{font-size:12px;font-weight:700;color:var(--ink2)}
+.macro .val{font-size:17px;font-weight:800;margin:2px 0 8px;letter-spacing:-.02em}
+.macro .val small{font-size:12px;font-weight:600;color:var(--ink3)}
+.bar{height:6px;border-radius:99px;background:var(--line);overflow:hidden}
+.bar i{display:block;height:100%;border-radius:99px;transition:width .5s ease}
+.m-prot i{background:var(--prot)} .m-carb i{background:var(--carb)} .m-fat i{background:var(--fat)}
+
+/* ============ WATER ============ */
+.water-cups{display:flex;gap:6px;flex:1;flex-wrap:wrap}
+.cup{width:22px;height:28px;border-radius:5px 5px 8px 8px;border:2px solid var(--water);opacity:.35}
+.cup.full{background:var(--water);opacity:1}
+.wbtn{width:44px;height:44px;border-radius:14px;background:var(--card2);border:1px solid var(--glass-border);
+  font-size:22px;font-weight:700;color:var(--water);display:flex;align-items:center;justify-content:center}
+.wbtn:active{transform:scale(.94)}
+
+/* ============ MEAL SECTIONS / LISTS ============ */
+.meal-head{display:flex;align-items:baseline;gap:8px;margin:4px 0 6px}
+.meal-head .t{font-size:13px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--ink2)}
+.meal-head .dots{flex:1;border-bottom:2px dotted var(--line);transform:translateY(-4px)}
+.meal-head .kc{font-size:13px;font-weight:700;color:var(--ink3)}
+.entry{display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:11px 4px;border-bottom:1px solid var(--line)}
+.entry:last-child{border-bottom:none}
+.entry:active{background:var(--card2)}
+.entry .info{flex:1;min-width:0}
+.entry .n{font-weight:600;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.entry .s{font-size:13px;color:var(--ink3)}
+.entry .kc{font-weight:700;font-size:15px;flex:none}
+.entry .kc small{font-size:11px;color:var(--ink3);font-weight:600}
+.empty{padding:14px 4px;font-size:14px;color:var(--ink3)}
+.list-btn{display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:12px 4px;border-bottom:1px solid var(--line);min-height:44px}
+.list-btn:last-child{border-bottom:none}
+.list-btn:active{background:var(--card2)}
+.avatar{width:38px;height:38px;border-radius:12px;background:var(--card2);display:flex;align-items:center;justify-content:center;font-size:18px;flex:none}
+.iconbtn{width:38px;height:38px;border-radius:12px;display:flex;align-items:center;justify-content:center;color:var(--ink3);flex:none}
+.iconbtn.on{color:var(--carb)}
+.iconbtn:active{transform:scale(.92)}
+
+/* ============ SEARCH / ADD ============ */
+.search{display:flex;align-items:center;gap:8px;background:var(--input-glass);border:1px solid var(--glass-border);border-radius:14px;padding:11px 14px;box-shadow:var(--shadow);margin-bottom:14px}
+.search svg{flex:none;color:var(--ink3)}
+.search input{flex:1;border:none;background:none;outline:none;font-size:16px;min-width:0;color:var(--ink)}
+.seg{display:flex;background:var(--card2);border:1px solid var(--glass-border);border-radius:12px;padding:3px;gap:3px}
+.seg button{flex:1;padding:8px 6px;border-radius:9px;font-size:13px;font-weight:600;color:var(--ink2);min-height:38px}
+.seg button.on{background:var(--input-glass);color:var(--ink);box-shadow:var(--shadow);font-weight:700}
+
+/* ============ SHEET / MODAL ============ */
+.backdrop{position:fixed;inset:0;background:rgba(0,0,0,.45);opacity:0;pointer-events:none;transition:opacity .25s;z-index:40;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+.backdrop.show{opacity:1;pointer-events:auto}
+.sheet{position:fixed;left:0;right:0;bottom:0;z-index:50;background:var(--card);border:1px solid var(--glass-border);border-bottom:none;
+  border-radius:24px 24px 0 0;transform:translateY(105%);transition:transform .32s cubic-bezier(.22,1,.36,1);
+  max-height:88vh;max-height:88dvh;display:flex;flex-direction:column;
+  padding:8px 18px calc(16px + var(--sab));max-width:640px;margin:0 auto;box-shadow:var(--shadow-elevated)}
+.sheet.show{transform:translateY(0)}
+.sheet .grab{width:40px;height:5px;border-radius:99px;background:var(--line);margin:4px auto 10px;flex:none}
+.sheet .body{overflow-y:auto;-webkit-overflow-scrolling:touch;flex:1;padding-bottom:4px}
+.sheet h2{font-size:20px;letter-spacing:-.02em;margin-bottom:2px}
+.field{margin:12px 0}
+.field label{display:block;font-size:12px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--ink3);margin-bottom:6px}
+.input{width:100%;background:var(--input-glass);border:1px solid var(--glass-border);border-radius:12px;padding:12px 14px;font-size:16px;outline:none;min-height:46px;color:var(--ink)}
+.input:focus{border-color:var(--prot)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.preset{padding:9px 4px;border-radius:10px;background:var(--card2);border:1px solid var(--glass-border);font-size:13px;font-weight:600;min-height:40px}
+.preset:active{transform:scale(.95)}
+.preview{background:var(--card2);border-radius:var(--radius-s);padding:14px;margin:14px 0;display:flex;align-items:center;justify-content:space-between}
+.preview .kc{font-size:26px;font-weight:800;letter-spacing:-.03em}
+.preview .kc small{font-size:13px;color:var(--ink3);font-weight:600}
+.preview .mac{font-size:12px;color:var(--ink2);text-align:right;line-height:1.7}
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;min-height:50px;border-radius:14px;
+  font-size:16px;font-weight:700;transition:transform .1s}
+.btn:active{transform:scale(.98)}
+.btn-primary{background:var(--ink);color:var(--bg)}
+[data-theme="dark"] .btn-primary{background:#fff;color:#000}
+.btn-ghost{background:var(--card2);border:1px solid var(--glass-border);color:var(--ink)}
+.btn-danger{background:rgba(255,59,48,.14);border:1px solid rgba(255,59,48,.32);color:var(--danger-text)}
+.btnrow{display:flex;gap:10px;margin-top:14px}
+.btnrow .btn{flex:1}
+.modal{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%) scale(.94);opacity:0;pointer-events:none;
+  z-index:60;background:var(--card);border:1px solid var(--glass-border);border-radius:20px;padding:20px;width:min(88vw,360px);
+  transition:all .2s ease;box-shadow:var(--shadow-elevated)}
+.modal.show{opacity:1;pointer-events:auto;transform:translate(-50%,-50%) scale(1)}
+.modal h2{font-size:18px;margin-bottom:8px}
+.modal p{font-size:14px;color:var(--ink2);margin:0 0 6px}
+
+/* ============ NAV ============ */
+nav{position:fixed;z-index:30;
+  left:calc(12px + var(--sal)); right:calc(12px + var(--sar));
+  bottom:calc(12px + var(--sab));
+  max-width:600px;margin:0 auto;
+  background:var(--nav-glass);
+  border:1px solid var(--glass-border);
+  border-radius:26px;
+  box-shadow:var(--shadow-elevated);
+  padding:8px 10px}
+.nav-inner{max-width:640px;margin:0 auto;display:flex;align-items:center}
+.tab{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:5px 0;color:var(--ink3);min-height:44px}
+.tab span{font-size:10px;font-weight:700;letter-spacing:.02em}
+.tab.on{color:var(--ink)}
+.tab.tab-add{flex:0 0 72px}
+.tab-add .plus{width:50px;height:50px;border-radius:18px;background:linear-gradient(135deg,var(--kcal1),var(--kcal2));
+  display:flex;align-items:center;justify-content:center;color:#fff;box-shadow:0 8px 20px rgba(255,80,80,.4),0 2px 6px rgba(255,80,80,.25);margin-top:-16px}
+.tab-add:active .plus{transform:scale(.94)}
+
+/* ============ CHART ============ */
+.chartwrap{overflow:hidden}
+.chartwrap svg{width:100%;height:auto;display:block}
+.legend{display:flex;gap:14px;margin-top:8px;font-size:12px;color:var(--ink2);flex-wrap:wrap}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+
+/* ============ HISTORY DATE STRIP ============ */
+.datestrip{display:flex;gap:8px;overflow-x:auto;padding:2px;margin-bottom:14px;scrollbar-width:none}
+.datestrip::-webkit-scrollbar{display:none}
+.dstile{flex:0 0 52px;background:var(--card);border-radius:14px;box-shadow:var(--shadow);padding:9px 4px;text-align:center;border:2px solid var(--glass-border)}
+.dstile .d{font-size:11px;font-weight:700;color:var(--ink3);text-transform:uppercase}
+.dstile .n{font-size:17px;font-weight:800;margin:1px 0}
+.dstile .dot{width:5px;height:5px;border-radius:99px;background:var(--line);margin:0 auto}
+.dstile .dot.has{background:var(--ok)}
+.dstile.on{border-color:var(--ink)}
+
+/* ============ TOAST / BANNERS ============ */
+#toast{position:fixed;left:50%;bottom:calc(var(--nav-h) + var(--sab) + 20px);transform:translate(-50%,16px);
+  background:rgba(26,29,31,.92);border:1px solid var(--glass-border);color:#fff;padding:11px 20px;border-radius:99px;font-size:14px;font-weight:600;
+  opacity:0;pointer-events:none;transition:all .3s;z-index:70;max-width:86vw;text-align:center}
+[data-theme="dark"] #toast{background:rgba(255,255,255,.94);color:#000}
+#toast.show{opacity:1;transform:translate(-50%,0)}
+.banner{border-radius:var(--radius-s);padding:14px;margin-bottom:14px;font-size:14px;border:1px solid var(--glass-border)}
+.banner-warn{background:rgba(255,59,48,.14);color:var(--danger-text)}
+.banner-info{background:rgba(10,132,255,.14);color:var(--info-text)}
+.banner .btnrow{margin-top:10px}
+.banner .btn{min-height:42px;font-size:14px}
+
+/* ============ LANDSCAPE ============ */
+@media (orientation:landscape) and (min-width:640px){
+  #app{max-width:960px}
+  .cols2{display:grid;grid-template-columns:360px 1fr;gap:16px;align-items:start}
+  .cols2 .col-a{position:sticky;top:8px}
+}
+@media (min-width:960px){#app{max-width:1024px}}
+</style>
+</head>
+<body>
+
+<div id="app">
+  <header class="appbar">
+    <div>
+      <h1 id="pageTitle">Hari Ini</h1>
+      <div class="sub" id="pageSub"></div>
+    </div>
+    <div class="badge-est" id="badgeEst" data-i18n="badge_est" data-i18n-title="badge_est_title" title="Semua nilai gizi adalah estimasi">± estimasi</div>
+  </header>
+
+  <!-- ============ TODAY ============ -->
+  <section class="view active" id="view-today">
+    <div id="corruptBanner"></div>
+    <div id="onboardCard"></div>
+    <div class="cols2">
+      <div class="col-a">
+        <div class="card">
+          <div class="hero">
+            <div class="ringwrap">
+              <svg width="150" height="150" viewBox="0 0 150 150" aria-hidden="true">
+                <defs>
+                  <linearGradient id="gradKcal" x1="0" y1="0" x2="1" y2="1">
+                    <stop offset="0%" stop-color="#FF9F0A"/><stop offset="100%" stop-color="#FF375F"/>
+                  </linearGradient>
+                </defs>
+                <circle class="ring-bg" cx="75" cy="75" r="64" stroke-width="13"/>
+                <circle class="ring-fg" id="ringFg" cx="75" cy="75" r="64" stroke-width="13"
+                  stroke-dasharray="402.1" stroke-dashoffset="402.1"/>
+              </svg>
+              <div class="ring-center" id="ringCenter">
+                <div class="big num" id="ringNum">0</div>
+                <div class="lbl" id="ringLbl">tersisa</div>
+              </div>
+            </div>
+            <div class="hero-stats">
+              <div class="hstat"><span class="muted" data-i18n="lbl_target">Target</span><span class="v num" id="stTarget">–</span></div>
+              <div class="hstat"><span class="muted" data-i18n="lbl_in">Masuk</span><span class="v num" id="stIn">–</span></div>
+              <div class="hstat"><span class="muted" data-i18n="lbl_left">Sisa</span><span class="v num" id="stLeft">–</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3 data-i18n="h_macro">Makro</h3>
+          <div class="macros" id="macroGrid"></div>
+        </div>
+
+        <div class="card">
+          <h3 data-i18n="h_water">Air Minum</h3>
+          <div class="row spread">
+            <button class="wbtn" id="waterMinus" data-i18n-aria="aria_water_minus" aria-label="Kurangi 1 gelas">−</button>
+            <div class="water-cups" id="waterCups"></div>
+            <button class="wbtn" id="waterPlus" data-i18n-aria="aria_water_plus" aria-label="Tambah 1 gelas">＋</button>
+          </div>
+          <div class="tiny" id="waterLbl" style="margin-top:8px"></div>
+        </div>
+      </div>
+
+      <div class="col-b">
+        <div class="card" id="quickCard" hidden>
+          <h3 data-i18n="h_quick">Cepat Tambah</h3>
+          <div class="chips" id="quickChips"></div>
+        </div>
+
+        <div class="card">
+          <h3 data-i18n="h_today_foods">Makanan Hari Ini</h3>
+          <div id="mealSections"></div>
+        </div>
+
+        <div class="card" id="topCard" hidden>
+          <h3 data-i18n="h_top">Kalori Terbesar Hari Ini</h3>
+          <div id="topList"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ ADD ============ -->
+  <section class="view" id="view-add">
+    <div class="search">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.2-3.2"/></svg>
+      <input type="search" id="searchInput" data-i18n-ph="search_ph" placeholder="Cari makanan… (nasi, ayam, kopi)" autocomplete="off">
+    </div>
+    <div class="chips" id="cuisineFilter" style="margin-bottom:14px">
+      <button class="chip on" data-cuisine="all" data-i18n="cuisine_all">Semua</button>
+      <button class="chip" data-cuisine="indonesian" data-i18n="cuisine_indonesian">Indonesia</button>
+      <button class="chip" data-cuisine="western" data-i18n="cuisine_western">Barat</button>
+      <button class="chip" data-cuisine="middle_eastern" data-i18n="cuisine_middle_eastern">Timur Tengah</button>
+      <button class="chip" data-cuisine="asian" data-i18n="cuisine_asian">Asia</button>
+      <button class="chip" data-cuisine="custom" data-i18n="cuisine_custom">Custom</button>
+    </div>
+    <div id="addResults"></div>
+  </section>
+
+  <!-- ============ FOODS ============ -->
+  <section class="view" id="view-foods">
+    <div class="card">
+      <div class="row spread">
+        <h3 style="margin:0" data-i18n="h_templates">Template Makan</h3>
+        <button class="chip" id="btnNewTemplate" data-i18n="btn_new">＋ Baru</button>
+      </div>
+      <div id="templateList" style="margin-top:8px"></div>
+    </div>
+    <div class="card">
+      <div class="row spread">
+        <h3 style="margin:0" data-i18n="h_customfoods">Makanan Custom</h3>
+        <button class="chip" id="btnNewCustom" data-i18n="btn_new">＋ Baru</button>
+      </div>
+      <div id="customList" style="margin-top:8px"></div>
+    </div>
+    <div class="card">
+      <h3 data-i18n="h_builtin">Database Bawaan</h3>
+      <div class="tiny" style="margin:-4px 0 8px" data-i18n="txt_builtin_disclaimer">Nilai gizi merupakan estimasi umum dan dapat berbeda dari makanan asli.</div>
+      <div id="builtinList"></div>
+    </div>
+  </section>
+
+  <!-- ============ HISTORY ============ -->
+  <section class="view" id="view-history">
+    <div class="datestrip" id="dateStrip"></div>
+    <div class="cols2">
+      <div class="col-a">
+        <div class="card" id="histSummary"></div>
+      </div>
+      <div class="col-b">
+        <div class="card chartwrap">
+          <h3 data-i18n="h_trend">Tren 7 Hari</h3>
+          <div id="chart7"></div>
+          <div class="legend">
+            <span><i style="background:linear-gradient(135deg,var(--kcal1),var(--kcal2))"></i><span data-i18n="lbl_kcal_word">Kalori</span></span>
+            <span><i style="background:var(--ink3)"></i><span data-i18n="lbl_target">Target</span></span>
+          </div>
+        </div>
+        <div class="card">
+          <h3 data-i18n="h_weekly">Ringkasan Mingguan</h3>
+          <div id="weekStats"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ SETTINGS ============ -->
+  <section class="view" id="view-settings">
+    <div class="card">
+      <h3 data-i18n="h_daily_target">Target Harian</h3>
+      <div class="field"><label for="tKcal" data-i18n="lbl_target_kcal">Kalori (kkal)</label><input class="input num" id="tKcal" type="number" inputmode="numeric" min="500" max="10000"></div>
+      <div class="grid2">
+        <div class="field"><label for="tProt" data-i18n="lbl_target_protein">Protein (g)</label><input class="input num" id="tProt" type="number" inputmode="numeric" min="0"></div>
+        <div class="field"><label for="tCarb" data-i18n="lbl_target_carbs">Karbo (g)</label><input class="input num" id="tCarb" type="number" inputmode="numeric" min="0"></div>
+        <div class="field"><label for="tFat" data-i18n="lbl_target_fat">Lemak (g)</label><input class="input num" id="tFat" type="number" inputmode="numeric" min="0"></div>
+        <div class="field"><label for="tWater" data-i18n="lbl_target_water">Air (ml)</label><input class="input num" id="tWater" type="number" inputmode="numeric" min="0" step="250"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3 data-i18n="h_appearance">Tampilan</h3>
+      <div class="seg" id="themeSeg">
+        <button data-theme-opt="auto" data-i18n="theme_auto">Otomatis</button>
+        <button data-theme-opt="light" data-i18n="theme_light">Terang</button>
+        <button data-theme-opt="dark" data-i18n="theme_dark">Gelap</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3 data-i18n="h_language">Bahasa</h3>
+      <div class="seg" id="langSeg">
+        <button data-lang-opt="en">English</button>
+        <button data-lang-opt="id">Indonesia</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3 data-i18n="h_data">Data</h3>
+      <button class="btn btn-ghost" id="btnExport" style="margin-bottom:10px" data-i18n="btn_export">Ekspor Cadangan (JSON)</button>
+      <button class="btn btn-ghost" id="btnImport" style="margin-bottom:10px" data-i18n="btn_import">Impor Cadangan</button>
+      <input type="file" id="importFile" accept=".json,application/json" hidden>
+      <button class="btn btn-danger" id="btnReset" data-i18n="btn_reset">Hapus Semua Data</button>
+      <div class="tiny" style="margin-top:10px" data-i18n="txt_backup_note">Ekspor cadangan secara berkala. Menghapus data Safari atau menghapus aplikasi dari Home Screen dapat menghapus data lokal Anda.</div>
+    </div>
+
+    <div class="card">
+      <h3 data-i18n="h_about">Tentang & Privasi</h3>
+      <p style="font-size:14px;color:var(--ink2);margin:0 0 8px" id="aboutP1" data-i18n-html="about_p1">
+        <strong style="color:var(--ink)">Calorie Tracker</strong> adalah aplikasi lokal tanpa server.
+        Semua catatan makanan, riwayat, dan pengaturan tersimpan <strong style="color:var(--ink)">hanya di perangkat ini</strong> —
+        tidak ada login, tidak ada unggahan data, tidak ada pelacakan.
+      </p>
+      <p style="font-size:13px;color:var(--ink3);margin:0 0 8px" id="aboutP2" data-i18n="about_p2">
+        Nilai nutrisi adalah estimasi dan dapat berbeda tergantung merek, metode memasak, resep, dan ukuran porsi.
+        Aplikasi ini hanya untuk pelacakan pribadi dan bukan nasihat medis.
+      </p>
+      <div class="tiny"><span data-i18n="lbl_version">Versi</span> <span id="verLbl"></span></div>
+    </div>
+  </section>
+</div>
+
+<!-- ============ NAV ============ -->
+<nav data-i18n-aria="aria_nav" aria-label="Navigasi utama">
+  <div class="nav-inner">
+    <button class="tab on" data-view="today">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="8.5"/><path d="M12 3.5A8.5 8.5 0 0 1 20.5 12" stroke-width="3.2" stroke-linecap="round"/></svg>
+      <span data-i18n="nav_today">Hari Ini</span>
+    </button>
+    <button class="tab" data-view="foods">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 11h16a8 8 0 0 1-16 0Z"/><path d="M9 7c0-1.5 1-1.5 1-3M14 7c0-1.5 1-1.5 1-3"/></svg>
+      <span data-i18n="nav_foods">Makanan</span>
+    </button>
+    <button class="tab tab-add" data-view="add" data-i18n-aria="aria_add_food" aria-label="Tambah makanan">
+      <div class="plus"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></div>
+    </button>
+    <button class="tab" data-view="history">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 19V9M10 19V5M16 19v-8M22 19H2" /></svg>
+      <span data-i18n="nav_history">Riwayat</span>
+    </button>
+    <button class="tab" data-view="settings">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3.2"/><path d="M19 12a7 7 0 0 0-.1-1.2l2-1.6-2-3.4-2.4 1a7 7 0 0 0-2-1.2L14 3h-4l-.5 2.6a7 7 0 0 0-2 1.2l-2.4-1-2 3.4 2 1.6A7 7 0 0 0 5 12c0 .4 0 .8.1 1.2l-2 1.6 2 3.4 2.4-1a7 7 0 0 0 2 1.2L10 21h4l.5-2.6a7 7 0 0 0 2-1.2l2.4 1 2-3.4-2-1.6c.1-.4.1-.8.1-1.2Z"/></svg>
+      <span data-i18n="nav_settings">Setelan</span>
+    </button>
+  </div>
+</nav>
+
+<!-- ============ SHEETS & MODALS ============ -->
+<div class="backdrop" id="backdrop"></div>
+
+<div class="sheet" id="foodSheet" role="dialog" aria-modal="true">
+  <div class="grab"></div>
+  <div class="body">
+    <div class="row spread">
+      <div>
+        <h2 id="fsName">Makanan</h2>
+        <div class="tiny" id="fsBase"></div>
+      </div>
+      <button class="iconbtn" id="fsFav" data-i18n-aria="aria_fav" aria-label="Favorit">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="m12 3 2.7 5.6 6.3.9-4.5 4.3 1 6.2-5.5-3-5.5 3 1-6.2L3 9.5l6.3-.9L12 3Z"/></svg>
+      </button>
+    </div>
+    <div class="field">
+      <label for="fsQty" data-i18n="lbl_qty">Jumlah</label>
+      <div class="grid2">
+        <input class="input num" id="fsQty" type="text" inputmode="decimal" autocomplete="off">
+        <select class="input" id="fsUnit"></select>
+      </div>
+      <div class="grid4" id="fsPresets" style="margin-top:8px"></div>
+    </div>
+    <div class="field">
+      <label data-i18n="lbl_mealtype">Jenis Makan</label>
+      <div class="seg" id="fsMeal">
+        <button data-meal="sarapan" data-i18n="meal_short_sarapan">Sarapan</button>
+        <button data-meal="makan_siang" data-i18n="meal_short_siang">Siang</button>
+        <button data-meal="makan_malam" data-i18n="meal_short_malam">Malam</button>
+        <button data-meal="camilan" data-i18n="meal_short_camilan">Camilan</button>
+      </div>
+    </div>
+    <div class="preview">
+      <div>
+        <div class="kc num" id="fsKcal">0 <small data-i18n="unit_kkal">kkal</small></div>
+        <div class="badge-est" style="margin-top:4px" data-i18n="badge_estimate">estimasi</div>
+      </div>
+      <div class="mac num" id="fsMac"></div>
+    </div>
+    <div class="tiny" id="fsNote"></div>
+    <button class="btn btn-ghost" id="fsCopy" hidden style="margin-top:10px;min-height:42px;font-size:14px" data-i18n="btn_copy_custom">Salin ke makanan custom</button>
+    <div class="btnrow">
+      <button class="btn btn-danger" id="fsDelete" hidden data-i18n="btn_delete">Hapus</button>
+      <button class="btn btn-ghost" id="fsCancel" data-i18n="btn_cancel">Batal</button>
+      <button class="btn btn-primary" id="fsSave" data-i18n="btn_save">Simpan</button>
+    </div>
+  </div>
+</div>
+
+<div class="sheet" id="customSheet" role="dialog" aria-modal="true">
+  <div class="grab"></div>
+  <div class="body">
+    <h2 id="csTitle" data-i18n="cs_title_new">Makanan Custom</h2>
+    <div class="field"><label for="csName" data-i18n="lbl_name">Nama</label><input class="input" id="csName" type="text" data-i18n-ph="ph_cs_name" placeholder="contoh: Es kopi susu Kenangan"></div>
+    <div class="grid2">
+      <div class="field"><label for="csCat" data-i18n="lbl_category">Kategori</label>
+        <select class="input" id="csCat"></select></div>
+      <div class="field"><label for="csUnit" data-i18n="lbl_serving_unit">Satuan Sajian</label>
+        <select class="input" id="csUnit"></select></div>
+    </div>
+    <div class="field"><label for="csGrams" data-i18n="lbl_serving_weight">Berat/Volume 1 Sajian (gram/ml)</label>
+      <input class="input num" id="csGrams" type="text" inputmode="decimal" placeholder="100">
+      <div class="tiny" style="margin-top:5px" data-i18n="txt_default_100">Jika tidak yakin, biarkan 100.</div></div>
+    <div class="field"><label data-i18n="lbl_nutrition_per_serving">Nilai Gizi per 1 Sajian</label>
+      <div class="grid4">
+        <input class="input num" id="csKcal" type="text" inputmode="decimal" data-i18n-ph="unit_kkal" placeholder="kkal">
+        <input class="input num" id="csProt" type="text" inputmode="decimal" data-i18n-ph="ph_protein" placeholder="P (g)">
+        <input class="input num" id="csCarb" type="text" inputmode="decimal" data-i18n-ph="ph_carbs" placeholder="K (g)">
+        <input class="input num" id="csFat" type="text" inputmode="decimal" data-i18n-ph="ph_fat" placeholder="L (g)">
+      </div></div>
+    <div class="field"><label for="csNotes" data-i18n="lbl_notes_opt">Catatan (opsional)</label><input class="input" id="csNotes" type="text"></div>
+    <div class="btnrow">
+      <button class="btn btn-danger" id="csDelete" hidden data-i18n="btn_delete">Hapus</button>
+      <button class="btn btn-ghost" id="csCancel" data-i18n="btn_cancel">Batal</button>
+      <button class="btn btn-primary" id="csSave" data-i18n="btn_save">Simpan</button>
+    </div>
+  </div>
+</div>
+
+<div class="sheet" id="templateSheet" role="dialog" aria-modal="true">
+  <div class="grab"></div>
+  <div class="body">
+    <h2 id="tsTitle" data-i18n="ts_title_new">Template Makan</h2>
+    <div class="field"><label for="tsName" data-i18n="lbl_template_name">Nama Template</label><input class="input" id="tsName" type="text" data-i18n-ph="ph_ts_name" placeholder="contoh: Kopi gula 8g"></div>
+    <div class="field"><label data-i18n="lbl_template_items">Isi Template</label>
+      <div id="tsItems"></div>
+      <button class="btn btn-ghost" id="tsAddItem" style="margin-top:8px;min-height:42px;font-size:14px" data-i18n="btn_add_item">＋ Tambah item</button>
+    </div>
+    <div class="preview">
+      <div><div class="kc num" id="tsKcal">0 <small data-i18n="unit_kkal">kkal</small></div>
+      <div class="badge-est" style="margin-top:4px" data-i18n="badge_estimate_total">estimasi total</div></div>
+      <div class="mac num" id="tsMac"></div>
+    </div>
+    <div class="btnrow">
+      <button class="btn btn-danger" id="tsDelete" hidden data-i18n="btn_delete">Hapus</button>
+      <button class="btn btn-ghost" id="tsCancel" data-i18n="btn_cancel">Batal</button>
+      <button class="btn btn-primary" id="tsSave" data-i18n="btn_save">Simpan</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="confirmModal" role="alertdialog" aria-modal="true">
+  <h2 id="cmTitle" data-i18n="cm_title_default">Konfirmasi</h2>
+  <p id="cmText"></p>
+  <div class="btnrow">
+    <button class="btn btn-ghost" id="cmCancel" data-i18n="btn_cancel">Batal</button>
+    <button class="btn btn-danger" id="cmOk" data-i18n="btn_yes_continue">Ya, lanjut</button>
+  </div>
+</div>
+
+<div id="toast" role="status"></div>
+
+<script>
+/* ================================================================
+   Calorie Tracker — app logic (local-only, no network calls)
+   ================================================================ */
+(function(){
+'use strict';
+var APP_VERSION='1.1.0';
+var SCHEMA_VERSION=1;
+var NS='calorietrack_id_';
+var K={settings:NS+'settings',logs:NS+'logs_v1',custom:NS+'customfoods_v1',templates:NS+'templates_v1',quick:NS+'quickaccess_v1'};
+
+/* ---------------- Built-in food DB (public, static) ---------------- */
+var FOOD_DB={dbVersion:1,foods:[
+{id:"builtin:nasi-putih",name_en:"Steamed white rice",name:"Nasi putih matang",aliases:["nasi","rice"],category:"pokok",basis:"g",baseQty:100,baseUnit:"g",cuisine:"indonesian",editable:false,per100:{kcal:130,protein:2.7,carbs:28.2,fat:0.3},servings:[{unit:"porsi",grams:150,label:"1 porsi (150 g)"},{unit:"centong",grams:100},{unit:"sendok makan",grams:15}],defaultServing:"porsi",source:"estimasi"},
+{id:"builtin:nasi-merah",name_en:"Steamed red rice",name:"Nasi merah matang",aliases:["beras merah","brown rice"],category:"pokok",basis:"g",baseQty:100,baseUnit:"g",cuisine:"indonesian",editable:false,per100:{kcal:110,protein:2.6,carbs:23,fat:0.9},servings:[{unit:"porsi",grams:150},{unit:"centong",grams:100}],defaultServing:"porsi",source:"estimasi"},
+{id:"builtin:nasi-goreng",name_en:"Fried rice",name:"Nasi goreng",aliases:["nasgor","fried rice"],category:"pokok",basis:"g",baseQty:100,baseUnit:"g",cuisine:"indonesian",editable:false,per100:{kcal:168,protein:5.5,carbs:21,fat:7},servings:[{unit:"porsi",grams:300,label:"1 piring (300 g)"}],defaultServing:"porsi",source:"estimasi"},
+{id:"builtin:mie-goreng",name_en:"Fried noodles",name:"Mie goreng (matang)",aliases:["mi goreng","fried noodles"],category:"pokok",basis:"g",baseQty:100,baseUnit:"g",cuisine:"indonesian",editable:false,per100:{kcal:190,protein:5,carbs:25,fat:8},servings:[{unit:"porsi",grams:250,label:"1 piring (250 g)"}],defaultServing:"porsi",source:"estimasi"},
+{id:"builtin:mie-instan",name_en:"Instant noodles (+ seasoning)",note_en:"Dry weight + seasoning. Varies by variant and brand.",name:"Mie instan (+ bumbu)",aliases:["indomie","mi instan","instant noodle"],category:"pokok",basis:"g",baseQty:100,baseUnit:"g",cuisine:"indonesian",editable:false,per100:{kcal:447,protein:9.4,carbs:63.5,fat:17.6},servings:[{unit:"bungkus",grams:85,label:"1 bungkus (85 g)"}],defaultServing:"bungkus",source:"estimasi label kemasan",note:"Berat kering + bumbu. Varian dan merek berbeda-beda."},
+{id:"builtin:bubur-ayam",name_en:"Chicken rice porridge",name:"Bubur ayam",aliases:["bubur"],category:"pokok",basis:"g",baseQty:100,baseUnit:"g",cuisine:"indonesian",editable:false,per100:{kcal:75,protein:3,carbs:11,fat:2},servings:[{unit:"mangkuk",grams:400}],defaultServing:"mangkuk",source:"estimasi"},
+{id:"builtin:roti-tawar",name_en:"White bread",name:"Roti tawar",aliases:["roti","bread"],category:"pokok",basis:"g",baseQty:100,baseUnit:"g",cuisine:"indonesian",editable:false,per100:{kcal:265,protein:9,carbs:49,fat:3.2},servings:[{unit:"potong",grams:25,label:"1 lembar (25 g)"}],defaultServing:"potong",source:"estimasi"},
+{id:"builtin:ayam-goreng",name_en:"Fried chicken (with skin)",name:"Ayam goreng (dengan kulit)",aliases:["fried chicken"],category:"lauk",basis:"g",baseQty:100,baseUnit:"g",cuisine:"indonesian",editable:false,per100:{kcal:260,protein:24,carbs:5,fat:16},servings:[{unit:"potong",grams:80}],defaultServing:"potong",source:"estimasi"},
+{id:"builtin:ayam-bakar",name_en:"Grilled chicken",name:"Ayam bakar",aliases:["grilled chicken"],category:"lauk",basis:"g",baseQty:100,baseUnit:"g",cuisine:"indonesian",editable:false,per100:{kcal:200,protein:25,carbs:3,fat:10},servings:[{unit:"potong",grams:80}],defaultServing:"potong",source:"estimasi"},
+{id:"builtin:dada-ayam",name_en:"Cooked chicken breast (no skin)",name:"Dada ayam matang (tanpa kulit)",aliases:["chicken breast","dada"],category:"lauk",basis:"g",baseQty:100,baseUnit:"g",cuisine:"indonesian",editable:false,per100:{kcal:165,protein:31,carbs:0,fat:3.6},servings:[{unit:"potong",grams:100}],defaultServing:"potong",source:"estimasi"},
+{id:"builtin:telur-rebus",name_en:"Boiled egg",name:"Telur rebus",aliases:["boiled egg","telor"],category:"lauk",basis:"g",baseQty:100,baseUnit:"g",cuisine:"indonesian",editable:false,per100:{kcal:155,protein:13,carbs:1.1,fat:11},servings:[{unit:"butir",grams:55}],defaultServing:"butir",source:"estimasi"},
+{id:"builtin:telur-goreng",name_en:"Fried egg (sunny-side up)",name:"Telur goreng (ceplok)",aliases:["telur ceplok","mata sapi","fried egg"],category:"lauk",basis:"g",baseQty:100,baseUnit:"g",cuisine:"indonesian",editable:false,per100:{kcal:196,protein:13.6,carbs:0.8,fat:15},servings:[{unit:"butir",grams:55}],defaultServing:"butir",source:"estimasi"},
+{id:"builtin:tempe-goreng",name_en:"Fried tempeh",name:"Tempe goreng",aliases:["tempe"],category:"lauk",basis:"g",baseQty:100,baseUnit:"g",cuisine:"indonesian",editable:false,per100:{kcal:225,protein:17,carbs:9,fat:14},servings:[{unit:"potong",grams:30}],defaultServing:"potong",source:"estimasi"},
+{id:"builtin:tempe-bacem",name_en:"Sweet braised tempeh",name:"Tempe bacem",aliases:["bacem"],category:"lauk",basis:"g",baseQty:100,baseUnit:"g",cuisine:"indonesian",editable:false,per100:{kcal:180,protein:14,carbs:15,fat:8},servings:[{unit:"potong",grams:40}],defaultServing:"potong",source:"estimasi"},
+{id:"builtin:tahu-goreng",name_en:"Fried tofu",name:"Tahu goreng",aliases:["tahu","tofu"],category:"lauk",basis:"g",baseQty:100,baseUnit:"g",cuisine:"indonesian",editable:false,per100:{kcal:115,protein:9.7,carbs:2.5,fat:8},servings:[{unit:"potong",grams:30}],defaultServing:"potong",source:"estimasi"},
+{id:"builtin:ikan-bakar",name_en:"Grilled fish",name:"Ikan bakar",aliases:["grilled fish"],category:"lauk",basis:"g",baseQty:100,baseUnit:"g",cuisine:"indonesian",editable:false,per100:{kcal:150,protein:26,carbs:1,fat:4.5},servings:[{unit:"potong",grams:100,label:"1 potong/ekor sedang (100 g)"}],defaultServing:"potong",source:"estimasi"},
+{id:"builtin:ikan-goreng",name_en:"Fried fish",name:"Ikan goreng",aliases:["fried fish"],category:"lauk",basis:"g",baseQty:100,baseUnit:"g",cuisine:"indonesian",editable:false,per100:{kcal:200,protein:24,carbs:2,fat:11},servings:[{unit:"potong",grams:80,label:"1 potong/ekor kecil (80 g)"}],defaultServing:"potong",source:"estimasi"},
+{id:"builtin:rendang",name_en:"Beef rendang",name:"Rendang daging",aliases:["rendang sapi"],category:"lauk",basis:"g",baseQty:100,baseUnit:"g",cuisine:"indonesian",editable:false,per100:{kcal:195,protein:19,carbs:5,fat:11},servings:[{unit:"potong",grams:60}],defaultServing:"potong",source:"estimasi"},
+{id:"builtin:sate-ayam",name_en:"Chicken satay + peanut sauce",name:"Sate ayam + bumbu kacang",aliases:["sate","satay"],category:"lauk",basis:"g",baseQty:100,baseUnit:"g",cuisine:"indonesian",editable:false,per100:{kcal:225,protein:20,carbs:8,fat:13},servings:[{unit:"tusuk",grams:20},{unit:"porsi",grams:200,label:"1 porsi 10 tusuk (200 g)"}],defaultServing:"porsi",source:"estimasi"},
+{id:"builtin:soto-ayam",name_en:"Chicken soto (broth soup)",note_en:"Does not include rice — log white rice separately.",name:"Soto ayam (kuah + isi)",aliases:["soto"],category:"berkuah",basis:"g",baseQty:100,baseUnit:"g",cuisine:"indonesian",editable:false,per100:{kcal:55,protein:4.5,carbs:4,fat:2},servings:[{unit:"mangkuk",grams:350,label:"1 mangkuk (350 g, tanpa nasi)"}],defaultServing:"mangkuk",source:"estimasi",note:"Belum termasuk nasi — catat nasi putih terpisah."},
+{id:"builtin:bakso",name_en:"Meatball soup",name:"Bakso kuah komplit",aliases:["baso","meatball"],category:"berkuah",basis:"g",baseQty:100,baseUnit:"g",cuisine:"indonesian",editable:false,per100:{kcal:75,protein:5,carbs:7,fat:3},servings:[{unit:"mangkuk",grams:400,label:"1 mangkuk (400 g, dengan mie)"}],defaultServing:"mangkuk",source:"estimasi"},
+{id:"builtin:gado-gado",name_en:"Gado-gado (veg. salad, peanut sauce)",name:"Gado-gado",aliases:["gado gado"],category:"sayur",basis:"g",baseQty:100,baseUnit:"g",cuisine:"indonesian",editable:false,per100:{kcal:130,protein:5,carbs:10,fat:8},servings:[{unit:"porsi",grams:300,label:"1 porsi (300 g, dengan lontong)"}],defaultServing:"porsi",source:"estimasi"},
+{id:"builtin:pecel",name_en:"Pecel (steamed veg., peanut sauce)",name:"Pecel sayur",aliases:["pecel"],category:"sayur",basis:"g",baseQty:100,baseUnit:"g",cuisine:"indonesian",editable:false,per100:{kcal:120,protein:5,carbs:11,fat:7},servings:[{unit:"porsi",grams:250,label:"1 porsi (250 g, tanpa nasi)"}],defaultServing:"porsi",source:"estimasi"},
+{id:"builtin:pisang",name_en:"Banana",name:"Pisang",aliases:["banana"],category:"buah",basis:"g",baseQty:100,baseUnit:"g",cuisine:"indonesian",editable:false,per100:{kcal:89,protein:1.1,carbs:22.8,fat:0.3},servings:[{unit:"buah",grams:100,label:"1 buah sedang (100 g)"}],defaultServing:"buah",source:"estimasi"},
+{id:"builtin:alpukat",name_en:"Avocado",name:"Alpukat",aliases:["avocado","avokad"],category:"buah",basis:"g",baseQty:100,baseUnit:"g",cuisine:"indonesian",editable:false,per100:{kcal:160,protein:2,carbs:8.5,fat:14.7},servings:[{unit:"buah",grams:150,label:"1 buah sedang (150 g daging)"}],defaultServing:"buah",source:"estimasi"},
+{id:"builtin:kopi-hitam",name_en:"Black coffee (no sugar)",name:"Kopi hitam (tanpa gula)",aliases:["kopi","black coffee"],category:"minuman",basis:"ml",baseQty:100,baseUnit:"ml",cuisine:"indonesian",editable:false,per100:{kcal:1,protein:0.1,carbs:0,fat:0},servings:[{unit:"cangkir",grams:200,label:"1 cangkir (200 ml)"},{unit:"gelas",grams:250}],defaultServing:"cangkir",source:"estimasi"},
+{id:"builtin:kopi-susu",name_en:"Sweet milk coffee",note_en:"Varies a lot by stall/brand — make a custom version for your usual order.",name:"Kopi susu (manis)",aliases:["kopsus","es kopi susu"],category:"minuman",basis:"ml",baseQty:100,baseUnit:"ml",cuisine:"indonesian",editable:false,per100:{kcal:45,protein:1.5,carbs:6,fat:1.8},servings:[{unit:"gelas",grams:250,label:"1 gelas (250 ml)"}],defaultServing:"gelas",source:"estimasi",note:"Sangat bervariasi antar warung/merek — buat versi custom untuk favoritmu."},
+{id:"builtin:teh-manis",name_en:"Sweet tea",name:"Teh manis",aliases:["es teh","sweet tea"],category:"minuman",basis:"ml",baseQty:100,baseUnit:"ml",cuisine:"indonesian",editable:false,per100:{kcal:30,protein:0,carbs:7.5,fat:0},servings:[{unit:"gelas",grams:250,label:"1 gelas (250 ml)"}],defaultServing:"gelas",source:"estimasi"},
+{id:"builtin:gula-pasir",name_en:"Sugar",name:"Gula pasir",aliases:["gula","sugar"],category:"bumbu",basis:"g",baseQty:100,baseUnit:"g",cuisine:"indonesian",editable:false,per100:{kcal:387,protein:0,carbs:100,fat:0},servings:[{unit:"sendok teh",grams:4,label:"1 sdt (4 g)"},{unit:"sendok makan",grams:12,label:"1 sdm (12 g)"}],defaultServing:"sendok teh",source:"estimasi"},
+{id:"builtin:minyak-goreng",name_en:"Cooking oil",name:"Minyak goreng",aliases:["minyak","cooking oil"],category:"bumbu",basis:"g",baseQty:100,baseUnit:"g",cuisine:"indonesian",editable:false,per100:{kcal:884,protein:0,carbs:0,fat:100},servings:[{unit:"sendok makan",grams:14,label:"1 sdm (14 g)"},{unit:"sendok teh",grams:5,label:"1 sdt (5 g)"}],defaultServing:"sendok makan",source:"estimasi"},
+{id:"builtin:sambal",name_en:"Sambal (chili paste)",name:"Sambal",aliases:["sambel","chili paste"],category:"bumbu",basis:"g",baseQty:100,baseUnit:"g",cuisine:"indonesian",editable:false,per100:{kcal:120,protein:2,carbs:10,fat:8},servings:[{unit:"sendok makan",grams:15}],defaultServing:"sendok makan",source:"estimasi"},
+{id:"builtin:kerupuk",name_en:"Crackers (fried)",name:"Kerupuk (goreng)",aliases:["krupuk","crackers"],category:"camilan",basis:"g",baseQty:100,baseUnit:"g",cuisine:"indonesian",editable:false,per100:{kcal:475,protein:3,carbs:65,fat:22},servings:[{unit:"potong",grams:5,label:"1 keping (5 g)"}],defaultServing:"potong",source:"estimasi"},
+{id:"builtin:nasi-uduk",name_en:"Coconut milk rice (nasi uduk)",name:"Nasi uduk",aliases:["nasi santan", "coconut rice"],category:"pokok",cuisine:"indonesian",basis:"g",baseQty:100,baseUnit:"g",per100:{"kcal": 178, "protein": 3.0, "carbs": 27, "fat": 6.5},servings:[{"unit": "porsi", "grams": 150, "label": "1 porsi (150 g)"}],defaultServing:"porsi",source:"estimasi",editable:false},
+{id:"builtin:nasi-kuning",name_en:"Turmeric rice (nasi kuning)",name:"Nasi kuning",aliases:["turmeric rice", "nasi kunyit"],category:"pokok",cuisine:"indonesian",basis:"g",baseQty:100,baseUnit:"g",per100:{"kcal": 160, "protein": 3.0, "carbs": 29, "fat": 3.5},servings:[{"unit": "porsi", "grams": 150, "label": "1 porsi (150 g)"}],defaultServing:"porsi",source:"estimasi",editable:false},
+{id:"builtin:telur-dadar",name_en:"Indonesian rolled omelette (telur dadar)",name:"Telur dadar",aliases:["dadar", "rolled omelette"],category:"lauk",cuisine:"indonesian",basis:"g",baseQty:100,baseUnit:"g",per100:{"kcal": 205, "protein": 13, "carbs": 2, "fat": 16},servings:[{"unit": "buah", "grams": 60, "label": "1 buah (60 g)"}],defaultServing:"buah",source:"estimasi",editable:false},
+{id:"builtin:susu-uht",name_en:"UHT milk",name:"Susu UHT",aliases:["susu", "milk", "uht"],category:"minuman",cuisine:"indonesian",basis:"ml",baseQty:100,baseUnit:"ml",per100:{"kcal": 61, "protein": 3.2, "carbs": 4.8, "fat": 3.3},servings:[{"unit": "gelas", "grams": 250, "label": "1 gelas (250 ml)"}],defaultServing:"gelas",source:"estimasi",editable:false},
+{id:"builtin:lontong",name_en:"Compressed rice cake (lontong)",name:"Lontong",aliases:["rice cake"],category:"pokok",cuisine:"indonesian",basis:"g",baseQty:100,baseUnit:"g",per100:{"kcal": 140, "protein": 2.5, "carbs": 30, "fat": 0.3},servings:[{"unit": "potong", "grams": 100, "label": "1 potong (100 g)"}],defaultServing:"potong",source:"estimasi",editable:false},
+{id:"builtin:oatmeal",name_en:"Oatmeal",name:"Oatmeal (bubur gandum)",aliases:["oats", "porridge", "bubur gandum"],category:"pokok",cuisine:"western",basis:"g",baseQty:100,baseUnit:"g",per100:{"kcal": 71, "protein": 2.5, "carbs": 12, "fat": 1.5},servings:[{"unit": "mangkuk", "grams": 240, "label": "1 mangkuk (240 g)"}],defaultServing:"mangkuk",source:"estimasi",editable:false},
+{id:"builtin:cereal",name_en:"Breakfast cereal",name:"Sereal sarapan",aliases:["cereal", "corn flakes"],category:"pokok",cuisine:"western",basis:"g",baseQty:100,baseUnit:"g",per100:{"kcal": 380, "protein": 7, "carbs": 82, "fat": 3},servings:[{"unit": "mangkuk", "grams": 40, "label": "1 mangkuk (40 g kering)"}],defaultServing:"mangkuk",source:"estimasi",editable:false,note:"Nilai untuk sereal kering, belum termasuk susu.",note_en:"Values for dry cereal, not including milk."},
+{id:"builtin:granola",name_en:"Granola",name:"Granola",aliases:["granola bar", "muesli"],category:"pokok",cuisine:"western",basis:"g",baseQty:100,baseUnit:"g",per100:{"kcal": 471, "protein": 10, "carbs": 64, "fat": 20},servings:[{"unit": "porsi", "grams": 50, "label": "1 porsi (50 g)"}],defaultServing:"porsi",source:"estimasi",editable:false},
+{id:"builtin:white-bread",name_en:"White bread",name:"Roti putih",aliases:["white bread", "sandwich bread"],category:"pokok",cuisine:"western",basis:"g",baseQty:100,baseUnit:"g",per100:{"kcal": 265, "protein": 9, "carbs": 49, "fat": 3.2},servings:[{"unit": "potong", "grams": 25, "label": "1 lembar (25 g)"}],defaultServing:"potong",source:"estimasi",editable:false},
+{id:"builtin:whole-wheat-bread",name_en:"Whole wheat bread",name:"Roti gandum utuh",aliases:["whole wheat bread", "brown bread"],category:"pokok",cuisine:"western",basis:"g",baseQty:100,baseUnit:"g",per100:{"kcal": 247, "protein": 13, "carbs": 41, "fat": 3.4},servings:[{"unit": "potong", "grams": 28, "label": "1 lembar (28 g)"}],defaultServing:"potong",source:"estimasi",editable:false},
+{id:"builtin:croissant",name_en:"Croissant",name:"Croissant",aliases:["kroisan"],category:"pokok",cuisine:"western",basis:"g",baseQty:100,baseUnit:"g",per100:{"kcal": 406, "protein": 8.2, "carbs": 45, "fat": 21},servings:[{"unit": "buah", "grams": 60, "label": "1 buah (60 g)"}],defaultServing:"buah",source:"estimasi",editable:false},
+{id:"builtin:pancake",name_en:"Pancake",name:"Pancake",aliases:["panekuk"],category:"pokok",cuisine:"western",basis:"g",baseQty:100,baseUnit:"g",per100:{"kcal": 227, "protein": 6, "carbs": 28, "fat": 10},servings:[{"unit": "buah", "grams": 60, "label": "1 lembar (60 g)"}],defaultServing:"buah",source:"estimasi",editable:false},
+{id:"builtin:waffle",name_en:"Waffle",name:"Waffle",aliases:["wafel"],category:"pokok",cuisine:"western",basis:"g",baseQty:100,baseUnit:"g",per100:{"kcal": 291, "protein": 7.9, "carbs": 33, "fat": 14},servings:[{"unit": "buah", "grams": 75, "label": "1 buah (75 g)"}],defaultServing:"buah",source:"estimasi",editable:false},
+{id:"builtin:scrambled-egg",name_en:"Scrambled egg",name:"Telur orak-arik",aliases:["scrambled egg", "orak-arik telur"],category:"lauk",cuisine:"western",basis:"g",baseQty:100,baseUnit:"g",per100:{"kcal": 148, "protein": 10, "carbs": 1.6, "fat": 11},servings:[{"unit": "porsi", "grams": 120, "label": "1 porsi (120 g, 2 butir)"}],defaultServing:"porsi",source:"estimasi",editable:false},
+{id:"builtin:omelette",name_en:"Omelette",name:"Omelet",aliases:["omelette", "omelet barat"],category:"lauk",cuisine:"western",basis:"g",baseQty:100,baseUnit:"g",per100:{"kcal": 154, "protein": 11, "carbs": 1, "fat": 12},servings:[{"unit": "porsi", "grams": 120, "label": "1 porsi (120 g, 2 butir)"}],defaultServing:"porsi",source:"estimasi",editable:false},
+{id:"builtin:grilled-chicken-breast",name_en:"Grilled chicken breast",name:"Dada ayam panggang (ala barat)",aliases:["grilled chicken breast"],category:"lauk",cuisine:"western",basis:"g",baseQty:100,baseUnit:"g",per100:{"kcal": 172, "protein": 31, "carbs": 0, "fat": 4.5},servings:[{"unit": "potong", "grams": 150, "label": "1 potong (150 g)"}],defaultServing:"potong",source:"estimasi",editable:false},
+{id:"builtin:chicken-sandwich",name_en:"Chicken sandwich",name:"Sandwich ayam",aliases:["chicken sandwich"],category:"lauk",cuisine:"western",basis:"g",baseQty:100,baseUnit:"g",per100:{"kcal": 240, "protein": 14, "carbs": 26, "fat": 9},servings:[{"unit": "buah", "grams": 200, "label": "1 buah (200 g)"}],defaultServing:"buah",source:"estimasi",editable:false},
+{id:"builtin:beef-burger",name_en:"Beef burger",name:"Burger daging sapi",aliases:["beef burger", "hamburger"],category:"lauk",cuisine:"western",basis:"g",baseQty:100,baseUnit:"g",per100:{"kcal": 260, "protein": 13, "carbs": 24, "fat": 13},servings:[{"unit": "buah", "grams": 150, "label": "1 buah (150 g)"}],defaultServing:"buah",source:"estimasi",editable:false},
+{id:"builtin:cheeseburger",name_en:"Cheeseburger",name:"Cheeseburger",aliases:["cheeseburger"],category:"lauk",cuisine:"western",basis:"g",baseQty:100,baseUnit:"g",per100:{"kcal": 290, "protein": 15, "carbs": 25, "fat": 15},servings:[{"unit": "buah", "grams": 170, "label": "1 buah (170 g)"}],defaultServing:"buah",source:"estimasi",editable:false},
+{id:"builtin:pizza-slice",name_en:"Pizza slice",name:"Pizza (per potong)",aliases:["pizza slice", "pizza"],category:"lauk",cuisine:"western",basis:"g",baseQty:100,baseUnit:"g",per100:{"kcal": 266, "protein": 11, "carbs": 33, "fat": 10},servings:[{"unit": "potong", "grams": 120, "label": "1 potong (120 g)"}],defaultServing:"potong",source:"estimasi",editable:false},
+{id:"builtin:pasta-spaghetti",name_en:"Spaghetti pasta",name:"Spaghetti",aliases:["pasta", "spaghetti"],category:"pokok",cuisine:"western",basis:"g",baseQty:100,baseUnit:"g",per100:{"kcal": 131, "protein": 5, "carbs": 25, "fat": 1.1},servings:[{"unit": "mangkuk", "grams": 200, "label": "1 mangkuk (200 g)"}],defaultServing:"mangkuk",source:"estimasi",editable:false,note:"Pasta polos rebus, belum termasuk saus.",note_en:"Plain boiled pasta, not including sauce."},
+{id:"builtin:mac-and-cheese",name_en:"Macaroni and cheese",name:"Makaroni keju",aliases:["mac and cheese", "macaroni cheese"],category:"pokok",cuisine:"western",basis:"g",baseQty:100,baseUnit:"g",per100:{"kcal": 164, "protein": 6.4, "carbs": 19, "fat": 6.6},servings:[{"unit": "mangkuk", "grams": 200, "label": "1 mangkuk (200 g)"}],defaultServing:"mangkuk",source:"estimasi",editable:false},
+{id:"builtin:mashed-potato",name_en:"Mashed potato",name:"Kentang tumbuk",aliases:["mashed potato", "puree kentang"],category:"pokok",cuisine:"western",basis:"g",baseQty:100,baseUnit:"g",per100:{"kcal": 88, "protein": 2, "carbs": 16, "fat": 2},servings:[{"unit": "mangkuk", "grams": 200, "label": "1 mangkuk (200 g)"}],defaultServing:"mangkuk",source:"estimasi",editable:false},
+{id:"builtin:french-fries",name_en:"French fries",name:"Kentang goreng",aliases:["french fries", "kentang goreng"],category:"camilan",cuisine:"western",basis:"g",baseQty:100,baseUnit:"g",per100:{"kcal": 312, "protein": 3.4, "carbs": 41, "fat": 15},servings:[{"unit": "porsi", "grams": 100, "label": "1 porsi kecil (100 g)"}],defaultServing:"porsi",source:"estimasi",editable:false},
+{id:"builtin:steak",name_en:"Steak",name:"Steak daging sapi",aliases:["steak", "beef steak"],category:"lauk",cuisine:"western",basis:"g",baseQty:100,baseUnit:"g",per100:{"kcal": 271, "protein": 25, "carbs": 0, "fat": 19},servings:[{"unit": "potong", "grams": 200, "label": "1 potong (200 g)"}],defaultServing:"potong",source:"estimasi",editable:false},
+{id:"builtin:grilled-salmon",name_en:"Grilled salmon",name:"Salmon panggang",aliases:["grilled salmon", "salmon"],category:"lauk",cuisine:"western",basis:"g",baseQty:100,baseUnit:"g",per100:{"kcal": 208, "protein": 22, "carbs": 0, "fat": 13},servings:[{"unit": "potong", "grams": 150, "label": "1 potong (150 g)"}],defaultServing:"potong",source:"estimasi",editable:false},
+{id:"builtin:tuna-sandwich",name_en:"Tuna sandwich",name:"Sandwich tuna",aliases:["tuna sandwich"],category:"lauk",cuisine:"western",basis:"g",baseQty:100,baseUnit:"g",per100:{"kcal": 200, "protein": 12, "carbs": 22, "fat": 7.5},servings:[{"unit": "buah", "grams": 200, "label": "1 buah (200 g)"}],defaultServing:"buah",source:"estimasi",editable:false},
+{id:"builtin:caesar-salad",name_en:"Caesar salad",name:"Salad Caesar",aliases:["caesar salad"],category:"sayur",cuisine:"western",basis:"g",baseQty:100,baseUnit:"g",per100:{"kcal": 130, "protein": 4, "carbs": 6, "fat": 10},servings:[{"unit": "porsi", "grams": 200, "label": "1 porsi (200 g)"}],defaultServing:"porsi",source:"estimasi",editable:false},
+{id:"builtin:greek-yogurt",name_en:"Greek yogurt",name:"Yogurt Yunani",aliases:["greek yogurt", "yogurt"],category:"camilan",cuisine:"western",basis:"g",baseQty:100,baseUnit:"g",per100:{"kcal": 59, "protein": 10, "carbs": 3.6, "fat": 0.4},servings:[{"unit": "cangkir", "grams": 170, "label": "1 cup (170 g)"}],defaultServing:"cangkir",source:"estimasi",editable:false},
+{id:"builtin:milk",name_en:"Milk",name:"Susu sapi",aliases:["milk", "susu"],category:"minuman",cuisine:"western",basis:"ml",baseQty:100,baseUnit:"ml",per100:{"kcal": 61, "protein": 3.2, "carbs": 4.8, "fat": 3.3},servings:[{"unit": "gelas", "grams": 250, "label": "1 gelas (250 ml)"}],defaultServing:"gelas",source:"estimasi",editable:false},
+{id:"builtin:cheese",name_en:"Cheese (cheddar)",name:"Keju cheddar",aliases:["cheese", "keju"],category:"camilan",cuisine:"western",basis:"g",baseQty:100,baseUnit:"g",per100:{"kcal": 402, "protein": 25, "carbs": 1.3, "fat": 33},servings:[{"unit": "potong", "grams": 30, "label": "1 potong (30 g)"}],defaultServing:"potong",source:"estimasi",editable:false},
+{id:"builtin:butter",name_en:"Butter",name:"Mentega",aliases:["butter", "mentega"],category:"bumbu",cuisine:"western",basis:"g",baseQty:100,baseUnit:"g",per100:{"kcal": 717, "protein": 0.9, "carbs": 0.1, "fat": 81},servings:[{"unit": "sendok makan", "grams": 14, "label": "1 sdm (14 g)"}],defaultServing:"sendok makan",source:"estimasi",editable:false},
+{id:"builtin:peanut-butter",name_en:"Peanut butter",name:"Selai kacang",aliases:["peanut butter", "selai kacang"],category:"bumbu",cuisine:"western",basis:"g",baseQty:100,baseUnit:"g",per100:{"kcal": 588, "protein": 25, "carbs": 20, "fat": 50},servings:[{"unit": "sendok makan", "grams": 16, "label": "1 sdm (16 g)"}],defaultServing:"sendok makan",source:"estimasi",editable:false},
+{id:"builtin:apple",name_en:"Apple",name:"Apel",aliases:["apple", "apel"],category:"buah",cuisine:"western",basis:"g",baseQty:100,baseUnit:"g",per100:{"kcal": 52, "protein": 0.3, "carbs": 14, "fat": 0.2},servings:[{"unit": "buah", "grams": 150, "label": "1 buah sedang (150 g)"}],defaultServing:"buah",source:"estimasi",editable:false},
+{id:"builtin:orange",name_en:"Orange",name:"Jeruk",aliases:["orange", "jeruk"],category:"buah",cuisine:"western",basis:"g",baseQty:100,baseUnit:"g",per100:{"kcal": 47, "protein": 0.9, "carbs": 12, "fat": 0.1},servings:[{"unit": "buah", "grams": 150, "label": "1 buah sedang (150 g)"}],defaultServing:"buah",source:"estimasi",editable:false},
+{id:"builtin:hummus",name_en:"Hummus",name:"Hummus",aliases:["hummus"],category:"bumbu",cuisine:"middle_eastern",basis:"g",baseQty:100,baseUnit:"g",per100:{"kcal": 166, "protein": 7.9, "carbs": 14, "fat": 9.6},servings:[{"unit": "sendok makan", "grams": 30, "label": "2 sdm (30 g)"}],defaultServing:"sendok makan",source:"estimasi",editable:false},
+{id:"builtin:pita-bread",name_en:"Pita bread",name:"Roti pita",aliases:["pita bread", "pita"],category:"pokok",cuisine:"middle_eastern",basis:"g",baseQty:100,baseUnit:"g",per100:{"kcal": 275, "protein": 9.1, "carbs": 55, "fat": 1.2},servings:[{"unit": "buah", "grams": 60, "label": "1 buah (60 g)"}],defaultServing:"buah",source:"estimasi",editable:false},
+{id:"builtin:falafel",name_en:"Falafel",name:"Falafel",aliases:["falafel"],category:"lauk",cuisine:"middle_eastern",basis:"g",baseQty:100,baseUnit:"g",per100:{"kcal": 333, "protein": 13, "carbs": 32, "fat": 18},servings:[{"unit": "butir", "grams": 17, "label": "1 butir (17 g)"}],defaultServing:"butir",source:"estimasi",editable:false},
+{id:"builtin:shawarma-chicken",name_en:"Chicken shawarma",name:"Shawarma ayam",aliases:["shawarma chicken", "shawarma ayam"],category:"lauk",cuisine:"middle_eastern",basis:"g",baseQty:100,baseUnit:"g",per100:{"kcal": 210, "protein": 18, "carbs": 12, "fat": 10},servings:[{"unit": "porsi", "grams": 250, "label": "1 porsi wrap (250 g)"}],defaultServing:"porsi",source:"estimasi",editable:false},
+{id:"builtin:shawarma-beef",name_en:"Beef shawarma",name:"Shawarma daging sapi",aliases:["shawarma beef", "shawarma sapi"],category:"lauk",cuisine:"middle_eastern",basis:"g",baseQty:100,baseUnit:"g",per100:{"kcal": 230, "protein": 17, "carbs": 12, "fat": 12},servings:[{"unit": "porsi", "grams": 250, "label": "1 porsi wrap (250 g)"}],defaultServing:"porsi",source:"estimasi",editable:false},
+{id:"builtin:kebab",name_en:"Kebab",name:"Kebab",aliases:["kebab"],category:"lauk",cuisine:"middle_eastern",basis:"g",baseQty:100,baseUnit:"g",per100:{"kcal": 250, "protein": 24, "carbs": 2, "fat": 16},servings:[{"unit": "tusuk", "grams": 100, "label": "1 tusuk (100 g)"}],defaultServing:"tusuk",source:"estimasi",editable:false},
+{id:"builtin:chicken-biryani",name_en:"Chicken biryani",name:"Nasi biryani ayam",aliases:["chicken biryani", "biryani ayam"],category:"pokok",cuisine:"middle_eastern",basis:"g",baseQty:100,baseUnit:"g",per100:{"kcal": 165, "protein": 9, "carbs": 20, "fat": 5},servings:[{"unit": "porsi", "grams": 300, "label": "1 porsi (300 g)"}],defaultServing:"porsi",source:"estimasi",editable:false},
+{id:"builtin:lamb-biryani",name_en:"Lamb biryani",name:"Nasi biryani kambing",aliases:["lamb biryani", "biryani kambing"],category:"pokok",cuisine:"middle_eastern",basis:"g",baseQty:100,baseUnit:"g",per100:{"kcal": 190, "protein": 10, "carbs": 19, "fat": 8},servings:[{"unit": "porsi", "grams": 300, "label": "1 porsi (300 g)"}],defaultServing:"porsi",source:"estimasi",editable:false},
+{id:"builtin:mandi-rice",name_en:"Mandi rice",name:"Nasi mandi",aliases:["mandi rice", "nasi mandi"],category:"pokok",cuisine:"middle_eastern",basis:"g",baseQty:100,baseUnit:"g",per100:{"kcal": 175, "protein": 8, "carbs": 22, "fat": 6},servings:[{"unit": "porsi", "grams": 300, "label": "1 porsi (300 g)"}],defaultServing:"porsi",source:"estimasi",editable:false},
+{id:"builtin:kabsa-rice",name_en:"Kabsa rice",name:"Nasi kabsa",aliases:["kabsa rice", "nasi kabsa"],category:"pokok",cuisine:"middle_eastern",basis:"g",baseQty:100,baseUnit:"g",per100:{"kcal": 180, "protein": 8, "carbs": 23, "fat": 6.5},servings:[{"unit": "porsi", "grams": 300, "label": "1 porsi (300 g)"}],defaultServing:"porsi",source:"estimasi",editable:false},
+{id:"builtin:couscous",name_en:"Couscous",name:"Kuskus",aliases:["couscous", "kuskus"],category:"pokok",cuisine:"middle_eastern",basis:"g",baseQty:100,baseUnit:"g",per100:{"kcal": 112, "protein": 3.8, "carbs": 23, "fat": 0.2},servings:[{"unit": "mangkuk", "grams": 200, "label": "1 mangkuk (200 g)"}],defaultServing:"mangkuk",source:"estimasi",editable:false},
+{id:"builtin:tabbouleh",name_en:"Tabbouleh",name:"Tabbouleh",aliases:["tabbouleh"],category:"sayur",cuisine:"middle_eastern",basis:"g",baseQty:100,baseUnit:"g",per100:{"kcal": 115, "protein": 2.4, "carbs": 13, "fat": 6.5},servings:[{"unit": "porsi", "grams": 150, "label": "1 porsi (150 g)"}],defaultServing:"porsi",source:"estimasi",editable:false},
+{id:"builtin:fattoush",name_en:"Fattoush",name:"Fattoush",aliases:["fattoush"],category:"sayur",cuisine:"middle_eastern",basis:"g",baseQty:100,baseUnit:"g",per100:{"kcal": 90, "protein": 2, "carbs": 10, "fat": 5},servings:[{"unit": "porsi", "grams": 200, "label": "1 porsi (200 g)"}],defaultServing:"porsi",source:"estimasi",editable:false},
+{id:"builtin:baba-ganoush",name_en:"Baba ganoush",name:"Baba ganoush",aliases:["baba ganoush", "baba ghanoush"],category:"bumbu",cuisine:"middle_eastern",basis:"g",baseQty:100,baseUnit:"g",per100:{"kcal": 130, "protein": 2.5, "carbs": 9, "fat": 10},servings:[{"unit": "sendok makan", "grams": 30, "label": "2 sdm (30 g)"}],defaultServing:"sendok makan",source:"estimasi",editable:false},
+{id:"builtin:labneh",name_en:"Labneh",name:"Labneh",aliases:["labneh"],category:"bumbu",cuisine:"middle_eastern",basis:"g",baseQty:100,baseUnit:"g",per100:{"kcal": 130, "protein": 5.5, "carbs": 4, "fat": 11},servings:[{"unit": "sendok makan", "grams": 30, "label": "2 sdm (30 g)"}],defaultServing:"sendok makan",source:"estimasi",editable:false},
+{id:"builtin:dates",name_en:"Dates",name:"Kurma",aliases:["dates", "kurma"],category:"buah",cuisine:"middle_eastern",basis:"g",baseQty:100,baseUnit:"g",per100:{"kcal": 282, "protein": 2.5, "carbs": 75, "fat": 0.4},servings:[{"unit": "butir", "grams": 8, "label": "3 butir (24 g)"}],defaultServing:"butir",source:"estimasi",editable:false},
+{id:"builtin:lentil-soup",name_en:"Lentil soup",name:"Sup lentil",aliases:["lentil soup", "sup lentil"],category:"berkuah",cuisine:"middle_eastern",basis:"g",baseQty:100,baseUnit:"g",per100:{"kcal": 66, "protein": 4.5, "carbs": 11, "fat": 0.8},servings:[{"unit": "mangkuk", "grams": 300, "label": "1 mangkuk (300 g)"}],defaultServing:"mangkuk",source:"estimasi",editable:false},
+{id:"builtin:kofta",name_en:"Kofta",name:"Kofta",aliases:["kofta"],category:"lauk",cuisine:"middle_eastern",basis:"g",baseQty:100,baseUnit:"g",per100:{"kcal": 230, "protein": 17, "carbs": 6, "fat": 15},servings:[{"unit": "butir", "grams": 40, "label": "3 butir (120 g)"}],defaultServing:"butir",source:"estimasi",editable:false},
+{id:"builtin:grilled-lamb",name_en:"Grilled lamb",name:"Kambing panggang",aliases:["grilled lamb", "kambing panggang"],category:"lauk",cuisine:"middle_eastern",basis:"g",baseQty:100,baseUnit:"g",per100:{"kcal": 258, "protein": 25, "carbs": 0, "fat": 17},servings:[{"unit": "potong", "grams": 150, "label": "1 potong (150 g)"}],defaultServing:"potong",source:"estimasi",editable:false},
+{id:"builtin:tahini-sauce",name_en:"Tahini sauce",name:"Saus tahini",aliases:["tahini", "tahini sauce"],category:"bumbu",cuisine:"middle_eastern",basis:"g",baseQty:100,baseUnit:"g",per100:{"kcal": 595, "protein": 17, "carbs": 21, "fat": 53},servings:[{"unit": "sendok makan", "grams": 15, "label": "1 sdm (15 g)"}],defaultServing:"sendok makan",source:"estimasi",editable:false},
+{id:"builtin:steamed-rice",name_en:"Steamed rice",name:"Nasi kukus (ala Asia)",aliases:["steamed rice"],category:"pokok",cuisine:"asian",basis:"g",baseQty:100,baseUnit:"g",per100:{"kcal": 130, "protein": 2.4, "carbs": 28, "fat": 0.2},servings:[{"unit": "mangkuk", "grams": 150, "label": "1 mangkuk (150 g)"}],defaultServing:"mangkuk",source:"estimasi",editable:false},
+{id:"builtin:fried-rice-asian",name_en:"Fried rice",name:"Nasi goreng ala Asia Timur",aliases:["fried rice asian", "chinese fried rice"],category:"pokok",cuisine:"asian",basis:"g",baseQty:100,baseUnit:"g",per100:{"kcal": 174, "protein": 4.5, "carbs": 24, "fat": 6.5},servings:[{"unit": "porsi", "grams": 250, "label": "1 porsi (250 g)"}],defaultServing:"porsi",source:"estimasi",editable:false},
+{id:"builtin:sushi-roll",name_en:"Sushi roll",name:"Sushi roll",aliases:["sushi roll", "sushi"],category:"pokok",cuisine:"asian",basis:"g",baseQty:100,baseUnit:"g",per100:{"kcal": 150, "protein": 5, "carbs": 28, "fat": 2},servings:[{"unit": "potong", "grams": 30, "label": "1 potong (30 g)"}],defaultServing:"potong",source:"estimasi",editable:false},
+{id:"builtin:salmon-sushi",name_en:"Salmon sushi",name:"Sushi salmon",aliases:["salmon sushi", "salmon nigiri"],category:"pokok",cuisine:"asian",basis:"g",baseQty:100,baseUnit:"g",per100:{"kcal": 168, "protein": 8, "carbs": 22, "fat": 5},servings:[{"unit": "potong", "grams": 30, "label": "1 potong (30 g)"}],defaultServing:"potong",source:"estimasi",editable:false},
+{id:"builtin:tuna-sushi",name_en:"Tuna sushi",name:"Sushi tuna",aliases:["tuna sushi", "tuna nigiri"],category:"pokok",cuisine:"asian",basis:"g",baseQty:100,baseUnit:"g",per100:{"kcal": 145, "protein": 10, "carbs": 20, "fat": 2.5},servings:[{"unit": "potong", "grams": 30, "label": "1 potong (30 g)"}],defaultServing:"potong",source:"estimasi",editable:false},
+{id:"builtin:ramen",name_en:"Ramen",name:"Ramen",aliases:["ramen"],category:"berkuah",cuisine:"asian",basis:"g",baseQty:100,baseUnit:"g",per100:{"kcal": 150, "protein": 6, "carbs": 20, "fat": 5},servings:[{"unit": "mangkuk", "grams": 500, "label": "1 mangkuk (500 g)"}],defaultServing:"mangkuk",source:"estimasi",editable:false},
+{id:"builtin:udon",name_en:"Udon",name:"Udon",aliases:["udon"],category:"berkuah",cuisine:"asian",basis:"g",baseQty:100,baseUnit:"g",per100:{"kcal": 110, "protein": 3.5, "carbs": 21, "fat": 0.5},servings:[{"unit": "mangkuk", "grams": 400, "label": "1 mangkuk (400 g)"}],defaultServing:"mangkuk",source:"estimasi",editable:false},
+{id:"builtin:soba",name_en:"Soba",name:"Soba",aliases:["soba"],category:"berkuah",cuisine:"asian",basis:"g",baseQty:100,baseUnit:"g",per100:{"kcal": 99, "protein": 5, "carbs": 21, "fat": 0.3},servings:[{"unit": "mangkuk", "grams": 300, "label": "1 mangkuk (300 g)"}],defaultServing:"mangkuk",source:"estimasi",editable:false},
+{id:"builtin:miso-soup",name_en:"Miso soup",name:"Sup miso",aliases:["miso soup"],category:"berkuah",cuisine:"asian",basis:"g",baseQty:100,baseUnit:"g",per100:{"kcal": 40, "protein": 2.7, "carbs": 4, "fat": 1.3},servings:[{"unit": "mangkuk", "grams": 250, "label": "1 mangkuk (250 g)"}],defaultServing:"mangkuk",source:"estimasi",editable:false},
+{id:"builtin:teriyaki-chicken",name_en:"Teriyaki chicken",name:"Ayam teriyaki",aliases:["teriyaki chicken"],category:"lauk",cuisine:"asian",basis:"g",baseQty:100,baseUnit:"g",per100:{"kcal": 180, "protein": 20, "carbs": 10, "fat": 6},servings:[{"unit": "porsi", "grams": 150, "label": "1 porsi (150 g)"}],defaultServing:"porsi",source:"estimasi",editable:false},
+{id:"builtin:chicken-katsu",name_en:"Chicken katsu",name:"Ayam katsu",aliases:["chicken katsu", "katsu"],category:"lauk",cuisine:"asian",basis:"g",baseQty:100,baseUnit:"g",per100:{"kcal": 260, "protein": 18, "carbs": 15, "fat": 14},servings:[{"unit": "potong", "grams": 150, "label": "1 potong (150 g)"}],defaultServing:"potong",source:"estimasi",editable:false},
+{id:"builtin:kimchi",name_en:"Kimchi",name:"Kimchi",aliases:["kimchi"],category:"sayur",cuisine:"asian",basis:"g",baseQty:100,baseUnit:"g",per100:{"kcal": 23, "protein": 1.1, "carbs": 4, "fat": 0.5},servings:[{"unit": "porsi", "grams": 40, "label": "1 porsi (40 g)"}],defaultServing:"porsi",source:"estimasi",editable:false},
+{id:"builtin:bibimbap",name_en:"Bibimbap",name:"Bibimbap",aliases:["bibimbap"],category:"pokok",cuisine:"asian",basis:"g",baseQty:100,baseUnit:"g",per100:{"kcal": 145, "protein": 5, "carbs": 22, "fat": 4},servings:[{"unit": "porsi", "grams": 400, "label": "1 mangkuk (400 g)"}],defaultServing:"porsi",source:"estimasi",editable:false},
+{id:"builtin:bulgogi",name_en:"Bulgogi",name:"Bulgogi",aliases:["bulgogi"],category:"lauk",cuisine:"asian",basis:"g",baseQty:100,baseUnit:"g",per100:{"kcal": 210, "protein": 18, "carbs": 8, "fat": 12},servings:[{"unit": "porsi", "grams": 150, "label": "1 porsi (150 g)"}],defaultServing:"porsi",source:"estimasi",editable:false},
+{id:"builtin:tteokbokki",name_en:"Tteokbokki",name:"Tteokbokki",aliases:["tteokbokki", "rice cake korea"],category:"camilan",cuisine:"asian",basis:"g",baseQty:100,baseUnit:"g",per100:{"kcal": 180, "protein": 3, "carbs": 38, "fat": 2},servings:[{"unit": "porsi", "grams": 250, "label": "1 porsi (250 g)"}],defaultServing:"porsi",source:"estimasi",editable:false},
+{id:"builtin:pho",name_en:"Pho",name:"Pho",aliases:["pho"],category:"berkuah",cuisine:"asian",basis:"g",baseQty:100,baseUnit:"g",per100:{"kcal": 90, "protein": 5, "carbs": 14, "fat": 1.5},servings:[{"unit": "mangkuk", "grams": 500, "label": "1 mangkuk (500 g)"}],defaultServing:"mangkuk",source:"estimasi",editable:false},
+{id:"builtin:pad-thai",name_en:"Pad thai",name:"Pad thai",aliases:["pad thai"],category:"pokok",cuisine:"asian",basis:"g",baseQty:100,baseUnit:"g",per100:{"kcal": 180, "protein": 6, "carbs": 24, "fat": 7},servings:[{"unit": "porsi", "grams": 300, "label": "1 porsi (300 g)"}],defaultServing:"porsi",source:"estimasi",editable:false},
+{id:"builtin:tom-yum-soup",name_en:"Tom yum soup",name:"Sup tom yum",aliases:["tom yum", "tom yum soup"],category:"berkuah",cuisine:"asian",basis:"g",baseQty:100,baseUnit:"g",per100:{"kcal": 45, "protein": 3.5, "carbs": 4, "fat": 1.8},servings:[{"unit": "mangkuk", "grams": 350, "label": "1 mangkuk (350 g)"}],defaultServing:"mangkuk",source:"estimasi",editable:false},
+{id:"builtin:green-curry",name_en:"Green curry",name:"Kari hijau",aliases:["green curry", "kari hijau"],category:"berkuah",cuisine:"asian",basis:"g",baseQty:100,baseUnit:"g",per100:{"kcal": 130, "protein": 6, "carbs": 6, "fat": 9.5},servings:[{"unit": "porsi", "grams": 300, "label": "1 porsi (300 g)"}],defaultServing:"porsi",source:"estimasi",editable:false},
+{id:"builtin:chicken-curry",name_en:"Chicken curry",name:"Kari ayam",aliases:["chicken curry", "kari ayam"],category:"berkuah",cuisine:"asian",basis:"g",baseQty:100,baseUnit:"g",per100:{"kcal": 140, "protein": 10, "carbs": 6, "fat": 8.5},servings:[{"unit": "porsi", "grams": 300, "label": "1 porsi (300 g)"}],defaultServing:"porsi",source:"estimasi",editable:false},
+{id:"builtin:dumplings",name_en:"Dumplings",name:"Pangsit/dumpling",aliases:["dumplings", "pangsit", "jiaozi"],category:"camilan",cuisine:"asian",basis:"g",baseQty:100,baseUnit:"g",per100:{"kcal": 220, "protein": 8, "carbs": 25, "fat": 9},servings:[{"unit": "butir", "grams": 15, "label": "5 butir (75 g)"}],defaultServing:"butir",source:"estimasi",editable:false},
+{id:"builtin:spring-rolls",name_en:"Spring rolls",name:"Lumpia goreng",aliases:["spring rolls", "lumpia"],category:"camilan",cuisine:"asian",basis:"g",baseQty:100,baseUnit:"g",per100:{"kcal": 195, "protein": 4, "carbs": 22, "fat": 10},servings:[{"unit": "buah", "grams": 30, "label": "2 buah (60 g)"}],defaultServing:"buah",source:"estimasi",editable:false},
+{id:"builtin:tofu-stir-fry",name_en:"Tofu stir fry",name:"Tumis tahu",aliases:["tofu stir fry", "tumis tahu"],category:"sayur",cuisine:"asian",basis:"g",baseQty:100,baseUnit:"g",per100:{"kcal": 110, "protein": 8, "carbs": 5, "fat": 7},servings:[{"unit": "porsi", "grams": 200, "label": "1 porsi (200 g)"}],defaultServing:"porsi",source:"estimasi",editable:false},
+{id:"builtin:stir-fried-vegetables",name_en:"Stir-fried vegetables",name:"Tumis sayur",aliases:["stir fried vegetables", "tumis sayur", "cap cay"],category:"sayur",cuisine:"asian",basis:"g",baseQty:100,baseUnit:"g",per100:{"kcal": 60, "protein": 2.5, "carbs": 7, "fat": 3},servings:[{"unit": "porsi", "grams": 200, "label": "1 porsi (200 g)"}],defaultServing:"porsi",source:"estimasi",editable:false},
+{id:"builtin:soy-milk",name_en:"Soy milk",name:"Susu kedelai",aliases:["soy milk", "susu kedelai"],category:"minuman",cuisine:"asian",basis:"ml",baseQty:100,baseUnit:"ml",per100:{"kcal": 33, "protein": 2.9, "carbs": 1.8, "fat": 1.6},servings:[{"unit": "gelas", "grams": 250, "label": "1 gelas (250 ml)"}],defaultServing:"gelas",source:"estimasi",editable:false}
+]};
+var BUILTIN_MAP={};
+FOOD_DB.foods.forEach(function(f){BUILTIN_MAP[f.id]=f;});
+
+var CATS={
+  pokok:{id:"Makanan Pokok",en:"Staples",emo:"🍚"},
+  lauk:{id:"Lauk",en:"Main Dish",emo:"🍗"},
+  berkuah:{id:"Berkuah",en:"Soup",emo:"🍜"},
+  sayur:{id:"Sayur",en:"Vegetable",emo:"🥗"},
+  buah:{id:"Buah",en:"Fruit",emo:"🍌"},
+  minuman:{id:"Minuman",en:"Beverage",emo:"☕️"},
+  bumbu:{id:"Bumbu & Tambahan",en:"Seasoning & Extras",emo:"🧂"},
+  camilan:{id:"Camilan",en:"Snack",emo:"🍘"}
+};
+var MEALS={
+  sarapan:{id:"Sarapan",en:"Breakfast"},
+  makan_siang:{id:"Makan Siang",en:"Lunch"},
+  makan_malam:{id:"Makan Malam",en:"Dinner"},
+  camilan:{id:"Camilan",en:"Snack"}
+};
+var MEAL_SHORT={
+  sarapan:{id:"Sarapan",en:"Breakfast"},
+  makan_siang:{id:"Siang",en:"Lunch"},
+  makan_malam:{id:"Malam",en:"Dinner"},
+  camilan:{id:"Camilan",en:"Snack"}
+};
+var MEAL_ORDER=["sarapan","makan_siang","makan_malam","camilan"];
+var ALL_UNITS=["porsi","mangkuk","gelas","cangkir","sendok makan","sendok teh","butir","potong","bungkus","tusuk","buah","centong"];
+var UNIT_LABELS={
+  gram:{id:"gram",en:"gram"}, ml:{id:"ml",en:"ml"},
+  porsi:{id:"porsi",en:"serving"}, mangkuk:{id:"mangkuk",en:"bowl"},
+  gelas:{id:"gelas",en:"glass"}, cangkir:{id:"cangkir",en:"cup"},
+  "sendok makan":{id:"sendok makan",en:"tbsp"}, "sendok teh":{id:"sendok teh",en:"tsp"},
+  butir:{id:"butir",en:"piece"}, potong:{id:"potong",en:"piece"},
+  bungkus:{id:"bungkus",en:"pack"}, tusuk:{id:"tusuk",en:"skewer"},
+  buah:{id:"buah",en:"piece"}, centong:{id:"centong",en:"scoop"}
+};
+var CUP_ML=250;
+
+/* ---------------- i18n ---------------- */
+var I18N={
+  id:{
+    badge_est:"± estimasi", badge_est_title:"Semua nilai gizi adalah estimasi",
+    lbl_target:"Target", lbl_in:"Masuk", lbl_left:"Sisa",
+    h_macro:"Makro", h_water:"Air Minum",
+    aria_water_minus:"Kurangi 1 gelas", aria_water_plus:"Tambah 1 gelas",
+    h_quick:"Cepat Tambah", h_today_foods:"Makanan Hari Ini", h_top:"Kalori Terbesar Hari Ini",
+    search_ph:"Cari makanan… (nasi, ayam, kopi)",
+    h_templates:"Template Makan", btn_new:"＋ Baru", btn_log:"＋ Catat",
+    h_customfoods:"Makanan Custom", h_builtin:"Database Bawaan",
+    cuisine_all:"Semua", cuisine_indonesian:"Indonesia", cuisine_western:"Barat",
+    cuisine_middle_eastern:"Timur Tengah", cuisine_asian:"Asia", cuisine_custom:"Custom",
+    txt_builtin_disclaimer:"Nilai gizi merupakan estimasi umum dan dapat berbeda dari makanan asli.",
+    h_trend:"Tren 7 Hari", lbl_kcal_word:"Kalori", h_weekly:"Ringkasan Mingguan",
+    h_daily_target:"Target Harian",
+    lbl_target_kcal:"Kalori (kkal)", lbl_target_protein:"Protein (g)",
+    lbl_target_carbs:"Karbo (g)", lbl_target_fat:"Lemak (g)", lbl_target_water:"Air (ml)",
+    h_appearance:"Tampilan", theme_auto:"Otomatis", theme_light:"Terang", theme_dark:"Gelap",
+    h_language:"Bahasa",
+    h_data:"Data", btn_export:"Ekspor Cadangan (JSON)", btn_import:"Impor Cadangan", btn_reset:"Hapus Semua Data",
+    txt_backup_note:"Ekspor cadangan secara berkala. Menghapus data Safari atau menghapus aplikasi dari Home Screen dapat menghapus data lokal Anda.",
+    h_about:"Tentang & Privasi",
+    about_p1:'<strong style="color:var(--ink)">Calorie Tracker</strong> adalah aplikasi lokal tanpa server. Semua catatan makanan, riwayat, dan pengaturan tersimpan <strong style="color:var(--ink)">hanya di perangkat ini</strong> — tidak ada login, tidak ada unggahan data, tidak ada pelacakan.',
+    about_p2:"Nilai nutrisi adalah estimasi dan dapat berbeda tergantung merek, metode memasak, resep, dan ukuran porsi. Aplikasi ini hanya untuk pelacakan pribadi dan bukan nasihat medis.",
+    lbl_version:"Versi",
+    aria_nav:"Navigasi utama", nav_today:"Hari Ini", nav_foods:"Makanan", nav_history:"Riwayat", nav_settings:"Setelan",
+    aria_add_food:"Tambah makanan",
+    aria_fav:"Favorit", lbl_qty:"Jumlah", lbl_mealtype:"Jenis Makan",
+    meal_short_sarapan:"Sarapan", meal_short_siang:"Siang", meal_short_malam:"Malam", meal_short_camilan:"Camilan",
+    unit_kkal:"kkal", badge_estimate:"estimasi", badge_estimate_total:"estimasi total",
+    btn_copy_custom:"Salin ke makanan custom", btn_delete:"Hapus", btn_cancel:"Batal", btn_save:"Simpan",
+    cs_title_new:"Makanan Custom", cs_title_edit:"Ubah Makanan Custom", cs_title_add:"Makanan Custom Baru",
+    lbl_name:"Nama", ph_cs_name:"contoh: Es kopi susu Kenangan",
+    lbl_category:"Kategori", lbl_serving_unit:"Satuan Sajian",
+    lbl_serving_weight:"Berat/Volume 1 Sajian (gram/ml)", txt_default_100:"Jika tidak yakin, biarkan 100.",
+    lbl_nutrition_per_serving:"Nilai Gizi per 1 Sajian",
+    ph_protein:"P (g)", ph_carbs:"K (g)", ph_fat:"L (g)", lbl_notes_opt:"Catatan (opsional)",
+    ts_title_new:"Template Makan", ts_title_edit:"Ubah Template", ts_title_add:"Template Baru",
+    lbl_template_name:"Nama Template", ph_ts_name:"contoh: Kopi gula 8g",
+    lbl_template_items:"Isi Template", btn_add_item:"＋ Tambah item",
+    cm_title_default:"Konfirmasi", btn_yes_continue:"Ya, lanjut",
+    view_today:"Hari Ini", view_add:"Tambah", view_foods:"Makanan", view_history:"Riwayat", view_settings:"Setelan",
+    sub_history:"Riwayat & tren",
+    ring_left:"tersisa", ring_over:"kelebihan",
+    empty_meal:"Belum ada catatan.",
+    pct_of_intake:"% dari asupan hari ini",
+    onboard_title:"Selamat datang di Calorie Tracker 👋",
+    onboard_body:"! Semua datamu tersimpan hanya di perangkat ini — tanpa akun, tanpa server. Nilai gizi bersifat estimasi. Mulai dengan tombol ＋ di bawah.",
+    onboard_ok:"Mengerti",
+    greet_morning:"Selamat pagi", greet_noon:"Selamat siang", greet_afternoon:"Selamat sore", greet_evening:"Selamat malam",
+    corrupt_title:"Sebagian data lokal tidak terbaca.",
+    corrupt_body:"Data yang bermasalah tidak dimuat agar aplikasi tetap berjalan. Kamu bisa mengunduh data mentahnya untuk diselamatkan.",
+    corrupt_btn:"Unduh data mentah",
+    empty_search:'Tidak ditemukan "{q}".', btn_make_custom:"＋ Buat sebagai makanan custom",
+    empty_cuisine:"Belum ada makanan di kategori ini untuk filter yang dipilih.",
+    h_favorites:"Favorit", h_recent:"Terakhir Dicatat",
+    badge_custom:"custom", per100_word:"per 100",
+    empty_templates:'Belum ada template. Gabungkan beberapa makanan yang sering kamu konsumsi bersamaan (contoh: "Kopi gula 8g").',
+    badge_item_missing:"item hilang",
+    empty_custom:"Belum ada makanan custom. Cocok untuk menu warung langganan atau produk bermerek.",
+    lbl_edit_arrow:"Ubah ›",
+    hist_total:"Total", hist_diff:"Selisih target", hist_macro:"Makro", hist_water:"Air",
+    empty_history_day:"Tidak ada catatan pada tanggal ini.",
+    chart_aria:"Grafik kalori 7 hari",
+    week_empty:"Belum ada data 7 hari terakhir.",
+    week_avg:"Rata-rata harian", week_best:"Hari terbaik", week_worst:"Paling meleset", week_within:"Dalam ±10% target",
+    week_within_of:"{n} dari {m} hari",
+    food_not_found:"Makanan tidak ditemukan",
+    qty_invalid:"Masukkan jumlah yang valid (lebih dari 0)",
+    toast_saved:"Tersimpan · {kcal} kkal", toast_entry_updated:"Entri diperbarui", toast_entry_deleted:"Entri dihapus",
+    confirm_del_entry_title:"Hapus entri?", confirm_del_entry_body:'"{name}" akan dihapus dari catatan hari ini.',
+    confirm_del_entry_missing_body:"Makanan sumber sudah tidak ada, entri hanya bisa dihapus.",
+    my_version_suffix:" (versi saya)",
+    toast_not_found:"Tidak ditemukan", toast_fill_name:"Isi nama makanan", toast_fill_kcal:"Isi kalori per sajian",
+    toast_food_updated:"Makanan diperbarui", toast_food_saved:"Makanan custom tersimpan", toast_food_deleted:"Makanan dihapus",
+    confirm_del_food_title:"Hapus makanan custom?",
+    confirm_del_food_body:"Riwayat lama tetap aman (nilai sudah tersimpan), tapi makanan ini tidak bisa dipakai lagi.",
+    toast_tpl_not_found:"Template tidak ditemukan", toast_fill_tpl_name:"Isi nama template", toast_tpl_empty:"Template masih kosong",
+    toast_tpl_updated:"Template diperbarui", toast_tpl_saved:"Template tersimpan", toast_tpl_deleted:"Template dihapus",
+    confirm_del_tpl_title:"Hapus template?",
+    confirm_del_tpl_body:"Template ini akan dihapus. Catatan harian yang sudah tersimpan tidak berubah.",
+    toast_tpl_item_unavailable:"Item template tidak tersedia",
+    toast_tpl_logged:'"{name}" masuk {meal} · {kcal} kkal',
+    toast_pick_for_tpl:"Pilih makanan untuk template",
+    empty_tpl_items:"Belum ada item. Tambahkan makanan/minuman ke template ini.",
+    item_unavailable:"(tidak tersedia)",
+    toast_invalid_value:"Nilai tidak valid", toast_target_saved:"Target disimpan",
+    toast_backup_downloaded:"Cadangan diunduh",
+    toast_bad_json:"File bukan JSON yang valid", toast_bad_backup:"Bukan file cadangan Calorie Tracker",
+    toast_backup_too_new:"Cadangan dari versi lebih baru — perbarui aplikasi dulu",
+    confirm_import_title:"Impor cadangan?",
+    confirm_import_body:"Berisi {n} entri di {d} hari, {c} makanan custom, {t} template. Semua data saat ini akan DIGANTI.",
+    confirm_import_ok:"Impor & ganti",
+    toast_backup_imported:"Cadangan berhasil diimpor", toast_read_failed:"Gagal membaca file",
+    confirm_reset_title:"Hapus SEMUA data?",
+    confirm_reset_body:"Seluruh catatan, riwayat, makanan custom, template, dan pengaturan di perangkat ini akan dihapus permanen. Database makanan bawaan tetap ada. Sudah ekspor cadangan?",
+    confirm_reset_ok:"Hapus semua", toast_all_deleted:"Semua data dihapus",
+    toast_save_failed:"Gagal menyimpan — penyimpanan penuh?",
+    meta_desc:"Pelacak kalori & makro harian dengan makanan Indonesia dan global. Data tersimpan lokal di perangkat Anda."
+  },
+  en:{
+    badge_est:"± estimate", badge_est_title:"All nutrition values are estimates",
+    lbl_target:"Target", lbl_in:"Consumed", lbl_left:"Remaining",
+    h_macro:"Macros", h_water:"Water Intake",
+    aria_water_minus:"Remove 1 glass", aria_water_plus:"Add 1 glass",
+    h_quick:"Quick Add", h_today_foods:"Today's Foods", h_top:"Biggest Contributors Today",
+    search_ph:"Search food… (rice, chicken, coffee)",
+    h_templates:"Meal Templates", btn_new:"＋ New", btn_log:"＋ Log",
+    h_customfoods:"Custom Foods", h_builtin:"Built-in Database",
+    cuisine_all:"All", cuisine_indonesian:"Indonesian", cuisine_western:"Western",
+    cuisine_middle_eastern:"Middle Eastern", cuisine_asian:"Asian", cuisine_custom:"Custom",
+    txt_builtin_disclaimer:"Nutrition values are general estimates and may differ from the actual food.",
+    h_trend:"7-Day Trend", lbl_kcal_word:"Calories", h_weekly:"Weekly Summary",
+    h_daily_target:"Daily Target",
+    lbl_target_kcal:"Calories (kcal)", lbl_target_protein:"Protein (g)",
+    lbl_target_carbs:"Carbs (g)", lbl_target_fat:"Fat (g)", lbl_target_water:"Water (ml)",
+    h_appearance:"Appearance", theme_auto:"Automatic", theme_light:"Light", theme_dark:"Dark",
+    h_language:"Language",
+    h_data:"Data", btn_export:"Export Backup (JSON)", btn_import:"Import Backup", btn_reset:"Delete All Data",
+    txt_backup_note:"Export a backup regularly. Clearing Safari data or removing the app from the Home Screen may delete your local data.",
+    h_about:"About & Privacy",
+    about_p1:'<strong style="color:var(--ink)">Calorie Tracker</strong> is a local app with no server. All food entries, history, and settings are stored <strong style="color:var(--ink)">only on this device</strong> — no login, no data upload, no tracking.',
+    about_p2:"Nutrition values are estimates and may vary by brand, cooking method, recipe, and portion size. This app is for personal tracking only and is not medical advice.",
+    lbl_version:"Version",
+    aria_nav:"Main navigation", nav_today:"Today", nav_foods:"Foods", nav_history:"History", nav_settings:"Settings",
+    aria_add_food:"Add food",
+    aria_fav:"Favorite", lbl_qty:"Amount", lbl_mealtype:"Meal Type",
+    meal_short_sarapan:"Breakfast", meal_short_siang:"Lunch", meal_short_malam:"Dinner", meal_short_camilan:"Snack",
+    unit_kkal:"kcal", badge_estimate:"estimate", badge_estimate_total:"total estimate",
+    btn_copy_custom:"Copy to custom food", btn_delete:"Delete", btn_cancel:"Cancel", btn_save:"Save",
+    cs_title_new:"Custom Food", cs_title_edit:"Edit Custom Food", cs_title_add:"New Custom Food",
+    lbl_name:"Name", ph_cs_name:"e.g. Iced milk coffee, Kenangan",
+    lbl_category:"Category", lbl_serving_unit:"Serving Unit",
+    lbl_serving_weight:"Weight/Volume per Serving (gram/ml)", txt_default_100:"If unsure, leave it at 100.",
+    lbl_nutrition_per_serving:"Nutrition per 1 Serving",
+    ph_protein:"P (g)", ph_carbs:"C (g)", ph_fat:"F (g)", lbl_notes_opt:"Notes (optional)",
+    ts_title_new:"Meal Template", ts_title_edit:"Edit Template", ts_title_add:"New Template",
+    lbl_template_name:"Template Name", ph_ts_name:"e.g. Coffee with 8g sugar",
+    lbl_template_items:"Template Items", btn_add_item:"＋ Add item",
+    cm_title_default:"Confirm", btn_yes_continue:"Yes, continue",
+    view_today:"Today", view_add:"Add", view_foods:"Foods", view_history:"History", view_settings:"Settings",
+    sub_history:"History & trends",
+    ring_left:"remaining", ring_over:"over",
+    empty_meal:"No entries yet.",
+    pct_of_intake:"% of today's intake",
+    onboard_title:"Welcome to Calorie Tracker 👋",
+    onboard_body:"! All your data stays on this device only — no account, no server. Nutrition values are estimates. Get started with the ＋ button below.",
+    onboard_ok:"Got it",
+    greet_morning:"Good morning", greet_noon:"Good afternoon", greet_afternoon:"Good afternoon", greet_evening:"Good evening",
+    corrupt_title:"Some local data could not be read.",
+    corrupt_body:"The affected data was not loaded so the app can keep running. You can download the raw data to try to recover it.",
+    corrupt_btn:"Download raw data",
+    empty_search:'No results for "{q}".', btn_make_custom:"＋ Create as custom food",
+    empty_cuisine:"No foods in this category for the selected filter yet.",
+    h_favorites:"Favorites", h_recent:"Recently Logged",
+    badge_custom:"custom", per100_word:"per 100",
+    empty_templates:'No templates yet. Combine foods you often eat together (e.g. "Coffee with 8g sugar").',
+    badge_item_missing:"item missing",
+    empty_custom:"No custom foods yet. Great for your regular warung order or a packaged product.",
+    lbl_edit_arrow:"Edit ›",
+    hist_total:"Total", hist_diff:"Target difference", hist_macro:"Macros", hist_water:"Water",
+    empty_history_day:"No entries on this date.",
+    chart_aria:"7-day calorie chart",
+    week_empty:"No data for the last 7 days yet.",
+    week_avg:"Daily average", week_best:"Best day", week_worst:"Furthest off target", week_within:"Within ±10% of target",
+    week_within_of:"{n} of {m} days",
+    food_not_found:"Food not found",
+    qty_invalid:"Enter a valid amount (greater than 0)",
+    toast_saved:"Saved · {kcal} kcal", toast_entry_updated:"Entry updated", toast_entry_deleted:"Entry deleted",
+    confirm_del_entry_title:"Delete entry?", confirm_del_entry_body:'"{name}" will be removed from today\u2019s log.',
+    confirm_del_entry_missing_body:"The source food no longer exists, so this entry can only be deleted.",
+    my_version_suffix:" (my version)",
+    toast_not_found:"Not found", toast_fill_name:"Enter a food name", toast_fill_kcal:"Enter the calories per serving",
+    toast_food_updated:"Food updated", toast_food_saved:"Custom food saved", toast_food_deleted:"Food deleted",
+    confirm_del_food_title:"Delete custom food?",
+    confirm_del_food_body:"Past entries stay safe (values were already saved), but this food can no longer be logged.",
+    toast_tpl_not_found:"Template not found", toast_fill_tpl_name:"Enter a template name", toast_tpl_empty:"Template is still empty",
+    toast_tpl_updated:"Template updated", toast_tpl_saved:"Template saved", toast_tpl_deleted:"Template deleted",
+    confirm_del_tpl_title:"Delete template?",
+    confirm_del_tpl_body:"This template will be deleted. Already-logged daily entries stay unchanged.",
+    toast_tpl_item_unavailable:"Template items unavailable",
+    toast_tpl_logged:'"{name}" added to {meal} · {kcal} kcal',
+    toast_pick_for_tpl:"Pick a food for the template",
+    empty_tpl_items:"No items yet. Add foods/drinks to this template.",
+    item_unavailable:"(unavailable)",
+    toast_invalid_value:"Invalid value", toast_target_saved:"Target saved",
+    toast_backup_downloaded:"Backup downloaded",
+    toast_bad_json:"File is not valid JSON", toast_bad_backup:"Not a Calorie Tracker backup file",
+    toast_backup_too_new:"Backup is from a newer version — update the app first",
+    confirm_import_title:"Import backup?",
+    confirm_import_body:"Contains {n} entries across {d} days, {c} custom foods, {t} templates. All current data will be REPLACED.",
+    confirm_import_ok:"Import & replace",
+    toast_backup_imported:"Backup imported successfully", toast_read_failed:"Failed to read file",
+    confirm_reset_title:"Delete ALL data?",
+    confirm_reset_body:"All entries, history, custom foods, templates, and settings on this device will be permanently deleted. The built-in food database stays intact. Have you exported a backup?",
+    confirm_reset_ok:"Delete all", toast_all_deleted:"All data deleted",
+    toast_save_failed:"Failed to save — storage full?",
+    meta_desc:"Daily calorie and macro tracker with Indonesian and global foods. Data stays local on your device."
+  }
+};
+function L(){return (S.settings&&S.settings.language==='en')?'en':'id';}
+function t(key){var d=I18N[L()];return (d&&d[key]!=null)?d[key]:key;}
+function tf(key,vars){var s=t(key);return s.replace(/\{(\w+)\}/g,function(_,k){return (vars&&vars[k]!=null)?vars[k]:'';});}
+function LOCALE(){return L()==='en'?'en-US':'id-ID';}
+function decSep(){return L()==='en'?'.':',';}
+function catLabel(c){return (CATS[c]&&CATS[c][L()])||c;}
+function cuisineLabel(c){return t('cuisine_'+c);}
+function mealLabel(m){return (MEALS[m]&&MEALS[m][L()])||m;}
+function mealShort(m){return (MEAL_SHORT[m]&&MEAL_SHORT[m][L()])||m;}
+function unitLabel(u){return (UNIT_LABELS[u]&&UNIT_LABELS[u][L()])||u;}
+function foodDisplayName(f){return (L()==='en'&&f.name_en)?f.name_en:f.name;}
+function foodDisplayNote(f){return (L()==='en'&&f.note_en)?f.note_en:(f.note||'');}
+function applyI18n(){
+  document.documentElement.lang=L();
+  document.title="Calorie Tracker";
+  var md=$('metaDesc');if(md)md.setAttribute('content',t('meta_desc'));
+  document.querySelectorAll('[data-i18n]').forEach(function(el){el.textContent=t(el.getAttribute('data-i18n'));});
+  document.querySelectorAll('[data-i18n-html]').forEach(function(el){el.innerHTML=t(el.getAttribute('data-i18n-html'));});
+  document.querySelectorAll('[data-i18n-ph]').forEach(function(el){el.setAttribute('placeholder',t(el.getAttribute('data-i18n-ph')));});
+  document.querySelectorAll('[data-i18n-aria]').forEach(function(el){el.setAttribute('aria-label',t(el.getAttribute('data-i18n-aria')));});
+  document.querySelectorAll('[data-i18n-title]').forEach(function(el){el.setAttribute('title',t(el.getAttribute('data-i18n-title')));});
+  var seg=$('langSeg');
+  if(seg)Array.prototype.forEach.call(seg.children,function(b){b.classList.toggle('on',b.dataset.langOpt===L());});
+}
+
+/* ---------------- Storage ---------------- */
+var DEFAULTS={
+  settings:{schemaVersion:SCHEMA_VERSION,targets:{kcal:2000,protein:100,carbs:250,fat:65,waterMl:2000},theme:"auto",language:"en",onboarded:false},
+  logs:{},custom:[],templates:[],quick:{favorites:[],recents:[]}
+};
+var S={};var corrupted=[];
+function clone(o){return JSON.parse(JSON.stringify(o));}
+function loadKey(key,fb){
+  var raw=null;
+  try{raw=localStorage.getItem(key);}catch(e){return clone(fb);}
+  if(raw==null)return clone(fb);
+  try{var v=JSON.parse(raw);if(v===null||typeof v!=='object')throw new Error('shape');return v;}
+  catch(e){corrupted.push({key:key,raw:raw});return clone(fb);}
+}
+function saveKey(key,val){
+  try{localStorage.setItem(key,JSON.stringify(val));}
+  catch(e){toast(t('toast_save_failed'));}
+}
+function loadAll(){
+  S.settings=loadKey(K.settings,DEFAULTS.settings);
+  S.logs=loadKey(K.logs,DEFAULTS.logs);
+  S.custom=loadKey(K.custom,DEFAULTS.custom);
+  S.templates=loadKey(K.templates,DEFAULTS.templates);
+  S.quick=loadKey(K.quick,DEFAULTS.quick);
+  if(!Array.isArray(S.custom))S.custom=[];
+  if(!Array.isArray(S.templates))S.templates=[];
+  if(!S.quick||typeof S.quick!=='object')S.quick=clone(DEFAULTS.quick);
+  if(!Array.isArray(S.quick.favorites))S.quick.favorites=[];
+  if(!Array.isArray(S.quick.recents))S.quick.recents=[];
+  if(!S.settings.targets)S.settings.targets=clone(DEFAULTS.settings.targets);
+  if(S.settings.language!=='en'&&S.settings.language!=='id')S.settings.language='en';
+  migrate();
+}
+function migrate(){
+  var v=S.settings.schemaVersion||1;
+  /* migration ladder for future versions:
+     if(v<2){ ... ; v=2; } */
+  if(v!==S.settings.schemaVersion||!S.settings.schemaVersion){
+    S.settings.schemaVersion=SCHEMA_VERSION;saveKey(K.settings,S.settings);
+  }
+}
+
+/* ---------------- Helpers ---------------- */
+function $(id){return document.getElementById(id);}
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+function uid(p){return (p||'x')+'_'+Date.now().toString(36)+Math.random().toString(36).slice(2,7);}
+function todayStr(){var d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+function dateFromStr(s){var p=s.split('-');return new Date(+p[0],+p[1]-1,+p[2]);}
+function fmtLong(s){return dateFromStr(s).toLocaleDateString(LOCALE(),{weekday:'long',day:'numeric',month:'long'});}
+function fmtInt(n){return Math.round(n).toLocaleString(LOCALE());}
+function fmt1(n){var r=Math.round(n*10)/10;return (r%1===0?String(Math.round(r)):r.toLocaleString(LOCALE(),{minimumFractionDigits:1,maximumFractionDigits:1}));}
+function parseNum(v){if(typeof v==='number')return v;var n=parseFloat(String(v).replace(',','.'));return isFinite(n)?n:NaN;}
+function toast(msg){var t=$('toast');t.textContent=msg;t.classList.add('show');clearTimeout(toast._t);toast._t=setTimeout(function(){t.classList.remove('show');},2200);}
+
+/* ---------------- Food access & calc ---------------- */
+function getFood(id){
+  if(!id)return null;
+  if(id.indexOf('custom:')===0){for(var i=0;i<S.custom.length;i++)if(S.custom[i].id===id)return S.custom[i];return null;}
+  return BUILTIN_MAP[id]||null;
+}
+function unitList(food){
+  var base={unit:food.basis==='ml'?'ml':'gram',grams:1};
+  return [base].concat(food.servings||[]);
+}
+function unitGrams(food,unit){
+  var ul=unitList(food);
+  for(var i=0;i<ul.length;i++)if(ul[i].unit===unit)return ul[i].grams;
+  return null;
+}
+function compute(food,qty,unit){
+  var ug=unitGrams(food,unit);
+  if(ug==null||!isFinite(qty)||qty<=0)return null;
+  var grams=qty*ug,f=grams/100,p=food.per100;
+  return {grams:grams,kcal:p.kcal*f,protein:p.protein*f,carbs:p.carbs*f,fat:p.fat*f};
+}
+function dayObj(dateStr,createIfMissing){
+  var d=S.logs[dateStr];
+  if(!d&&createIfMissing){d={entries:[],waterMl:0};S.logs[dateStr]=d;}
+  if(d&&!Array.isArray(d.entries))d.entries=[];
+  return d||{entries:[],waterMl:0};
+}
+function dayTotals(dateStr){
+  var d=dayObj(dateStr,false),t={kcal:0,protein:0,carbs:0,fat:0};
+  d.entries.forEach(function(e){t.kcal+=e.kcal||0;t.protein+=e.protein||0;t.carbs+=e.carbs||0;t.fat+=e.fat||0;});
+  return t;
+}
+
+/* ---------------- Recents / favorites ---------------- */
+function pushRecent(foodRef,qty,unit,meal){
+  S.quick.recents=S.quick.recents.filter(function(r){return r.foodRef!==foodRef;});
+  S.quick.recents.unshift({foodRef:foodRef,lastQty:qty,lastUnit:unit,lastMeal:meal,ts:Date.now()});
+  S.quick.recents=S.quick.recents.slice(0,20);
+  saveKey(K.quick,S.quick);
+}
+function isFav(id){return S.quick.favorites.indexOf(id)>=0;}
+function toggleFav(id){
+  var i=S.quick.favorites.indexOf(id);
+  if(i>=0)S.quick.favorites.splice(i,1);else S.quick.favorites.unshift(id);
+  saveKey(K.quick,S.quick);
+}
+
+/* ---------------- Theme ---------------- */
+var darkMQ=window.matchMedia('(prefers-color-scheme: dark)');
+function applyTheme(){
+  var mode=S.settings.theme||'auto';
+  var resolved=mode==='auto'?(darkMQ.matches?'dark':'light'):mode;
+  document.documentElement.dataset.theme=resolved;
+  $('metaTheme').setAttribute('content',resolved==='dark'?'#000000':'#F5F3EF');
+  var seg=$('themeSeg');
+  Array.prototype.forEach.call(seg.children,function(b){b.classList.toggle('on',b.dataset.themeOpt===mode);});
+}
+darkMQ.addEventListener('change',function(){if((S.settings.theme||'auto')==='auto')applyTheme();});
+
+/* ---------------- Sheets/modals ---------------- */
+var openLayer=null;
+function openSheet(el){closeLayers();$('backdrop').classList.add('show');el.classList.add('show');openLayer=el;}
+function closeLayers(){
+  $('backdrop').classList.remove('show');
+  ['foodSheet','customSheet','templateSheet','confirmModal'].forEach(function(id){$(id).classList.remove('show');});
+  openLayer=null;
+}
+$('backdrop').addEventListener('click',closeLayers);
+function confirmAsk(title,text,okLabel,cb){
+  $('cmTitle').textContent=title;$('cmText').textContent=text;$('cmOk').textContent=okLabel||'Ya, lanjut';
+  confirmAsk._cb=cb;openSheet($('confirmModal'));
+}
+$('cmCancel').addEventListener('click',closeLayers);
+$('cmOk').addEventListener('click',function(){var cb=confirmAsk._cb;closeLayers();if(cb)cb();});
+
+/* ---------------- Food sheet (log / edit / pick) ---------------- */
+var FS={food:null,mode:'new',entryDate:null,entryId:null,meal:'sarapan',pickCb:null};
+function defaultMealNow(){var h=new Date().getHours();if(h<11)return 'sarapan';if(h<15)return 'makan_siang';if(h<18)return 'camilan';return 'makan_malam';}
+function openFoodSheet(opts){
+  var food=getFood(opts.foodRef);
+  if(!food){toast(t('food_not_found'));return;}
+  FS.food=food;FS.mode=opts.mode||'new';FS.entryDate=opts.date||todayStr();FS.entryId=opts.entryId||null;FS.pickCb=opts.pickCb||null;
+  $('fsName').textContent=foodDisplayName(food);
+  var per=food.per100;
+  $('fsBase').textContent=t('per100_word')+' '+(food.basis==='ml'?'ml':'g')+': '+fmtInt(per.kcal)+' '+t('unit_kkal')+' · P '+fmt1(per.protein)+' · K '+fmt1(per.carbs)+' · L '+fmt1(per.fat);
+  $('fsNote').textContent=foodDisplayNote(food);
+  var favBtn=$('fsFav');
+  favBtn.classList.toggle('on',isFav(food.id));
+  favBtn.querySelector('path').setAttribute('fill',isFav(food.id)?'currentColor':'none');
+  var sel=$('fsUnit');sel.innerHTML='';
+  unitList(food).forEach(function(u){
+    var o=document.createElement('option');o.value=u.unit;
+    o.textContent=unitLabel(u.unit)+(u.unit==='gram'||u.unit==='ml'?'':' ('+fmt1(u.grams)+' g)');
+    sel.appendChild(o);
+  });
+  var qty,unit;
+  if(opts.qty!=null&&opts.unit){qty=opts.qty;unit=opts.unit;}
+  else{unit=food.defaultServing||unitList(food)[0].unit;qty=(unit==='gram'||unit==='ml')?100:1;}
+  if(!unitGrams(food,unit)){unit=unitList(food)[0].unit;}
+  sel.value=unit;
+  $('fsQty').value=String(qty).replace('.',decSep());
+  FS.meal=opts.meal||defaultMealNow();
+  syncMealSeg();renderPresets();syncPreview();
+  var isEdit=FS.mode==='edit';
+  $('fsDelete').hidden=!isEdit;
+  if(FS.mode==='pick')$('fsSave').textContent=(L()==='en'?'Choose':'Pilih');
+  else if(isEdit)$('fsSave').textContent=(L()==='en'?'Update':'Perbarui');
+  else $('fsSave').textContent=t('btn_save');
+  $('fsMeal').parentElement.style.display=FS.mode==='pick'?'none':'';
+  $('fsCopy').hidden=!(food.editable===false&&FS.mode!=='pick');
+  openSheet($('foodSheet'));
+}
+function syncMealSeg(){Array.prototype.forEach.call($('fsMeal').children,function(b){b.classList.toggle('on',b.dataset.meal===FS.meal);});}
+$('fsMeal').addEventListener('click',function(e){var b=e.target.closest('button');if(!b)return;FS.meal=b.dataset.meal;syncMealSeg();});
+function renderPresets(){
+  var unit=$('fsUnit').value,vals=(unit==='gram'||unit==='ml')?[50,100,150,200]:[0.5,1,1.5,2];
+  $('fsPresets').innerHTML=vals.map(function(v){return '<button class="preset num" data-q="'+v+'">'+String(v).replace('.',decSep())+'</button>';}).join('');
+}
+$('fsPresets').addEventListener('click',function(e){var b=e.target.closest('button');if(!b)return;$('fsQty').value=b.dataset.q.replace('.',decSep());syncPreview();});
+$('fsUnit').addEventListener('change',function(){
+  var unit=$('fsUnit').value;
+  $('fsQty').value=(unit==='gram'||unit==='ml')?'100':'1';
+  renderPresets();syncPreview();
+});
+$('fsQty').addEventListener('input',syncPreview);
+function syncPreview(){
+  var qty=parseNum($('fsQty').value),c=FS.food?compute(FS.food,qty,$('fsUnit').value):null;
+  if(!c){$('fsKcal').innerHTML='– <small>'+t('unit_kkal')+'</small>';$('fsMac').innerHTML='';return;}
+  $('fsKcal').innerHTML=fmtInt(c.kcal)+' <small>'+t('unit_kkal')+'</small>';
+  $('fsMac').innerHTML='P '+fmt1(c.protein)+' g<br>K '+fmt1(c.carbs)+' g<br>L '+fmt1(c.fat)+' g';
+}
+$('fsFav').addEventListener('click',function(){
+  if(!FS.food)return;toggleFav(FS.food.id);
+  this.classList.toggle('on',isFav(FS.food.id));
+  this.querySelector('path').setAttribute('fill',isFav(FS.food.id)?'currentColor':'none');
+  renderAll();
+});
+$('fsCancel').addEventListener('click',closeLayers);
+$('fsSave').addEventListener('click',function(){
+  var qty=parseNum($('fsQty').value),unit=$('fsUnit').value;
+  var c=compute(FS.food,qty,unit);
+  if(!c){toast(t('qty_invalid'));return;}
+  if(FS.mode==='pick'){var cb=FS.pickCb;closeLayers();if(cb)cb({foodRef:FS.food.id,qty:qty,unit:unit});return;}
+  var d=dayObj(FS.entryDate,true);
+  if(FS.mode==='edit'){
+    for(var i=0;i<d.entries.length;i++)if(d.entries[i].id===FS.entryId){
+      var e=d.entries[i];
+      e.meal=FS.meal;e.qty=qty;e.unit=unit;e.grams=c.grams;
+      e.kcal=c.kcal;e.protein=c.protein;e.carbs=c.carbs;e.fat=c.fat;
+      e.foodName=foodDisplayName(FS.food);
+      break;
+    }
+    toast(t('toast_entry_updated'));
+  }else{
+    d.entries.push({id:uid('e'),meal:FS.meal,foodRef:FS.food.id,foodName:foodDisplayName(FS.food),
+      qty:qty,unit:unit,grams:c.grams,kcal:c.kcal,protein:c.protein,carbs:c.carbs,fat:c.fat,
+      loggedAt:new Date().toISOString()});
+    pushRecent(FS.food.id,qty,unit,FS.meal);
+    toast(tf('toast_saved',{kcal:fmtInt(c.kcal)}));
+  }
+  saveKey(K.logs,S.logs);closeLayers();renderAll();
+});
+$('fsDelete').addEventListener('click',function(){
+  confirmAsk(t('confirm_del_entry_title'),tf('confirm_del_entry_body',{name:FS.food.name}),t('btn_delete'),function(){
+    var d=dayObj(FS.entryDate,true);
+    d.entries=d.entries.filter(function(e){return e.id!==FS.entryId;});
+    saveKey(K.logs,S.logs);renderAll();toast(t('toast_entry_deleted'));
+  });
+});
+$('fsCopy').addEventListener('click',function(){
+  if(!FS.food)return;var f=FS.food;closeLayers();
+  openCustomSheet(null,{name:foodDisplayName(f)+t('my_version_suffix'),category:f.category,
+    unit:f.defaultServing||'porsi',grams:unitGrams(f,f.defaultServing)||100,
+    per:compute(f,1,f.defaultServing||unitList(f)[0].unit)});
+});
+
+/* ---------------- Custom food sheet ---------------- */
+var CS={editId:null};
+function fillCatSelect(sel){sel.innerHTML=Object.keys(CATS).map(function(c){return '<option value="'+c+'">'+catLabel(c)+'</option>';}).join('');}
+function fillUnitSelect(sel){sel.innerHTML=ALL_UNITS.map(function(u){return '<option value="'+u+'">'+unitLabel(u)+'</option>';}).join('');}
+function openCustomSheet(editId,prefill){
+  CS.editId=editId||null;
+  fillCatSelect($('csCat'));fillUnitSelect($('csUnit'));
+  $('csTitle').textContent=editId?t('cs_title_edit'):t('cs_title_add');
+  $('csDelete').hidden=!editId;
+  if(editId){
+    var f=getFood(editId);if(!f){toast(t('toast_not_found'));return;}
+    var sv=(f.servings&&f.servings[0])||{unit:'porsi',grams:100};
+    $('csName').value=f.name;$('csCat').value=f.category||'lauk';$('csUnit').value=sv.unit;
+    $('csGrams').value=String(sv.grams).replace('.',decSep());
+    var c=compute(f,1,sv.unit)||{kcal:0,protein:0,carbs:0,fat:0};
+    $('csKcal').value=fmt1(c.kcal);$('csProt').value=fmt1(c.protein);$('csCarb').value=fmt1(c.carbs);$('csFat').value=fmt1(c.fat);
+    $('csNotes').value=f.note||'';
+  }else{
+    $('csName').value=(prefill&&prefill.name)||'';
+    $('csCat').value=(prefill&&prefill.category)||'lauk';
+    $('csUnit').value=(prefill&&prefill.unit)||'porsi';
+    $('csGrams').value=prefill?String(prefill.grams).replace('.',decSep()):'100';
+    if(prefill&&prefill.per){$('csKcal').value=fmt1(prefill.per.kcal);$('csProt').value=fmt1(prefill.per.protein);$('csCarb').value=fmt1(prefill.per.carbs);$('csFat').value=fmt1(prefill.per.fat);}
+    else{$('csKcal').value='';$('csProt').value='';$('csCarb').value='';$('csFat').value='';}
+    $('csNotes').value='';
+  }
+  openSheet($('customSheet'));
+}
+$('csCancel').addEventListener('click',closeLayers);
+$('csSave').addEventListener('click',function(){
+  var name=$('csName').value.trim();
+  if(!name){toast(t('toast_fill_name'));return;}
+  var grams=parseNum($('csGrams').value);if(!isFinite(grams)||grams<=0)grams=100;
+  var kcal=parseNum($('csKcal').value);
+  if(!isFinite(kcal)||kcal<0){toast(t('toast_fill_kcal'));return;}
+  var p=Math.max(0,parseNum($('csProt').value)||0),c=Math.max(0,parseNum($('csCarb').value)||0),ft=Math.max(0,parseNum($('csFat').value)||0);
+  var f=grams/100;
+  var food={
+    id:CS.editId||('custom:'+uid('f')),
+    name:name,aliases:[],category:$('csCat').value,cuisine:'custom',basis:'g',baseQty:100,baseUnit:'g',
+    per100:{kcal:kcal/f,protein:p/f,carbs:c/f,fat:ft/f},
+    servings:[{unit:$('csUnit').value,grams:grams,label:'1 '+$('csUnit').value+' ('+fmt1(grams)+' g)'}],
+    defaultServing:$('csUnit').value,source:'custom',editable:true,note:$('csNotes').value.trim(),
+    createdAt:Date.now(),updatedAt:Date.now()
+  };
+  if(CS.editId){
+    for(var i=0;i<S.custom.length;i++)if(S.custom[i].id===CS.editId){food.createdAt=S.custom[i].createdAt;S.custom[i]=food;break;}
+    toast(t('toast_food_updated'));
+  }else{S.custom.unshift(food);toast(t('toast_food_saved'));}
+  saveKey(K.custom,S.custom);closeLayers();renderAll();
+});
+$('csDelete').addEventListener('click',function(){
+  var id=CS.editId;
+  confirmAsk(t('confirm_del_food_title'),t('confirm_del_food_body'),t('btn_delete'),function(){
+    S.custom=S.custom.filter(function(f){return f.id!==id;});
+    S.quick.favorites=S.quick.favorites.filter(function(x){return x!==id;});
+    S.quick.recents=S.quick.recents.filter(function(r){return r.foodRef!==id;});
+    saveKey(K.custom,S.custom);saveKey(K.quick,S.quick);renderAll();toast(t('toast_food_deleted'));
+  });
+});
+
+/* ---------------- Template sheet ---------------- */
+var TS={editId:null,items:[]};
+function templateTotals(items){
+  var tt={kcal:0,protein:0,carbs:0,fat:0,missing:false};
+  items.forEach(function(it){
+    var f=getFood(it.foodRef),c=f?compute(f,it.qty,it.unit):null;
+    if(!c){tt.missing=true;return;}
+    tt.kcal+=c.kcal;tt.protein+=c.protein;tt.carbs+=c.carbs;tt.fat+=c.fat;
+  });
+  return tt;
+}
+function openTemplateSheet(editId){
+  TS.editId=editId||null;
+  if(editId){
+    var tpl=S.templates.find(function(x){return x.id===editId;});
+    if(!tpl){toast(t('toast_tpl_not_found'));return;}
+    $('tsName').value=tpl.name;TS.items=clone(tpl.items);
+  }else{$('tsName').value='';TS.items=[];}
+  $('tsTitle').textContent=editId?t('ts_title_edit'):t('ts_title_add');
+  $('tsDelete').hidden=!editId;
+  renderTsItems();openSheet($('templateSheet'));
+}
+function renderTsItems(){
+  var host=$('tsItems');
+  if(!TS.items.length){host.innerHTML='<div class="empty">'+t('empty_tpl_items')+'</div>';}
+  else{
+    host.innerHTML=TS.items.map(function(it,i){
+      var f=getFood(it.foodRef),c=f?compute(f,it.qty,it.unit):null;
+      return '<div class="entry"><div class="info"><div class="n">'+esc(f?foodDisplayName(f):t('item_unavailable'))+'</div>'+
+        '<div class="s num">'+fmt1(it.qty)+' '+esc(unitLabel(it.unit))+'</div></div>'+
+        '<div class="kc num">'+(c?fmtInt(c.kcal):'–')+' <small>'+t('unit_kkal')+'</small></div>'+
+        '<button class="iconbtn" data-rm="'+i+'" aria-label="'+t('btn_delete')+'">✕</button></div>';
+    }).join('');
+  }
+  var tt=templateTotals(TS.items);
+  $('tsKcal').innerHTML=fmtInt(tt.kcal)+' <small>'+t('unit_kkal')+'</small>';
+  $('tsMac').innerHTML='P '+fmt1(tt.protein)+' g<br>K '+fmt1(tt.carbs)+' g<br>L '+fmt1(tt.fat)+' g';
+}
+$('tsItems').addEventListener('click',function(e){
+  var b=e.target.closest('[data-rm]');if(!b)return;
+  TS.items.splice(+b.dataset.rm,1);renderTsItems();
+});
+$('tsAddItem').addEventListener('click',function(){
+  /* switch to Add view in "pick" flow via prompt-less search: use a mini approach — open the Add tab search UI inside sheet is complex; simplest robust flow: temporarily close template sheet, let user pick from Add list */
+  var name=$('tsName').value;
+  $('templateSheet').classList.remove('show');
+  showView('add');$('searchInput').focus();
+  pickForTemplate=function(sel){
+    TS.items.push(sel);
+    $('tsName').value=name;
+    renderTsItems();
+    openSheet($('templateSheet'));
+    pickForTemplate=null;
+  };
+  toast(t('toast_pick_for_tpl'));
+});
+var pickForTemplate=null;
+$('tsCancel').addEventListener('click',function(){pickForTemplate=null;closeLayers();});
+$('tsSave').addEventListener('click',function(){
+  var name=$('tsName').value.trim();
+  if(!name){toast(t('toast_fill_tpl_name'));return;}
+  if(!TS.items.length){toast(t('toast_tpl_empty'));return;}
+  if(TS.editId){
+    var tpl=S.templates.find(function(x){return x.id===TS.editId;});
+    tpl.name=name;tpl.items=clone(TS.items);
+    toast(t('toast_tpl_updated'));
+  }else{
+    S.templates.unshift({id:uid('t'),name:name,items:clone(TS.items),favorite:false});
+    toast(t('toast_tpl_saved'));
+  }
+  saveKey(K.templates,S.templates);closeLayers();renderAll();
+});
+$('tsDelete').addEventListener('click',function(){
+  var id=TS.editId;
+  confirmAsk(t('confirm_del_tpl_title'),t('confirm_del_tpl_body'),t('btn_delete'),function(){
+    S.templates=S.templates.filter(function(x){return x.id!==id;});
+    saveKey(K.templates,S.templates);renderAll();toast(t('toast_tpl_deleted'));
+  });
+});
+function logTemplate(tplId){
+  var tpl=S.templates.find(function(x){return x.id===tplId;});
+  if(!tpl)return;
+  var meal=defaultMealNow(),d=dayObj(todayStr(),true),added=0,total=0;
+  tpl.items.forEach(function(it){
+    var f=getFood(it.foodRef),c=f?compute(f,it.qty,it.unit):null;
+    if(!c)return;
+    d.entries.push({id:uid('e'),meal:meal,foodRef:f.id,foodName:foodDisplayName(f),qty:it.qty,unit:it.unit,
+      grams:c.grams,kcal:c.kcal,protein:c.protein,carbs:c.carbs,fat:c.fat,loggedAt:new Date().toISOString(),fromTemplate:tpl.name});
+    added++;total+=c.kcal;
+  });
+  if(!added){toast(t('toast_tpl_item_unavailable'));return;}
+  saveKey(K.logs,S.logs);renderAll();
+  toast(tf('toast_tpl_logged',{name:tpl.name,meal:mealLabel(meal),kcal:fmtInt(total)}));
+}
+
+/* ---------------- Views / nav ---------------- */
+var VIEW_KEYS={today:'view_today',add:'view_add',foods:'view_foods',history:'view_history',settings:'view_settings'};
+var currentView='today';
+function showView(v){
+  currentView=v;
+  document.querySelectorAll('.view').forEach(function(s){s.classList.toggle('active',s.id==='view-'+v);});
+  document.querySelectorAll('nav .tab').forEach(function(b){b.classList.toggle('on',b.dataset.view===v);});
+  $('pageTitle').textContent=t(VIEW_KEYS[v]);
+  $('pageSub').textContent=v==='today'?fmtLong(todayStr()):(v==='history'?t('sub_history'):'');
+  if(v==='add'){renderAddResults($('searchInput').value);}
+  window.scrollTo(0,0);
+}
+document.querySelector('nav').addEventListener('click',function(e){
+  var b=e.target.closest('.tab');if(!b)return;showView(b.dataset.view);
+});
+
+/* ---------------- Render: Today ---------------- */
+var RING_C=2*Math.PI*64;
+function greet(){var h=new Date().getHours();return h<11?t('greet_morning'):h<15?t('greet_noon'):h<18?t('greet_afternoon'):t('greet_evening');}
+function renderToday(){
+  var ds=todayStr(),tot=dayTotals(ds),tg=S.settings.targets;
+  var pct=tg.kcal>0?Math.min(1,tot.kcal/tg.kcal):0;
+  $('ringFg').style.strokeDasharray=RING_C;
+  $('ringFg').style.strokeDashoffset=RING_C*(1-pct);
+  var left=tg.kcal-tot.kcal,over=left<0;
+  $('ringNum').textContent=fmtInt(Math.abs(left));
+  $('ringLbl').textContent=over?t('ring_over'):t('ring_left');
+  $('ringCenter').classList.toggle('over',over);
+  $('stTarget').textContent=fmtInt(tg.kcal)+' '+t('unit_kkal');
+  $('stIn').textContent=fmtInt(tot.kcal)+' '+t('unit_kkal');
+  $('stLeft').textContent=(over?'−':'')+fmtInt(Math.abs(left))+' '+t('unit_kkal');
+  /* macros */
+  var mg=$('macroGrid');
+  mg.innerHTML=[
+    {cls:'m-prot',n:'Protein',v:tot.protein,tg:tg.protein},
+    {cls:'m-carb',n:(L()==='en'?'Carbs':'Karbo'),v:tot.carbs,tg:tg.carbs},
+    {cls:'m-fat',n:(L()==='en'?'Fat':'Lemak'),v:tot.fat,tg:tg.fat}
+  ].map(function(m){
+    var p=m.tg>0?Math.min(100,m.v/m.tg*100):0;
+    return '<div class="macro '+m.cls+'"><div class="name">'+m.n+'</div>'+
+      '<div class="val num">'+fmt1(m.v)+'<small> / '+fmtInt(m.tg)+' g</small></div>'+
+      '<div class="bar"><i style="width:'+p+'%"></i></div></div>';
+  }).join('');
+  /* water */
+  var d=dayObj(ds,false),wt=tg.waterMl||2000,cups=Math.max(1,Math.round(wt/CUP_ML)),full=Math.round((d.waterMl||0)/CUP_ML);
+  var ch='';for(var i=0;i<cups;i++)ch+='<div class="cup'+(i<full?' full':'')+'"></div>';
+  $('waterCups').innerHTML=ch;
+  $('waterLbl').textContent=fmtInt(d.waterMl||0)+' / '+fmtInt(wt)+' ml · 1 '+unitLabel('gelas')+' = '+CUP_ML+' ml';
+  /* quick chips */
+  var seen={},items=[];
+  S.quick.favorites.forEach(function(id){if(!seen[id]&&getFood(id)){seen[id]=1;items.push({foodRef:id,fav:true});}});
+  S.quick.recents.forEach(function(r){if(!seen[r.foodRef]&&getFood(r.foodRef)){seen[r.foodRef]=1;items.push(r);}});
+  items=items.slice(0,8);
+  $('quickCard').hidden=!items.length;
+  $('quickChips').innerHTML=items.map(function(it){
+    var f=getFood(it.foodRef);
+    return '<button class="chip" data-quick="'+esc(it.foodRef)+'">'+(it.fav?'★ ':'')+esc(foodDisplayName(f))+'</button>';
+  }).join('');
+  /* meal sections */
+  var host=$('mealSections'),html='';
+  MEAL_ORDER.forEach(function(m){
+    var es=d.entries.filter(function(e){return e.meal===m;});
+    var mk=es.reduce(function(a,e){return a+(e.kcal||0);},0);
+    html+='<div class="meal-head"><span class="t">'+mealLabel(m)+'</span><span class="dots"></span><span class="kc num">'+(es.length?fmtInt(mk)+' '+t('unit_kkal'):'—')+'</span></div>';
+    if(!es.length){html+='<div class="empty">'+t('empty_meal')+'</div>';}
+    else es.forEach(function(e){
+      html+='<button class="entry" data-edit="'+e.id+'"><div class="info"><div class="n">'+esc(e.foodName)+'</div>'+
+        '<div class="s num">'+fmt1(e.qty)+' '+esc(unitLabel(e.unit))+' · P '+fmt1(e.protein)+' K '+fmt1(e.carbs)+' L '+fmt1(e.fat)+'</div></div>'+
+        '<div class="kc num">'+fmtInt(e.kcal)+' <small>'+t('unit_kkal')+'</small></div></button>';
+    });
+  });
+  host.innerHTML=html;
+  /* top contributors */
+  var sorted=d.entries.slice().sort(function(a,b){return b.kcal-a.kcal;}).slice(0,3);
+  $('topCard').hidden=sorted.length<2;
+  $('topList').innerHTML=sorted.map(function(e){
+    var p=tot.kcal>0?Math.round(e.kcal/tot.kcal*100):0;
+    return '<div class="entry" style="pointer-events:none"><div class="info"><div class="n">'+esc(e.foodName)+'</div>'+
+      '<div class="s">'+p+t('pct_of_intake')+'</div></div><div class="kc num">'+fmtInt(e.kcal)+' <small>'+t('unit_kkal')+'</small></div></div>';
+  }).join('');
+  /* onboarding */
+  $('onboardCard').innerHTML=S.settings.onboarded?'':(
+    '<div class="banner banner-info"><strong>'+t('onboard_title')+'</strong><br>'+
+    esc(greet())+t('onboard_body')+
+    '<div class="btnrow"><button class="btn btn-ghost" id="obOk">'+t('onboard_ok')+'</button></div></div>');
+  var ob=$('obOk');
+  if(ob)ob.addEventListener('click',function(){S.settings.onboarded=true;saveKey(K.settings,S.settings);renderToday();});
+  /* corrupted banner */
+  $('corruptBanner').innerHTML=corrupted.length?(
+    '<div class="banner banner-warn"><strong>'+t('corrupt_title')+'</strong><br>'+
+    t('corrupt_body')+
+    '<div class="btnrow"><button class="btn btn-ghost" id="rawExport">'+t('corrupt_btn')+'</button></div></div>'):'';
+  var re=$('rawExport');
+  if(re)re.addEventListener('click',function(){
+    downloadJSON('calorietrack-raw-recovery.json',{recoveredAt:new Date().toISOString(),items:corrupted});
+  });
+}
+$('mealSections').addEventListener('click',function(e){
+  var b=e.target.closest('[data-edit]');if(!b)return;
+  var d=dayObj(todayStr(),false),en=d.entries.find(function(x){return x.id===b.dataset.edit;});
+  if(!en)return;
+  if(getFood(en.foodRef)){
+    openFoodSheet({foodRef:en.foodRef,mode:'edit',date:todayStr(),entryId:en.id,qty:en.qty,unit:en.unit,meal:en.meal});
+  }else{
+    confirmAsk(t('confirm_del_entry_title'),t('confirm_del_entry_missing_body'),t('btn_delete'),function(){
+      d.entries=d.entries.filter(function(x){return x.id!==en.id;});
+      saveKey(K.logs,S.logs);renderAll();
+    });
+  }
+});
+$('quickChips').addEventListener('click',function(e){
+  var b=e.target.closest('[data-quick]');if(!b)return;
+  var r=S.quick.recents.find(function(x){return x.foodRef===b.dataset.quick;});
+  openFoodSheet({foodRef:b.dataset.quick,mode:'new',qty:r?r.lastQty:null,unit:r?r.lastUnit:null,meal:r?r.lastMeal:null});
+});
+$('waterPlus').addEventListener('click',function(){changeWater(CUP_ML);});
+$('waterMinus').addEventListener('click',function(){changeWater(-CUP_ML);});
+function changeWater(delta){
+  var d=dayObj(todayStr(),true);
+  d.waterMl=Math.max(0,(d.waterMl||0)+delta);
+  saveKey(K.logs,S.logs);renderToday();
+}
+
+/* ---------------- Render: Add ---------------- */
+function normalize(s){return String(s).toLowerCase().normalize('NFD').replace(/[^a-z0-9 ]/g,'');}
+function allFoods(){return S.custom.concat(FOOD_DB.foods);}
+function isCustomFood(f){return f.id.indexOf('custom:')===0;}
+var addCuisineFilter='all';
+function matchesCuisine(f){
+  if(addCuisineFilter==='all')return true;
+  if(addCuisineFilter==='custom')return isCustomFood(f);
+  return f.cuisine===addCuisineFilter;
+}
+function searchFoods(q){
+  var n=normalize(q);if(!n)return [];
+  var starts=[],incl=[];
+  allFoods().filter(matchesCuisine).forEach(function(f){
+    var hay=[f.name].concat(f.name_en?[f.name_en]:[]).concat(f.aliases||[]).map(normalize);
+    var st=hay.some(function(h){return h.indexOf(n)===0;});
+    var ic=hay.some(function(h){return h.indexOf(n)>=0;});
+    if(st)starts.push(f);else if(ic)incl.push(f);
+  });
+  return starts.concat(incl);
+}
+function foodRow(f){
+  var per=f.per100,base=f.defaultServing?(' · 1 '+unitLabel(f.defaultServing)+' ≈ '+fmtInt(per.kcal*(unitGrams(f,f.defaultServing)/100))+' '+t('unit_kkal')):'';
+  var cuisineTag=(f.cuisine&&!isCustomFood(f))?(' <span class="badge-est badge-cuisine">'+esc(cuisineLabel(f.cuisine))+'</span>'):'';
+  return '<button class="list-btn" data-food="'+esc(f.id)+'">'+
+    '<div class="avatar">'+(CATS[f.category]?CATS[f.category].emo:'🍽')+'</div>'+
+    '<div class="info" style="flex:1;min-width:0"><div class="n" style="font-weight:600;font-size:15px">'+esc(foodDisplayName(f))+(isCustomFood(f)?' <span class="badge-est">'+t('badge_custom')+'</span>':'')+cuisineTag+'</div>'+
+    '<div class="s tiny num">'+fmtInt(per.kcal)+' '+t('unit_kkal')+'/100 '+(f.basis==='ml'?'ml':'g')+base+'</div></div>'+
+    (isFav(f.id)?'<span style="color:var(--carb)">★</span>':'')+'</button>';
+}
+function renderAddResults(q){
+  var host=$('addResults'),html='';
+  var res=searchFoods(q||'');
+  if(q&&q.trim()){
+    if(!res.length){
+      html='<div class="card"><div class="empty">'+tf('empty_search',{q:esc(q)})+'</div>'+
+        '<button class="btn btn-ghost" id="addAsCustom">'+t('btn_make_custom')+'</button></div>';
+    }else{
+      html='<div class="card">'+res.map(foodRow).join('')+'</div>';
+    }
+  }else{
+    if(S.templates.length&&!pickForTemplate){
+      html+='<div class="card"><h3>'+t('h_templates')+'</h3>'+S.templates.map(function(tpl){
+        var tt=templateTotals(tpl.items);
+        return '<div class="list-btn" style="padding-right:0"><div class="avatar">📦</div>'+
+          '<div style="flex:1;min-width:0"><div style="font-weight:600;font-size:15px">'+esc(tpl.name)+'</div>'+
+          '<div class="tiny num">'+tpl.items.length+' item · '+fmtInt(tt.kcal)+' '+t('unit_kkal')+'</div></div>'+
+          '<button class="chip" data-logtpl="'+tpl.id+'">'+t('btn_log')+'</button></div>';
+      }).join('')+'</div>';
+    }
+    var favs=S.quick.favorites.map(getFood).filter(Boolean);
+    if(favs.length)html+='<div class="card"><h3>'+t('h_favorites')+'</h3>'+favs.map(foodRow).join('')+'</div>';
+    var recs=S.quick.recents.map(function(r){return getFood(r.foodRef);}).filter(Boolean).slice(0,6);
+    if(recs.length)html+='<div class="card"><h3>'+t('h_recent')+'</h3>'+recs.map(foodRow).join('')+'</div>';
+    var cuisineFoodCount=0;
+    Object.keys(CATS).forEach(function(c){
+      var fs=allFoods().filter(matchesCuisine).filter(function(f){return f.category===c;});
+      cuisineFoodCount+=fs.length;
+      if(fs.length)html+='<div class="card"><h3>'+CATS[c].emo+' '+catLabel(c)+'</h3>'+fs.map(foodRow).join('')+'</div>';
+    });
+    if(addCuisineFilter!=='all'&&cuisineFoodCount===0){
+      html+='<div class="card"><div class="empty">'+t('empty_cuisine')+'</div></div>';
+    }
+  }
+  host.innerHTML=html;
+  var ac=$('addAsCustom');
+  if(ac)ac.addEventListener('click',function(){openCustomSheet(null,{name:q.trim(),category:'lauk',unit:'porsi',grams:100});});
+}
+$('cuisineFilter').addEventListener('click',function(e){
+  var b=e.target.closest('[data-cuisine]');if(!b)return;
+  addCuisineFilter=b.dataset.cuisine;
+  Array.prototype.forEach.call($('cuisineFilter').children,function(x){x.classList.toggle('on',x===b);});
+  renderAddResults($('searchInput').value);
+});
+var searchDeb;
+$('searchInput').addEventListener('input',function(){
+  clearTimeout(searchDeb);var v=this.value;
+  searchDeb=setTimeout(function(){renderAddResults(v);},120);
+});
+$('addResults').addEventListener('click',function(e){
+  var tb=e.target.closest('[data-logtpl]');
+  if(tb){logTemplate(tb.dataset.logtpl);showView('today');return;}
+  var b=e.target.closest('[data-food]');if(!b)return;
+  if(pickForTemplate){
+    openFoodSheet({foodRef:b.dataset.food,mode:'pick',pickCb:pickForTemplate});
+  }else{
+    openFoodSheet({foodRef:b.dataset.food,mode:'new'});
+  }
+});
+
+/* ---------------- Render: Foods ---------------- */
+function renderFoods(){
+  $('templateList').innerHTML=S.templates.length?S.templates.map(function(tpl){
+    var tt=templateTotals(tpl.items);
+    return '<div class="list-btn" style="padding-right:0"><div class="avatar">📦</div>'+
+      '<button style="flex:1;min-width:0;text-align:left" data-edittpl="'+tpl.id+'">'+
+      '<div style="font-weight:600;font-size:15px">'+esc(tpl.name)+(tt.missing?' <span class="badge-est" style="color:var(--danger-text)">'+t('badge_item_missing')+'</span>':'')+'</div>'+
+      '<div class="tiny num">'+tpl.items.length+' item · '+fmtInt(tt.kcal)+' '+t('unit_kkal')+' · P '+fmt1(tt.protein)+' K '+fmt1(tt.carbs)+' L '+fmt1(tt.fat)+'</div></button>'+
+      '<button class="chip" data-logtpl2="'+tpl.id+'">＋</button></div>';
+  }).join(''):'<div class="empty">'+t('empty_templates')+'</div>';
+  $('customList').innerHTML=S.custom.length?S.custom.map(function(f){
+    return '<button class="list-btn" data-editcustom="'+esc(f.id)+'"><div class="avatar">'+(CATS[f.category]?CATS[f.category].emo:'🍽')+'</div>'+
+      '<div style="flex:1;min-width:0"><div style="font-weight:600;font-size:15px">'+esc(f.name)+'</div>'+
+      '<div class="tiny num">'+fmtInt(f.per100.kcal)+' '+t('unit_kkal')+'/100 g</div></div>'+
+      '<span class="tiny">'+t('lbl_edit_arrow')+'</span></button>';
+  }).join(''):'<div class="empty">'+t('empty_custom')+'</div>';
+  $('builtinList').innerHTML=FOOD_DB.foods.map(foodRow).join('');
+}
+$('btnNewTemplate').addEventListener('click',function(){openTemplateSheet(null);});
+$('btnNewCustom').addEventListener('click',function(){openCustomSheet(null);});
+$('view-foods').addEventListener('click',function(e){
+  var t1=e.target.closest('[data-edittpl]');if(t1){openTemplateSheet(t1.dataset.edittpl);return;}
+  var t2=e.target.closest('[data-logtpl2]');if(t2){logTemplate(t2.dataset.logtpl2);return;}
+  var t3=e.target.closest('[data-editcustom]');if(t3){openCustomSheet(t3.dataset.editcustom);return;}
+  var t4=e.target.closest('[data-food]');if(t4){openFoodSheet({foodRef:t4.dataset.food,mode:'new'});return;}
+});
+
+/* ---------------- Render: History ---------------- */
+var histSel=todayStr();
+function lastNDates(n,endStr){
+  var out=[],d=dateFromStr(endStr||todayStr());
+  for(var i=n-1;i>=0;i--){
+    var x=new Date(d);x.setDate(d.getDate()-i);
+    out.push(x.getFullYear()+'-'+String(x.getMonth()+1).padStart(2,'0')+'-'+String(x.getDate()).padStart(2,'0'));
+  }
+  return out;
+}
+var DAY_ABBR_MAP={id:['Min','Sen','Sel','Rab','Kam','Jum','Sab'],en:['Sun','Mon','Tue','Wed','Thu','Fri','Sat']};
+function DAY_ABBR(){return DAY_ABBR_MAP[L()];}
+function renderHistory(){
+  var days=lastNDates(14);
+  $('dateStrip').innerHTML=days.map(function(ds){
+    var d=dateFromStr(ds),has=(S.logs[ds]&&S.logs[ds].entries&&S.logs[ds].entries.length)?' has':'';
+    return '<button class="dstile'+(ds===histSel?' on':'')+'" data-day="'+ds+'">'+
+      '<div class="d">'+DAY_ABBR()[d.getDay()]+'</div><div class="n num">'+d.getDate()+'</div><div class="dot'+has+'"></div></button>';
+  }).join('');
+  requestAnimationFrame(function(){var el=$('dateStrip');el.scrollLeft=el.scrollWidth;});
+  /* selected day summary */
+  var tot=dayTotals(histSel),tg=S.settings.targets,d=dayObj(histSel,false);
+  var diff=tot.kcal-tg.kcal;
+  var mealHtml=MEAL_ORDER.map(function(m){
+    var es=d.entries.filter(function(e){return e.meal===m;});
+    if(!es.length)return '';
+    var mk=es.reduce(function(a,e){return a+e.kcal;},0);
+    return '<div class="hstat"><span class="muted">'+mealLabel(m)+' <span class="tiny">('+es.length+')</span></span><span class="v num">'+fmtInt(mk)+' '+t('unit_kkal')+'</span></div>';
+  }).join('');
+  $('histSummary').innerHTML='<h3>'+esc(fmtLong(histSel))+'</h3>'+
+    (d.entries.length?
+      '<div class="hstat"><span class="muted">'+t('hist_total')+'</span><span class="v num">'+fmtInt(tot.kcal)+' / '+fmtInt(tg.kcal)+' '+t('unit_kkal')+'</span></div>'+
+      '<div class="hstat"><span class="muted">'+t('hist_diff')+'</span><span class="v num" style="color:'+(diff>0?'var(--danger-text)':'var(--ok-text)')+'">'+(diff>0?'+':'')+fmtInt(diff)+' '+t('unit_kkal')+'</span></div>'+
+      '<div class="hstat"><span class="muted">'+t('hist_macro')+'</span><span class="v num">P '+fmt1(tot.protein)+' · K '+fmt1(tot.carbs)+' · L '+fmt1(tot.fat)+'</span></div>'+
+      mealHtml+
+      '<div class="hstat"><span class="muted">'+t('hist_water')+'</span><span class="v num">'+fmtInt(d.waterMl||0)+' ml</span></div>'
+      :'<div class="empty">'+t('empty_history_day')+'</div>');
+  /* chart 7 days */
+  $('chart7').innerHTML=buildChart(lastNDates(7),tg.kcal);
+  /* weekly stats */
+  var days7=lastNDates(7),vals=[],within=0;
+  days7.forEach(function(ds){
+    var dd=S.logs[ds];
+    if(dd&&dd.entries&&dd.entries.length){
+      var k=dayTotals(ds).kcal;vals.push({ds:ds,k:k});
+      if(k>=tg.kcal*0.9&&k<=tg.kcal*1.1)within++;
+    }
+  });
+  if(!vals.length){$('weekStats').innerHTML='<div class="empty">'+t('week_empty')+'</div>';}
+  else{
+    var avg=vals.reduce(function(a,v){return a+v.k;},0)/vals.length;
+    var best=vals.slice().sort(function(a,b){return Math.abs(a.k-tg.kcal)-Math.abs(b.k-tg.kcal);})[0];
+    var worst=vals.slice().sort(function(a,b){return Math.abs(b.k-tg.kcal)-Math.abs(a.k-tg.kcal);})[0];
+    $('weekStats').innerHTML=
+      '<div class="hstat"><span class="muted">'+t('week_avg')+'</span><span class="v num">'+fmtInt(avg)+' '+t('unit_kkal')+'</span></div>'+
+      '<div class="hstat"><span class="muted">'+t('week_best')+'</span><span class="v num">'+fmtLong(best.ds).split(',')[0]+' · '+fmtInt(best.k)+'</span></div>'+
+      '<div class="hstat"><span class="muted">'+t('week_worst')+'</span><span class="v num">'+fmtLong(worst.ds).split(',')[0]+' · '+fmtInt(worst.k)+'</span></div>'+
+      '<div class="hstat"><span class="muted">'+t('week_within')+'</span><span class="v num">'+tf('week_within_of',{n:within,m:vals.length})+'</span></div>';
+  }
+}
+function buildChart(days,target){
+  var W=340,H=150,padL=6,padR=6,padT=14,padB=22;
+  var innerW=W-padL-padR,innerH=H-padT-padB;
+  var vals=days.map(function(ds){return dayTotals(ds).kcal;});
+  var maxV=Math.max(target,Math.max.apply(null,vals),1)*1.12;
+  var bw=innerW/days.length*0.56,gap=innerW/days.length;
+  var bars=days.map(function(ds,i){
+    var v=vals[i],h=Math.max(v>0?3:0,v/maxV*innerH);
+    var x=padL+gap*i+(gap-bw)/2,y=padT+innerH-h;
+    var day=dateFromStr(ds);
+    return '<rect x="'+x.toFixed(1)+'" y="'+y.toFixed(1)+'" width="'+bw.toFixed(1)+'" height="'+h.toFixed(1)+'" rx="5" fill="url(#gbar)"'+(v===0?' opacity=".15"':'')+'/>'+
+      '<text x="'+(padL+gap*i+gap/2).toFixed(1)+'" y="'+(H-6)+'" text-anchor="middle" font-size="10" font-weight="700" fill="var(--ink3)">'+DAY_ABBR()[day.getDay()]+'</text>'+
+      (v>0?'<text x="'+(padL+gap*i+gap/2).toFixed(1)+'" y="'+(y-4).toFixed(1)+'" text-anchor="middle" font-size="9" font-weight="700" fill="var(--ink2)" class="num">'+Math.round(v/100)/10+'k</text>':'');
+  }).join('');
+  var ty=padT+innerH-(target/maxV*innerH);
+  return '<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="'+t('chart_aria')+'">'+
+    '<defs><linearGradient id="gbar" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#FF9F0A"/><stop offset="100%" stop-color="#FF375F"/></linearGradient></defs>'+
+    bars+
+    '<line x1="'+padL+'" x2="'+(W-padR)+'" y1="'+ty.toFixed(1)+'" y2="'+ty.toFixed(1)+'" stroke="var(--ink3)" stroke-width="1.5" stroke-dasharray="5 4"/>'+
+    '</svg>';
+}
+$('dateStrip').addEventListener('click',function(e){
+  var b=e.target.closest('[data-day]');if(!b)return;
+  histSel=b.dataset.day;renderHistory();
+});
+
+/* ---------------- Render: Settings ---------------- */
+function renderSettings(){
+  var tg=S.settings.targets;
+  $('tKcal').value=tg.kcal;$('tProt').value=tg.protein;$('tCarb').value=tg.carbs;$('tFat').value=tg.fat;$('tWater').value=tg.waterMl;
+  $('verLbl').textContent=APP_VERSION;
+  applyTheme();
+  var langSeg=$('langSeg');
+  Array.prototype.forEach.call(langSeg.children,function(b){b.classList.toggle('on',b.dataset.langOpt===L());});
+}
+[['tKcal','kcal',500,10000],['tProt','protein',0,1000],['tCarb','carbs',0,2000],['tFat','fat',0,1000],['tWater','waterMl',0,10000]].forEach(function(cfg){
+  $(cfg[0]).addEventListener('change',function(){
+    var v=parseNum(this.value);
+    if(!isFinite(v)||v<cfg[2]||v>cfg[3]){toast(t('toast_invalid_value'));renderSettings();return;}
+    S.settings.targets[cfg[1]]=Math.round(v);
+    saveKey(K.settings,S.settings);renderAll();toast(t('toast_target_saved'));
+  });
+});
+$('themeSeg').addEventListener('click',function(e){
+  var b=e.target.closest('[data-theme-opt]');if(!b)return;
+  S.settings.theme=b.dataset.themeOpt;saveKey(K.settings,S.settings);applyTheme();
+});
+$('langSeg').addEventListener('click',function(e){
+  var b=e.target.closest('[data-lang-opt]');if(!b)return;
+  S.settings.language=b.dataset.langOpt;saveKey(K.settings,S.settings);
+  applyI18n();renderAll();
+});
+
+/* ---------------- Backup / restore / reset ---------------- */
+function downloadJSON(filename,obj){
+  var blob=new Blob([JSON.stringify(obj,null,2)],{type:'application/json'});
+  var url=URL.createObjectURL(blob),a=document.createElement('a');
+  a.href=url;a.download=filename;document.body.appendChild(a);a.click();
+  setTimeout(function(){document.body.removeChild(a);URL.revokeObjectURL(url);},400);
+}
+$('btnExport').addEventListener('click',function(){
+  downloadJSON('calorietrack-backup-'+todayStr()+'.json',{
+    app:'calorietrack-id',schemaVersion:SCHEMA_VERSION,appVersion:APP_VERSION,exportedAt:new Date().toISOString(),
+    settings:S.settings,logs:S.logs,customFoods:S.custom,templates:S.templates,quickAccess:S.quick
+  });
+  toast(t('toast_backup_downloaded'));
+});
+$('btnImport').addEventListener('click',function(){$('importFile').value='';$('importFile').click();});
+$('importFile').addEventListener('change',function(){
+  var file=this.files&&this.files[0];if(!file)return;
+  var reader=new FileReader();
+  reader.onload=function(){
+    var obj;
+    try{obj=JSON.parse(reader.result);}catch(e){toast(t('toast_bad_json'));return;}
+    if(!obj||obj.app!=='calorietrack-id'){toast(t('toast_bad_backup'));return;}
+    if((obj.schemaVersion||1)>SCHEMA_VERSION){toast(t('toast_backup_too_new'));return;}
+    var logs=(obj.logs&&typeof obj.logs==='object')?obj.logs:{};
+    var nDays=Object.keys(logs).length;
+    var nEntries=Object.keys(logs).reduce(function(a,k){return a+((logs[k].entries||[]).length);},0);
+    var nCustom=Array.isArray(obj.customFoods)?obj.customFoods.length:0;
+    var nTpl=Array.isArray(obj.templates)?obj.templates.length:0;
+    confirmAsk(t('confirm_import_title'),
+      tf('confirm_import_body',{n:nEntries,d:nDays,c:nCustom,t:nTpl}),
+      t('confirm_import_ok'),function(){
+        S.settings=obj.settings&&typeof obj.settings==='object'?obj.settings:clone(DEFAULTS.settings);
+        if(!S.settings.targets)S.settings.targets=clone(DEFAULTS.settings.targets);
+        if(S.settings.language!=='en'&&S.settings.language!=='id')S.settings.language='en';
+        S.settings.schemaVersion=SCHEMA_VERSION;
+        S.logs=logs;
+        S.custom=Array.isArray(obj.customFoods)?obj.customFoods:[];
+        S.templates=Array.isArray(obj.templates)?obj.templates:[];
+        S.quick=(obj.quickAccess&&typeof obj.quickAccess==='object')?obj.quickAccess:clone(DEFAULTS.quick);
+        if(!Array.isArray(S.quick.favorites))S.quick.favorites=[];
+        if(!Array.isArray(S.quick.recents))S.quick.recents=[];
+        saveKey(K.settings,S.settings);saveKey(K.logs,S.logs);saveKey(K.custom,S.custom);
+        saveKey(K.templates,S.templates);saveKey(K.quick,S.quick);
+        applyI18n();renderAll();applyTheme();toast(t('toast_backup_imported'));
+      });
+  };
+  reader.onerror=function(){toast(t('toast_read_failed'));};
+  reader.readAsText(file);
+});
+$('btnReset').addEventListener('click',function(){
+  confirmAsk(t('confirm_reset_title'),t('confirm_reset_body'),t('confirm_reset_ok'),function(){
+    Object.keys(K).forEach(function(k){try{localStorage.removeItem(K[k]);}catch(e){}});
+    corrupted=[];loadAll();applyI18n();renderAll();applyTheme();toast(t('toast_all_deleted'));
+  });
+});
+
+/* ---------------- Day rollover & init ---------------- */
+var bootDate=todayStr();
+document.addEventListener('visibilitychange',function(){
+  if(document.visibilityState==='visible'&&todayStr()!==bootDate){bootDate=todayStr();renderAll();}
+});
+function renderAll(){renderToday();renderFoods();renderHistory();renderSettings();if(currentView==='add')renderAddResults($('searchInput').value);}
+loadAll();applyI18n();applyTheme();renderAll();showView('today');
+
+/* ---------------- Service worker ---------------- */
+if('serviceWorker' in navigator){
+  window.addEventListener('load',function(){
+    navigator.serviceWorker.register('service-worker.js').catch(function(){/* offline shell tidak tersedia; app tetap berfungsi */});
+  });
+}
+if(navigator.storage&&navigator.storage.persist){navigator.storage.persist().catch(function(){});}
+})();
+</script>
+</body>
+</html>
