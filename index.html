@@ -191,6 +191,17 @@ header.appbar{padding:14px 18px;margin:4px 0 14px;display:flex;align-items:flex-
 .seg button{flex:1;padding:8px 6px;border-radius:9px;font-size:13px;font-weight:600;color:var(--ink2);min-height:38px}
 .seg button.on{background:var(--input-glass);color:var(--ink);box-shadow:var(--shadow);font-weight:700}
 
+/* ============ ONLINE LOOKUP ============ */
+.online-card h3{margin-bottom:0}
+.online-source{font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--ink3);border:1px solid var(--glass-border);border-radius:999px;padding:4px 8px;background:var(--card2);white-space:nowrap}
+.online-result{align-items:flex-start}
+.online-result .actions{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;margin-top:8px}
+.mini-btn{display:inline-flex;align-items:center;justify-content:center;min-height:38px;border-radius:11px;padding:0 12px;font-size:13px;font-weight:800;border:1px solid var(--glass-border);background:var(--card2);color:var(--ink);white-space:nowrap}
+.mini-btn.primary{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+[data-theme="dark"] .mini-btn.primary{background:#fff;color:#000;border-color:#fff}
+.mini-btn:active{transform:scale(.96)}
+.confidence{margin-left:6px}
+
 /* ============ SHEET / MODAL ============ */
 .backdrop{position:fixed;inset:0;background:rgba(0,0,0,.45);opacity:0;pointer-events:none;transition:opacity .25s;z-index:40;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
 .backdrop.show{opacity:1;pointer-events:auto}
@@ -470,6 +481,15 @@ nav::before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-e
     </div>
 
     <div class="card">
+      <h3 data-i18n="h_online_lookup">Online Food Lookup</h3>
+      <div class="seg" id="onlineLookupSeg">
+        <button data-online-opt="off" data-i18n="opt_off">Off</button>
+        <button data-online-opt="on" data-i18n="opt_on">On</button>
+      </div>
+      <div class="tiny" style="margin-top:10px" data-i18n="txt_online_lookup">When enabled, Search Online sends only your search keyword to Open Food Facts. Logs and settings remain local.</div>
+    </div>
+
+    <div class="card">
       <h3 data-i18n="h_data">Data</h3>
       <button class="btn btn-ghost" id="btnExport" style="margin-bottom:10px" data-i18n="btn_export">Ekspor Cadangan (JSON)</button>
       <button class="btn btn-ghost" id="btnImport" style="margin-bottom:10px" data-i18n="btn_import">Impor Cadangan</button>
@@ -637,7 +657,7 @@ nav::before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-e
    ================================================================ */
 (function(){
 'use strict';
-var APP_VERSION='1.1.5';
+var APP_VERSION='1.2.0';
 var SCHEMA_VERSION=1;
 var NS='calorietrack_id_';
 var K={settings:NS+'settings',logs:NS+'logs_v1',custom:NS+'customfoods_v1',templates:NS+'templates_v1',quick:NS+'quickaccess_v1'};
@@ -808,6 +828,8 @@ var I18N={
     h_customfoods:"Makanan Custom", h_builtin:"Database Bawaan",
     cuisine_all:"Semua", cuisine_indonesian:"Indonesia", cuisine_western:"Barat",
     cuisine_middle_eastern:"Timur Tengah", cuisine_asian:"Asia", cuisine_custom:"Custom",
+    h_online_lookup:"Pencarian Makanan Online", opt_off:"Mati", opt_on:"Aktif",
+    txt_online_lookup:"Jika aktif, tombol Cari Online hanya mengirim kata kunci pencarian ke Open Food Facts. Catatan, riwayat, dan pengaturan tetap lokal di perangkat ini.",
     txt_builtin_disclaimer:"Nilai gizi merupakan estimasi umum dan dapat berbeda dari makanan asli.",
     h_trend:"Tren 7 Hari", lbl_kcal_word:"Kalori", h_weekly:"Ringkasan Mingguan",
     h_daily_target:"Target Harian",
@@ -819,7 +841,7 @@ var I18N={
     txt_backup_note:"Ekspor cadangan secara berkala. Menghapus data Safari atau menghapus aplikasi dari Home Screen dapat menghapus data lokal Anda.",
     h_about:"Tentang & Privasi",
     about_p1:'<strong style="color:var(--ink)">Calorie Tracker</strong> adalah aplikasi lokal tanpa server. Semua catatan makanan, riwayat, dan pengaturan tersimpan <strong style="color:var(--ink)">hanya di perangkat ini</strong> — tidak ada login, tidak ada unggahan data, tidak ada pelacakan.',
-    about_p2:"Nilai nutrisi adalah estimasi dan dapat berbeda tergantung merek, metode memasak, resep, dan ukuran porsi. Aplikasi ini hanya untuk pelacakan pribadi dan bukan nasihat medis.",
+    about_p2:"Nilai nutrisi adalah estimasi dan dapat berbeda tergantung merek, metode memasak, resep, dan ukuran porsi. Aplikasi ini hanya untuk pelacakan pribadi dan bukan nasihat medis. Pencarian online bersifat opsional dan hanya mengirim kata kunci pencarian ke Open Food Facts saat digunakan.",
     lbl_version:"Versi",
     aria_nav:"Navigasi utama", nav_today:"Hari Ini", nav_foods:"Makanan", nav_history:"Riwayat", nav_settings:"Setelan",
     aria_add_food:"Tambah makanan",
@@ -850,6 +872,17 @@ var I18N={
     corrupt_body:"Data yang bermasalah tidak dimuat agar aplikasi tetap berjalan. Kamu bisa mengunduh data mentahnya untuk diselamatkan.",
     corrupt_btn:"Unduh data mentah",
     empty_search:'Tidak ditemukan "{q}".', btn_make_custom:"＋ Buat sebagai makanan custom",
+    h_online_results:"Hasil Online", btn_search_online:"Cari Online", btn_searching_online:"Mencari…",
+    online_hint:"Cari database Open Food Facts untuk produk bermerek/kemasan. Pilih hasil lalu edit jika perlu.",
+    online_disabled:"Pencarian online belum aktif. Ketuk Cari Online untuk mengaktifkan dan mencari.",
+    online_privacy_title:"Aktifkan pencarian online?",
+    online_privacy_body:"Kata kunci pencarian akan dikirim ke Open Food Facts. Catatan makanan, riwayat, target, dan pengaturan tetap lokal di perangkat ini.",
+    online_enable_search:"Aktifkan & cari",
+    online_no_query:"Ketik nama makanan terlebih dahulu.", online_no_results:"Tidak ada hasil online yang cukup lengkap. Tambahkan manual atau coba kata kunci lain.",
+    online_failed:"Pencarian online gagal. Periksa koneksi atau tambahkan manual.",
+    online_source:"Sumber", online_serving:"Porsi", online_per100:"per 100 g", online_conf_high:"Akurat", online_conf_medium:"Sedang", online_conf_low:"Rendah",
+    btn_use:"Pakai", btn_edit:"Edit", btn_save_custom:"Simpan Custom", toast_online_saved:"Hasil online disimpan sebagai makanan custom", toast_online_ready:"Hasil online siap dipakai",
+
     empty_cuisine:"Belum ada makanan di kategori ini untuk filter yang dipilih.",
     h_favorites:"Favorit", h_recent:"Terakhir Dicatat",
     badge_custom:"custom", per100_word:"per 100",
@@ -907,6 +940,8 @@ var I18N={
     h_customfoods:"Custom Foods", h_builtin:"Built-in Database",
     cuisine_all:"All", cuisine_indonesian:"Indonesian", cuisine_western:"Western",
     cuisine_middle_eastern:"Middle Eastern", cuisine_asian:"Asian", cuisine_custom:"Custom",
+    h_online_lookup:"Online Food Lookup", opt_off:"Off", opt_on:"On",
+    txt_online_lookup:"When enabled, Search Online sends only your search keyword to Open Food Facts. Logs, history, and settings remain local on this device.",
     txt_builtin_disclaimer:"Nutrition values are general estimates and may differ from the actual food.",
     h_trend:"7-Day Trend", lbl_kcal_word:"Calories", h_weekly:"Weekly Summary",
     h_daily_target:"Daily Target",
@@ -918,7 +953,7 @@ var I18N={
     txt_backup_note:"Export a backup regularly. Clearing Safari data or removing the app from the Home Screen may delete your local data.",
     h_about:"About & Privacy",
     about_p1:'<strong style="color:var(--ink)">Calorie Tracker</strong> is a local app with no server. All food entries, history, and settings are stored <strong style="color:var(--ink)">only on this device</strong> — no login, no data upload, no tracking.',
-    about_p2:"Nutrition values are estimates and may vary by brand, cooking method, recipe, and portion size. This app is for personal tracking only and is not medical advice.",
+    about_p2:"Nutrition values are estimates and may vary by brand, cooking method, recipe, and portion size. This app is for personal tracking only and is not medical advice. Online lookup is optional and only sends the search keyword to Open Food Facts when used.",
     lbl_version:"Version",
     aria_nav:"Main navigation", nav_today:"Today", nav_foods:"Foods", nav_history:"History", nav_settings:"Settings",
     aria_add_food:"Add food",
@@ -949,6 +984,17 @@ var I18N={
     corrupt_body:"The affected data was not loaded so the app can keep running. You can download the raw data to try to recover it.",
     corrupt_btn:"Download raw data",
     empty_search:'No results for "{q}".', btn_make_custom:"＋ Create as custom food",
+    h_online_results:"Online Results", btn_search_online:"Search Online", btn_searching_online:"Searching…",
+    online_hint:"Search Open Food Facts for branded/packaged products. Pick a result and edit it if needed.",
+    online_disabled:"Online lookup is off. Tap Search Online to enable it and search.",
+    online_privacy_title:"Enable online lookup?",
+    online_privacy_body:"Your search keyword will be sent to Open Food Facts. Food logs, history, targets, and settings stay local on this device.",
+    online_enable_search:"Enable & search",
+    online_no_query:"Enter a food name first.", online_no_results:"No reliable online result found. Add it manually or try another keyword.",
+    online_failed:"Online lookup failed. Check your connection or add it manually.",
+    online_source:"Source", online_serving:"Serving", online_per100:"per 100 g", online_conf_high:"High", online_conf_medium:"Medium", online_conf_low:"Low",
+    btn_use:"Use", btn_edit:"Edit", btn_save_custom:"Save Custom", toast_online_saved:"Online result saved as custom food", toast_online_ready:"Online result ready to use",
+
     empty_cuisine:"No foods in this category for the selected filter yet.",
     h_favorites:"Favorites", h_recent:"Recently Logged",
     badge_custom:"custom", per100_word:"per 100",
@@ -1023,7 +1069,7 @@ function applyI18n(){
 
 /* ---------------- Storage ---------------- */
 var DEFAULTS={
-  settings:{schemaVersion:SCHEMA_VERSION,targets:{kcal:2000,protein:100,carbs:250,fat:65,waterMl:2000},theme:"auto",language:"en",onboarded:false},
+  settings:{schemaVersion:SCHEMA_VERSION,targets:{kcal:2000,protein:100,carbs:250,fat:65,waterMl:2000},theme:"auto",language:"en",onlineLookup:false,onboarded:false},
   logs:{},custom:[],templates:[],quick:{favorites:[],recents:[]}
 };
 var S={};var corrupted=[];
@@ -1052,6 +1098,7 @@ function loadAll(){
   if(!Array.isArray(S.quick.recents))S.quick.recents=[];
   if(!S.settings.targets)S.settings.targets=clone(DEFAULTS.settings.targets);
   if(S.settings.language!=='en'&&S.settings.language!=='id')S.settings.language='en';
+  if(typeof S.settings.onlineLookup!=='boolean')S.settings.onlineLookup=false;
   migrate();
 }
 function migrate(){
@@ -1252,11 +1299,11 @@ $('fsCopy').addEventListener('click',function(){
 });
 
 /* ---------------- Custom food sheet ---------------- */
-var CS={editId:null};
+var CS={editId:null,prefill:null};
 function fillCatSelect(sel){sel.innerHTML=Object.keys(CATS).map(function(c){return '<option value="'+c+'">'+catLabel(c)+'</option>';}).join('');}
 function fillUnitSelect(sel){sel.innerHTML=ALL_UNITS.map(function(u){return '<option value="'+u+'">'+unitLabel(u)+'</option>';}).join('');}
 function openCustomSheet(editId,prefill){
-  CS.editId=editId||null;
+  CS.editId=editId||null;CS.prefill=prefill||null;
   fillCatSelect($('csCat'));fillUnitSelect($('csUnit'));
   $('csTitle').textContent=editId?t('cs_title_edit'):t('cs_title_add');
   $('csDelete').hidden=!editId;
@@ -1275,7 +1322,7 @@ function openCustomSheet(editId,prefill){
     $('csGrams').value=prefill?String(prefill.grams).replace('.',decSep()):'100';
     if(prefill&&prefill.per){$('csKcal').value=fmt1(prefill.per.kcal);$('csProt').value=fmt1(prefill.per.protein);$('csCarb').value=fmt1(prefill.per.carbs);$('csFat').value=fmt1(prefill.per.fat);}
     else{$('csKcal').value='';$('csProt').value='';$('csCarb').value='';$('csFat').value='';}
-    $('csNotes').value='';
+    $('csNotes').value=(prefill&&prefill.notes)||'';
   }
   openSheet($('customSheet'));
 }
@@ -1296,6 +1343,9 @@ $('csSave').addEventListener('click',function(){
     defaultServing:$('csUnit').value,source:'custom',editable:true,note:$('csNotes').value.trim(),
     createdAt:Date.now(),updatedAt:Date.now()
   };
+  var sourceBase=CS.prefill||null,oldFood=null;
+  if(CS.editId){for(var oi=0;oi<S.custom.length;oi++)if(S.custom[oi].id===CS.editId){oldFood=S.custom[oi];break;}sourceBase=oldFood||sourceBase;}
+  if(sourceBase){['source','sourceUrl','sourceId','brand','estimated','onlineImported'].forEach(function(k){if(sourceBase[k]!=null)food[k]=sourceBase[k];});}
   if(CS.editId){
     for(var i=0;i<S.custom.length;i++)if(S.custom[i].id===CS.editId){food.createdAt=S.custom[i].createdAt;S.custom[i]=food;break;}
     toast(t('toast_food_updated'));
@@ -1534,6 +1584,8 @@ function changeWater(delta){
 /* ---------------- Render: Add ---------------- */
 function normalize(s){return String(s).toLowerCase().normalize('NFD').replace(/[^a-z0-9 ]/g,'');}
 function allFoods(){return S.custom.concat(FOOD_DB.foods);}
+var ONLINE={query:'',loading:false,error:'',items:[]};
+function onlineEnabled(){return !!S.settings.onlineLookup;}
 function isCustomFood(f){return f.id.indexOf('custom:')===0;}
 var addCuisineFilter='all';
 function matchesCuisine(f){
@@ -1560,6 +1612,111 @@ function foodRow(f){
     '<div class="info" style="flex:1;min-width:0"><div class="n" style="font-weight:600;font-size:15px">'+esc(foodDisplayName(f))+(isCustomFood(f)?' <span class="badge-est">'+t('badge_custom')+'</span>':'')+cuisineTag+'</div>'+
     '<div class="s tiny num">'+fmtInt(per.kcal)+' '+t('unit_kkal')+'/100 '+(f.basis==='ml'?'ml':'g')+base+'</div></div>'+
     (isFav(f.id)?'<span style="color:var(--carb)">★</span>':'')+'</button>';
+}
+function parseServingGrams(txt){
+  txt=String(txt||'').toLowerCase().replace(',', '.');
+  var m=txt.match(/(\d+(?:\.\d+)?)\s*(g|gr|gram|grams|ml|milliliter|millilitre)/);
+  if(!m)return null;
+  var v=parseFloat(m[1]);return isFinite(v)&&v>0?v:null;
+}
+function nutVal(n,key){var v=n&&n[key];v=Number(v);return isFinite(v)?v:null;}
+function offEnergyKcal(n,suffix){
+  var kcal=nutVal(n,'energy-kcal_'+suffix);if(kcal!=null)return kcal;
+  var kj=nutVal(n,'energy_'+suffix);if(kj!=null)return kj/4.184;
+  return null;
+}
+function inferOnlineCategory(name){
+  var n=normalize(name);
+  if(/coffee|tea|milk|juice|drink|cola|water|soda|kopi|teh|susu/.test(n))return 'minuman';
+  if(/rice|bread|oat|pasta|noodle|cereal|nasi|roti|mie/.test(n))return 'pokok';
+  if(/apple|banana|orange|fruit|pisang|apel/.test(n))return 'buah';
+  if(/sauce|salt|sugar|oil|butter|saus|gula|minyak/.test(n))return 'bumbu';
+  if(/chips|cookie|biscuit|snack|chocolate|wafer|cracker|kerupuk/.test(n))return 'camilan';
+  return 'lauk';
+}
+function onlineConfidence(p,food,servG){
+  var hasBrand=!!food.brand,hasMacros=(food.per100.protein+food.per100.carbs+food.per100.fat)>0;
+  if(hasBrand&&servG&&hasMacros)return 'high';
+  if(food.per100.kcal>0&&(hasBrand||servG))return 'medium';
+  return 'low';
+}
+function confidenceLabel(c){return c==='high'?t('online_conf_high'):(c==='medium'?t('online_conf_medium'):t('online_conf_low'));}
+function productUrl(p){return p.url||(p.code?('https://world.openfoodfacts.org/product/'+encodeURIComponent(p.code)):'https://world.openfoodfacts.org/');}
+function mapOpenFoodProduct(p,idx){
+  var name=(p.product_name||p.product_name_en||p.generic_name||'').trim();
+  if(!name)return null;
+  var brand=(p.brands||'').split(',')[0].trim();
+  var n=p.nutriments||{};
+  var servG=parseServingGrams(p.serving_size)||parseServingGrams(p.quantity);
+  var kcal100=offEnergyKcal(n,'100g'),kcalServing=offEnergyKcal(n,'serving');
+  if((kcal100==null||kcal100<=0)&&kcalServing!=null&&servG)kcal100=kcalServing/servG*100;
+  if(kcal100==null||!isFinite(kcal100)||kcal100<=0)return null;
+  function macro(key){
+    var v=nutVal(n,key+'_100g');
+    if(v==null&&servG){var sv=nutVal(n,key+'_serving');if(sv!=null)v=sv/servG*100;}
+    return (v!=null&&isFinite(v)&&v>=0)?v:0;
+  }
+  var id='online:off:'+(p.code||('q'+idx+'-'+Math.abs(hashCode(name+brand))));
+  var food={
+    id:id,name:name,name_en:name,aliases:brand?[brand,name+' '+brand,brand+' '+name]:[],category:inferOnlineCategory(name),
+    cuisine:'custom',basis:'g',baseQty:100,baseUnit:'g',per100:{kcal:kcal100,protein:macro('proteins'),carbs:macro('carbohydrates'),fat:macro('fat')},
+    servings:[],defaultServing:'gram',source:'Open Food Facts',sourceUrl:productUrl(p),sourceId:p.code||'',brand:brand,editable:true,estimated:true,onlineImported:true,
+    note:(brand?brand+' · ':'')+'Open Food Facts estimate',note_en:(brand?brand+' · ':'')+'Open Food Facts estimate'
+  };
+  if(servG){food.servings=[{unit:'porsi',grams:servG,label:'1 serving ('+fmt1(servG)+' g)'}];food.defaultServing='porsi';}
+  food.confidence=onlineConfidence(p,food,servG);
+  food.servingText=p.serving_size||p.quantity||'';
+  return food;
+}
+function hashCode(str){var h=0;for(var i=0;i<str.length;i++){h=((h<<5)-h)+str.charCodeAt(i);h|=0;}return h;}
+function onlineResultRow(item,i){
+  var f=item.food,serv=item.servingText?(' · '+esc(item.servingText)):'';
+  return '<div class="list-btn online-result">'+
+    '<div class="avatar">🌐</div><div class="info" style="flex:1;min-width:0">'+
+    '<div class="n" style="font-weight:700;font-size:15px">'+esc(foodDisplayName(f))+' <span class="badge-est">'+esc(f.brand||t('online_source'))+'</span> <span class="badge-est confidence">'+confidenceLabel(f.confidence)+'</span></div>'+ 
+    '<div class="s tiny num">'+fmtInt(f.per100.kcal)+' '+t('unit_kkal')+' '+t('online_per100')+serv+' · P '+fmt1(f.per100.protein)+' · C '+fmt1(f.per100.carbs)+' · F '+fmt1(f.per100.fat)+'</div>'+ 
+    '<div class="tiny">Open Food Facts · '+t('badge_estimate')+'</div>'+ 
+    '<div class="actions"><button class="mini-btn primary" data-online-use="'+i+'">'+t('btn_use')+'</button><button class="mini-btn" data-online-edit="'+i+'">'+t('btn_edit')+'</button><button class="mini-btn" data-online-save="'+i+'">'+t('btn_save_custom')+'</button></div>'+ 
+    '</div></div>';
+}
+function renderOnlineSection(q){
+  if(!q||!q.trim())return '';
+  var same=ONLINE.query===q.trim();
+  var html='<div class="card online-card"><div class="row spread"><h3>'+t('h_online_results')+'</h3><span class="online-source">Open Food Facts</span></div>'+
+    '<div class="tiny" style="margin:8px 0 10px">'+(onlineEnabled()?t('online_hint'):t('online_disabled'))+'</div>'+
+    '<button class="btn btn-ghost" id="btnOnlineSearch" '+(ONLINE.loading?'disabled':'')+' style="margin-bottom:10px">'+(ONLINE.loading?t('btn_searching_online'):t('btn_search_online'))+'</button>';
+  if(same&&ONLINE.error)html+='<div class="empty">'+esc(ONLINE.error)+'</div>';
+  if(same&&!ONLINE.loading&&!ONLINE.error&&ONLINE.items.length)html+=ONLINE.items.map(onlineResultRow).join('');
+  if(same&&!ONLINE.loading&&!ONLINE.error&&ONLINE.didSearch&&!ONLINE.items.length)html+='<div class="empty">'+t('online_no_results')+'</div>';
+  return html+'</div>';
+}
+function saveOnlineAsCustom(food,silent){
+  var sid=food.sourceId||'',existing=null;
+  if(sid)existing=S.custom.find(function(f){return f.source==='Open Food Facts'&&f.sourceId===sid;});
+  if(!existing)existing=S.custom.find(function(f){return normalize(f.name)===normalize(food.name)&&normalize(f.brand||'')===normalize(food.brand||'')&&f.source==='Open Food Facts';});
+  if(existing)return existing.id;
+  var f=clone(food);f.id=sid?('custom:off:'+sid):('custom:'+uid('off'));f.cuisine='custom';f.createdAt=Date.now();f.updatedAt=Date.now();
+  delete f.confidence;delete f.servingText;
+  S.custom.unshift(f);saveKey(K.custom,S.custom);if(!silent)toast(t('toast_online_saved'));return f.id;
+}
+function openOnlineCustomEditor(food){
+  var unit=food.defaultServing||'gram',grams=unitGrams(food,unit)||100;
+  openCustomSheet(null,{name:food.name,category:food.category||'lauk',unit:unit,grams:grams,per:compute(food,1,unit)||{kcal:food.per100.kcal,protein:food.per100.protein,carbs:food.per100.carbs,fat:food.per100.fat},notes:food.note||'',source:food.source,sourceUrl:food.sourceUrl,sourceId:food.sourceId,brand:food.brand,estimated:true,onlineImported:true});
+}
+function runOnlineLookup(q){
+  q=(q||'').trim();if(!q){toast(t('online_no_query'));return;}
+  if(!onlineEnabled()){
+    confirmAsk(t('online_privacy_title'),t('online_privacy_body'),t('online_enable_search'),function(){S.settings.onlineLookup=true;saveKey(K.settings,S.settings);renderSettings();runOnlineLookup(q);});
+    return;
+  }
+  ONLINE={query:q,loading:true,error:'',items:[],didSearch:true};renderAddResults(q);
+  var fields=['code','product_name','product_name_en','generic_name','brands','serving_size','quantity','nutriments','url'].join(',');
+  var url='https://world.openfoodfacts.org/cgi/search.pl?search_simple=1&action=process&json=1&page_size=10&fields='+encodeURIComponent(fields)+'&search_terms='+encodeURIComponent(q);
+  fetch(url,{method:'GET',headers:{'Accept':'application/json'}}).then(function(r){if(!r.ok)throw new Error('network');return r.json();}).then(function(data){
+    var products=Array.isArray(data.products)?data.products:[];
+    var items=[];products.forEach(function(p,i){var f=mapOpenFoodProduct(p,i);if(f)items.push({food:f,servingText:f.servingText||''});});
+    ONLINE={query:q,loading:false,error:'',items:items.slice(0,8),didSearch:true};renderAddResults(q);
+  }).catch(function(){ONLINE={query:q,loading:false,error:t('online_failed'),items:[],didSearch:true};renderAddResults(q);});
 }
 function renderAddResults(q){
   var host=$('addResults'),html='';
@@ -1595,6 +1752,7 @@ function renderAddResults(q){
       html+='<div class="card"><div class="empty">'+t('empty_cuisine')+'</div></div>';
     }
   }
+  if(q&&q.trim())html+=renderOnlineSection(q.trim());
   host.innerHTML=html;
   var ac=$('addAsCustom');
   if(ac)ac.addEventListener('click',function(){openCustomSheet(null,{name:q.trim(),category:'lauk',unit:'porsi',grams:100});});
@@ -1611,6 +1769,18 @@ $('searchInput').addEventListener('input',function(){
   searchDeb=setTimeout(function(){renderAddResults(v);},120);
 });
 $('addResults').addEventListener('click',function(e){
+  var onlineBtn=e.target.closest('#btnOnlineSearch');
+  if(onlineBtn){runOnlineLookup($('searchInput').value);return;}
+  var oi=e.target.closest('[data-online-use],[data-online-edit],[data-online-save]');
+  if(oi){
+    var idx=+(oi.dataset.onlineUse||oi.dataset.onlineEdit||oi.dataset.onlineSave),item=ONLINE.items[idx];
+    if(!item||!item.food)return;
+    if(oi.dataset.onlineEdit!=null){openOnlineCustomEditor(item.food);return;}
+    var id=saveOnlineAsCustom(item.food,oi.dataset.onlineUse!=null);
+    if(oi.dataset.onlineUse!=null){toast(t('toast_online_ready'));openFoodSheet({foodRef:id,mode:'new'});}
+    else renderAll();
+    return;
+  }
   var tb=e.target.closest('[data-logtpl]');
   if(tb){logTemplate(tb.dataset.logtpl);showView('today');return;}
   var b=e.target.closest('[data-food]');if(!b)return;
@@ -1758,6 +1928,8 @@ function renderSettings(){
   applyTheme();
   var langSeg=$('langSeg');
   Array.prototype.forEach.call(langSeg.children,function(b){b.classList.toggle('on',b.dataset.langOpt===L());});
+  var onlineSeg=$('onlineLookupSeg');
+  if(onlineSeg)Array.prototype.forEach.call(onlineSeg.children,function(b){b.classList.toggle('on',(S.settings.onlineLookup?'on':'off')===b.dataset.onlineOpt);});
 }
 [['tKcal','kcal',500,10000],['tProt','protein',0,1000],['tCarb','carbs',0,2000],['tFat','fat',0,1000],['tWater','waterMl',0,10000]].forEach(function(cfg){
   $(cfg[0]).addEventListener('change',function(){
@@ -1775,6 +1947,10 @@ $('langSeg').addEventListener('click',function(e){
   var b=e.target.closest('[data-lang-opt]');if(!b)return;
   S.settings.language=b.dataset.langOpt;saveKey(K.settings,S.settings);
   applyI18n();renderAll();
+});
+$('onlineLookupSeg').addEventListener('click',function(e){
+  var b=e.target.closest('[data-online-opt]');if(!b)return;
+  S.settings.onlineLookup=b.dataset.onlineOpt==='on';saveKey(K.settings,S.settings);renderSettings();
 });
 
 /* ---------------- Backup / restore / reset ---------------- */
@@ -1811,6 +1987,7 @@ $('importFile').addEventListener('change',function(){
         S.settings=obj.settings&&typeof obj.settings==='object'?obj.settings:clone(DEFAULTS.settings);
         if(!S.settings.targets)S.settings.targets=clone(DEFAULTS.settings.targets);
         if(S.settings.language!=='en'&&S.settings.language!=='id')S.settings.language='en';
+        if(typeof S.settings.onlineLookup!=='boolean')S.settings.onlineLookup=false;
         S.settings.schemaVersion=SCHEMA_VERSION;
         S.logs=logs;
         S.custom=Array.isArray(obj.customFoods)?obj.customFoods:[];

@@ -1,21 +1,22 @@
 # Calorie Tracker
 
-**Version:** 1.1.5  
+**Version:** 1.2.0  
 **Repository:** https://github.com/slimutebal/calorie-tracker
 
-Calorie Tracker is a static, mobile-first **Progressive Web App (PWA)** for daily calorie and macronutrient tracking. It includes a built-in food library covering common **Indonesian, Western, Middle Eastern, and Asian** foods. It has no server, no account system, no telemetry, and no external food API. All personal data stays **only on the device/browser that uses the app**.
+Calorie Tracker is a static, mobile-first **Progressive Web App (PWA)** for daily calorie and macronutrient tracking. It includes a built-in food library covering common **Indonesian, Western, Middle Eastern, and Asian** foods, plus optional online lookup through Open Food Facts. It has no server, no account system, and no telemetry. All personal food logs stay **only on the device/browser that uses the app**.
 
 > **Nutrition disclaimer:** all nutrition values are estimates. Actual values may vary by brand, recipe, cooking method, oil amount, and portion size. This app is for personal tracking only and is not medical or dietary advice.
 
 ---
 
-## What changed in v1.1.5
+## What changed in v1.2.0
 
-- Updated the bottom navigation material from a fixed dark dock to adaptive liquid glass.
-- Preserved the v1.1.4 pill dock geometry, bottom safe-area spacing, and integrated center Add (+) button.
-- Added translucent light-mode and dark-mode glass backgrounds with blur, saturation, border highlights, and subtle layered reflections.
-- Improved active tab capsule treatment so the dock blends better with the page background in both Light and Dark mode.
-- Bumped the app version to `1.1.5` and the service worker cache to `calorietrack-shell-v8`.
+- Added optional **Online Food Lookup** using Open Food Facts.
+- Added an explicit Settings toggle for Online Food Lookup.
+- Added Search Online results on the Add screen with source, confidence, serving, calories, and macro preview.
+- Online results can be used, edited, or saved as custom foods for offline reuse.
+- Added privacy copy explaining that online lookup only sends the search keyword; logs, history, and settings remain local.
+- Bumped the app version to `1.2.0` and the service worker cache to `calorietrack-shell-v9`.
 
 ---
 
@@ -26,6 +27,7 @@ Calorie Tracker is a static, mobile-first **Progressive Web App (PWA)** for dail
 - **Built-in food database** — about 112 foods across Indonesian, Western, Middle Eastern, and Asian cuisines.
 - **Cuisine filter** — All / Indonesian / Western / Middle Eastern / Asian / Custom.
 - **Custom foods** — create, edit, delete, search, favorite, and reuse your own foods.
+- **Online Food Lookup** — optionally search Open Food Facts from the Add screen, then use, edit, or save selected results locally.
 - **Meal templates** — combine multiple items and log them again with one tap.
 - **History and trend view** — daily summaries, 7-day trend, weekly average, best/worst day, and target adherence.
 - **Targets** — calories, protein, carbs, fat, and water.
@@ -44,6 +46,7 @@ Calorie Tracker is a static, mobile-first **Progressive Web App (PWA)** for dail
 - No telemetry.
 - No food log upload.
 - No cloud sync.
+- Optional Online Food Lookup sends only the typed search keyword to Open Food Facts when used.
 - No third-party tracking.
 
 User data is stored locally in the browser using `localStorage` under the `calorietrack_id_*` prefix.
@@ -55,6 +58,7 @@ This means:
 - If two people install the same GitHub Pages link on different phones, their data does not mix.
 - Clearing Safari website data, removing site data, or deleting the PWA may delete local data.
 - Use **Settings → Export Backup (JSON)** regularly.
+- Online results saved as custom foods are stored locally and included in backups.
 
 ---
 
@@ -142,13 +146,13 @@ https://slimutebal.github.io/calorie-tracker/
 This app uses a service worker cache. When you change app files, update the cache version in `service-worker.js`:
 
 ```js
-const CACHE_VERSION = 'calorietrack-shell-v8';
+const CACHE_VERSION = 'calorietrack-shell-v9';
 ```
 
 For future releases, increase it again, for example:
 
 ```js
-const CACHE_VERSION = 'calorietrack-shell-v9';
+const CACHE_VERSION = 'calorietrack-shell-v10';
 ```
 
 After uploading an update:
@@ -240,6 +244,8 @@ Keep backups before clearing Safari data, deleting the PWA, changing devices, or
 - Data is local only and does not sync across devices.
 - iOS/Safari may remove site data under some conditions, especially if storage is cleared manually or the device is low on space.
 - No push notifications.
+- Online lookup depends on Open Food Facts availability, coverage, and data completeness.
+- Restaurant/local foods may be missing or inaccurate in online results.
 - No barcode scanner.
 - No camera food recognition.
 - No cloud account.
@@ -250,13 +256,14 @@ Keep backups before clearing Safari data, deleting the PWA, changing devices, or
 
 ## Release notes
 
-### v1.1.5
+### v1.2.0
 
-- Updated the bottom navigation material to adaptive liquid glass.
-- Preserved the v1.1.4 pill dock geometry, safe-area position, and integrated center Add (+) button.
-- Added light/dark translucent glass backgrounds with blur, saturation, border highlights, and layered reflections.
-- Updated app version to `1.1.5`.
-- Service worker cache bumped to `calorietrack-shell-v8`.
+- Added optional Online Food Lookup powered by Open Food Facts.
+- Added Search Online cards with source, confidence, serving, calories, and macro preview.
+- Added Use / Edit / Save Custom actions for online results.
+- Online lookup only sends the typed keyword to Open Food Facts when explicitly used.
+- Updated app version to `1.2.0`.
+- Service worker cache bumped to `calorietrack-shell-v9`.
 
 ### v1.1.4
 
