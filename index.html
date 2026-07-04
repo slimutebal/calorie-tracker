@@ -201,6 +201,8 @@ header.appbar{padding:14px 18px;margin:4px 0 14px;display:flex;align-items:flex-
 [data-theme="dark"] .mini-btn.primary{background:#fff;color:#000;border-color:#fff}
 .mini-btn:active{transform:scale(.96)}
 .confidence{margin-left:6px}
+.online-notice{padding:10px 12px;margin:8px 0 10px;border-radius:12px;background:var(--card2);border:1px solid var(--glass-border);color:var(--ink2);font-size:13px;line-height:1.35}
+.online-notice.error{color:var(--danger-text);border-color:rgba(255,59,48,.28);background:rgba(255,59,48,.08)}
 
 /* ============ SHEET / MODAL ============ */
 .backdrop{position:fixed;inset:0;background:rgba(0,0,0,.45);opacity:0;pointer-events:none;transition:opacity .25s;z-index:40;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
@@ -653,14 +655,14 @@ nav::before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-e
 
 <script>
 /* ================================================================
-   Calorie Tracker — app logic (local-only, no network calls)
+   Calorie Tracker — app logic (local-first, optional online lookup)
    ================================================================ */
 (function(){
 'use strict';
-var APP_VERSION='1.2.0';
+var APP_VERSION='1.2.1';
 var SCHEMA_VERSION=1;
 var NS='calorietrack_id_';
-var K={settings:NS+'settings',logs:NS+'logs_v1',custom:NS+'customfoods_v1',templates:NS+'templates_v1',quick:NS+'quickaccess_v1'};
+var K={settings:NS+'settings',logs:NS+'logs_v1',custom:NS+'customfoods_v1',templates:NS+'templates_v1',quick:NS+'quickaccess_v1',onlineCache:NS+'online_lookup_cache_v1'};
 
 /* ---------------- Built-in food DB (public, static) ---------------- */
 var FOOD_DB={dbVersion:1,foods:[
@@ -880,6 +882,12 @@ var I18N={
     online_enable_search:"Aktifkan & cari",
     online_no_query:"Ketik nama makanan terlebih dahulu.", online_no_results:"Tidak ada hasil online yang cukup lengkap. Tambahkan manual atau coba kata kunci lain.",
     online_failed:"Pencarian online gagal. Periksa koneksi atau tambahkan manual.",
+    online_failed_offline:"Perangkat tampaknya offline. Jika ada cache, hasil tersimpan akan ditampilkan.",
+    online_failed_timeout:"Pencarian online timeout. Coba lagi atau gunakan kata kunci lebih pendek.",
+    online_failed_temp:"Open Food Facts sementara tidak tersedia. Coba lagi nanti atau gunakan kata kunci lebih pendek.",
+    online_cached:"Menampilkan hasil tersimpan dari pencarian sebelumnya.",
+    online_try_shorter:"Coba kata kunci lebih pendek, misalnya cheeseburger.",
+    online_retrying:"Mencoba ulang pencarian…",
     online_source:"Sumber", online_serving:"Porsi", online_per100:"per 100 g", online_conf_high:"Akurat", online_conf_medium:"Sedang", online_conf_low:"Rendah",
     btn_use:"Pakai", btn_edit:"Edit", btn_save_custom:"Simpan Custom", toast_online_saved:"Hasil online disimpan sebagai makanan custom", toast_online_ready:"Hasil online siap dipakai",
 
@@ -992,6 +1000,12 @@ var I18N={
     online_enable_search:"Enable & search",
     online_no_query:"Enter a food name first.", online_no_results:"No reliable online result found. Add it manually or try another keyword.",
     online_failed:"Online lookup failed. Check your connection or add it manually.",
+    online_failed_offline:"You appear to be offline. If cache exists, saved results will be shown.",
+    online_failed_timeout:"Online lookup timed out. Try again or use a shorter keyword.",
+    online_failed_temp:"Open Food Facts is temporarily unavailable. Try again later or use a shorter keyword.",
+    online_cached:"Showing saved results from a previous online lookup.",
+    online_try_shorter:"Try a shorter keyword, for example cheeseburger.",
+    online_retrying:"Retrying online lookup…",
     online_source:"Source", online_serving:"Serving", online_per100:"per 100 g", online_conf_high:"High", online_conf_medium:"Medium", online_conf_low:"Low",
     btn_use:"Use", btn_edit:"Edit", btn_save_custom:"Save Custom", toast_online_saved:"Online result saved as custom food", toast_online_ready:"Online result ready to use",
 
@@ -1070,7 +1084,7 @@ function applyI18n(){
 /* ---------------- Storage ---------------- */
 var DEFAULTS={
   settings:{schemaVersion:SCHEMA_VERSION,targets:{kcal:2000,protein:100,carbs:250,fat:65,waterMl:2000},theme:"auto",language:"en",onlineLookup:false,onboarded:false},
-  logs:{},custom:[],templates:[],quick:{favorites:[],recents:[]}
+  logs:{},custom:[],templates:[],quick:{favorites:[],recents:[]},onlineCache:{}
 };
 var S={};var corrupted=[];
 function clone(o){return JSON.parse(JSON.stringify(o));}
@@ -1091,6 +1105,8 @@ function loadAll(){
   S.custom=loadKey(K.custom,DEFAULTS.custom);
   S.templates=loadKey(K.templates,DEFAULTS.templates);
   S.quick=loadKey(K.quick,DEFAULTS.quick);
+  S.onlineCache=loadKey(K.onlineCache,DEFAULTS.onlineCache);
+  if(!S.onlineCache||typeof S.onlineCache!=='object'||Array.isArray(S.onlineCache))S.onlineCache={};
   if(!Array.isArray(S.custom))S.custom=[];
   if(!Array.isArray(S.templates))S.templates=[];
   if(!S.quick||typeof S.quick!=='object')S.quick=clone(DEFAULTS.quick);
@@ -1584,7 +1600,11 @@ function changeWater(delta){
 /* ---------------- Render: Add ---------------- */
 function normalize(s){return String(s).toLowerCase().normalize('NFD').replace(/[^a-z0-9 ]/g,'');}
 function allFoods(){return S.custom.concat(FOOD_DB.foods);}
-var ONLINE={query:'',loading:false,error:'',items:[]};
+var ONLINE={query:'',loading:false,error:'',notice:'',items:[],didSearch:false};
+var ONLINE_CACHE_MAX_AGE=1000*60*60*24*30;
+var ONLINE_CACHE_LIMIT=32;
+var ONLINE_TIMEOUT_MS=9000;
+var ONLINE_PROVIDERS=[];
 function onlineEnabled(){return !!S.settings.onlineLookup;}
 function isCustomFood(f){return f.id.indexOf('custom:')===0;}
 var addCuisineFilter='all';
@@ -1627,39 +1647,33 @@ function offEnergyKcal(n,suffix){
 }
 function inferOnlineCategory(name){
   var n=normalize(name);
-  if(/coffee|tea|milk|juice|drink|cola|water|soda|kopi|teh|susu/.test(n))return 'minuman';
-  if(/rice|bread|oat|pasta|noodle|cereal|nasi|roti|mie/.test(n))return 'pokok';
-  if(/apple|banana|orange|fruit|pisang|apel/.test(n))return 'buah';
-  if(/sauce|salt|sugar|oil|butter|saus|gula|minyak/.test(n))return 'bumbu';
-  if(/chips|cookie|biscuit|snack|chocolate|wafer|cracker|kerupuk/.test(n))return 'camilan';
-  return 'lauk';
+  if(/drink|milk|coffee|tea|juice|cola|water|soda|minuman|kopi|teh/.test(n))return 'minuman';
+  if(/bread|rice|noodle|pasta|burger|pizza|cereal|oat|roti|nasi|mie/.test(n))return 'pokok';
+  if(/chicken|beef|fish|egg|tofu|tempe|meat|ayam|sapi|ikan|telur/.test(n))return 'lauk';
+  if(/snack|chip|cookie|biscuit|chocolate|candy|kerupuk/.test(n))return 'camilan';
+  return 'camilan';
 }
+function productUrl(p){return p.url||(p.code?('https://world.openfoodfacts.org/product/'+encodeURIComponent(p.code)):'https://world.openfoodfacts.org/');}
 function onlineConfidence(p,food,servG){
-  var hasBrand=!!food.brand,hasMacros=(food.per100.protein+food.per100.carbs+food.per100.fat)>0;
-  if(hasBrand&&servG&&hasMacros)return 'high';
-  if(food.per100.kcal>0&&(hasBrand||servG))return 'medium';
+  var hasBrand=!!food.brand,hasName=!!food.name,hasKcal=food.per100&&isFinite(food.per100.kcal);
+  if(hasName&&hasBrand&&hasKcal&&servG)return 'high';
+  if(hasName&&hasKcal)return 'medium';
   return 'low';
 }
-function confidenceLabel(c){return c==='high'?t('online_conf_high'):(c==='medium'?t('online_conf_medium'):t('online_conf_low'));}
-function productUrl(p){return p.url||(p.code?('https://world.openfoodfacts.org/product/'+encodeURIComponent(p.code)):'https://world.openfoodfacts.org/');}
-function mapOpenFoodProduct(p,idx){
-  var name=(p.product_name||p.product_name_en||p.generic_name||'').trim();
-  if(!name)return null;
+function confidenceLabel(c){return t(c==='high'?'online_conf_high':c==='medium'?'online_conf_medium':'online_conf_low');}
+function mapOpenFoodProduct(p,i){
+  var name=(p.product_name_en||p.product_name||p.generic_name||'').trim();
   var brand=(p.brands||'').split(',')[0].trim();
+  if(!name)return null;
   var n=p.nutriments||{};
-  var servG=parseServingGrams(p.serving_size)||parseServingGrams(p.quantity);
-  var kcal100=offEnergyKcal(n,'100g'),kcalServing=offEnergyKcal(n,'serving');
-  if((kcal100==null||kcal100<=0)&&kcalServing!=null&&servG)kcal100=kcalServing/servG*100;
+  var kcal100=offEnergyKcal(n,'100g');
+  if(kcal100==null)kcal100=offEnergyKcal(n,'serving');
   if(kcal100==null||!isFinite(kcal100)||kcal100<=0)return null;
-  function macro(key){
-    var v=nutVal(n,key+'_100g');
-    if(v==null&&servG){var sv=nutVal(n,key+'_serving');if(sv!=null)v=sv/servG*100;}
-    return (v!=null&&isFinite(v)&&v>=0)?v:0;
-  }
-  var id='online:off:'+(p.code||('q'+idx+'-'+Math.abs(hashCode(name+brand))));
+  var servG=parseServingGrams(p.serving_size||p.quantity||'');
+  function macro(k){var v=nutVal(n,k+'_100g');if(v==null)v=nutVal(n,k+'_serving');return v==null?0:v;}
+  var id='online:off:'+(p.code||hashCode(name+brand+i));
   var food={
-    id:id,name:name,name_en:name,aliases:brand?[brand,name+' '+brand,brand+' '+name]:[],category:inferOnlineCategory(name),
-    cuisine:'custom',basis:'g',baseQty:100,baseUnit:'g',per100:{kcal:kcal100,protein:macro('proteins'),carbs:macro('carbohydrates'),fat:macro('fat')},
+    id:id,name:name,name_en:name,aliases:brand?[brand,name+' '+brand,brand+' '+name]:[],category:inferOnlineCategory(name),cuisine:'online',basis:'g',baseQty:100,baseUnit:'g',per100:{kcal:kcal100,protein:macro('proteins'),carbs:macro('carbohydrates'),fat:macro('fat')},
     servings:[],defaultServing:'gram',source:'Open Food Facts',sourceUrl:productUrl(p),sourceId:p.code||'',brand:brand,editable:true,estimated:true,onlineImported:true,
     note:(brand?brand+' · ':'')+'Open Food Facts estimate',note_en:(brand?brand+' · ':'')+'Open Food Facts estimate'
   };
@@ -1669,6 +1683,94 @@ function mapOpenFoodProduct(p,idx){
   return food;
 }
 function hashCode(str){var h=0;for(var i=0;i<str.length;i++){h=((h<<5)-h)+str.charCodeAt(i);h|=0;}return h;}
+function normalizeOnlineQuery(q){
+  var x=String(q||'').toLowerCase().trim();
+  x=x.replace(/[’']/g,'').replace(/\s+/g,' ');
+  x=x.replace(/\bmcd\b/g,'mcdonalds').replace(/\bmcdonald\b/g,'mcdonalds');
+  x=x.replace(/\bchees\s+burger\b/g,'cheeseburger').replace(/\bcheese\s+burger\b/g,'cheeseburger');
+  x=x.replace(/\bchese\s*burger\b/g,'cheeseburger');
+  return x.trim();
+}
+function uniqueStrings(arr){var out=[],seen={};arr.forEach(function(x){x=String(x||'').trim();if(!x)return;var k=normalize(x);if(!seen[k]){seen[k]=1;out.push(x);}});return out;}
+function buildOnlineQueries(q){
+  var raw=String(q||'').trim();
+  var norm=normalizeOnlineQuery(raw);
+  var arr=[raw,norm];
+  var n=normalize(norm);
+  if(/mcdonalds/.test(n)&&/cheeseburger|cheese burger|burger/.test(n))arr.push('mcdonalds cheeseburger','mcdonalds cheese burger','cheeseburger');
+  if(/cheeseburger/.test(n))arr.push('cheese burger','cheeseburger');
+  if(/burger/.test(n))arr.push('burger');
+  return uniqueStrings(arr).slice(0,5);
+}
+function onlineCacheKey(q){return normalize(normalizeOnlineQuery(q)).replace(/\s+/g,'-').slice(0,80)||'query';}
+function getOnlineCache(q){
+  var variants=buildOnlineQueries(q),now=Date.now();
+  for(var i=0;i<variants.length;i++){
+    var c=S.onlineCache&&S.onlineCache[onlineCacheKey(variants[i])];
+    if(c&&Array.isArray(c.items)&&c.items.length&&(now-(c.savedAt||0)<ONLINE_CACHE_MAX_AGE))return clone(c.items);
+  }
+  return null;
+}
+function putOnlineCache(q,items){
+  if(!items||!items.length)return;
+  if(!S.onlineCache||typeof S.onlineCache!=='object')S.onlineCache={};
+  S.onlineCache[onlineCacheKey(q)]={query:q,savedAt:Date.now(),items:clone(items).slice(0,8)};
+  var keys=Object.keys(S.onlineCache).sort(function(a,b){return (S.onlineCache[b].savedAt||0)-(S.onlineCache[a].savedAt||0);});
+  keys.slice(ONLINE_CACHE_LIMIT).forEach(function(k){delete S.onlineCache[k];});
+  saveKey(K.onlineCache,S.onlineCache);
+}
+function fetchJsonWithTimeout(url,ms){
+  var controller=(typeof AbortController!=='undefined')?new AbortController():null;
+  var done=false;
+  var timer=setTimeout(function(){if(controller)controller.abort();done=true;},ms||ONLINE_TIMEOUT_MS);
+  return fetch(url,{method:'GET',headers:{'Accept':'application/json'},signal:controller?controller.signal:undefined}).then(function(r){
+    clearTimeout(timer);
+    if(!r.ok){var e=new Error(r.status===429?'rate':'network');e.status=r.status;throw e;}
+    return r.json();
+  }).catch(function(e){
+    clearTimeout(timer);
+    if(e&&e.name==='AbortError')throw new Error('timeout');
+    if(done)throw new Error('timeout');
+    throw e;
+  });
+}
+function openFoodFactsSearch(query){
+  var fields=['code','product_name','product_name_en','generic_name','brands','serving_size','quantity','nutriments','url'].join(',');
+  var url='https://world.openfoodfacts.org/cgi/search.pl?search_simple=1&action=process&json=1&page_size=10&sort_by=popularity_key&fields='+encodeURIComponent(fields)+'&search_terms='+encodeURIComponent(query);
+  return fetchJsonWithTimeout(url,ONLINE_TIMEOUT_MS).then(function(data){
+    var products=Array.isArray(data.products)?data.products:[];
+    var items=[];products.forEach(function(p,i){var f=mapOpenFoodProduct(p,i);if(f)items.push({food:f,servingText:f.servingText||''});});
+    return items.slice(0,8);
+  });
+}
+ONLINE_PROVIDERS=[{id:'openfoodfacts',label:'Open Food Facts',search:openFoodFactsSearch}];
+function searchOnlineProviders(q){
+  var variants=buildOnlineQueries(q),provider=ONLINE_PROVIDERS[0],lastErr=null,idx=0;
+  function next(){
+    if(idx>=variants.length){
+      if(lastErr)throw lastErr;
+      return [];
+    }
+    var query=variants[idx++];
+    return provider.search(query).then(function(items){
+      if(items&&items.length)return {items:items,query:query,provider:provider};
+      return next();
+    }).catch(function(e){
+      lastErr=e;
+      if((e&&e.message==='timeout')||idx>=variants.length)throw e;
+      return next();
+    });
+  }
+  return next();
+}
+function onlineErrorMessage(err,hadCache){
+  if(hadCache)return t('online_cached');
+  if(typeof navigator!=='undefined'&&navigator.onLine===false)return t('online_failed_offline');
+  if(err&&err.message==='timeout')return t('online_failed_timeout');
+  if(err&&err.message==='rate')return t('online_failed_temp');
+  if(err&&err.message==='no-results')return t('online_no_results');
+  return t('online_failed_temp')+' '+t('online_try_shorter');
+}
 function onlineResultRow(item,i){
   var f=item.food,serv=item.servingText?(' · '+esc(item.servingText)):'';
   return '<div class="list-btn online-result">'+
@@ -1685,8 +1787,9 @@ function renderOnlineSection(q){
   var html='<div class="card online-card"><div class="row spread"><h3>'+t('h_online_results')+'</h3><span class="online-source">Open Food Facts</span></div>'+
     '<div class="tiny" style="margin:8px 0 10px">'+(onlineEnabled()?t('online_hint'):t('online_disabled'))+'</div>'+
     '<button class="btn btn-ghost" id="btnOnlineSearch" '+(ONLINE.loading?'disabled':'')+' style="margin-bottom:10px">'+(ONLINE.loading?t('btn_searching_online'):t('btn_search_online'))+'</button>';
+  if(same&&ONLINE.notice)html+='<div class="online-notice'+(ONLINE.error?' error':'')+'">'+esc(ONLINE.notice)+'</div>';
   if(same&&ONLINE.error)html+='<div class="empty">'+esc(ONLINE.error)+'</div>';
-  if(same&&!ONLINE.loading&&!ONLINE.error&&ONLINE.items.length)html+=ONLINE.items.map(onlineResultRow).join('');
+  if(same&&!ONLINE.loading&&ONLINE.items.length)html+=ONLINE.items.map(onlineResultRow).join('');
   if(same&&!ONLINE.loading&&!ONLINE.error&&ONLINE.didSearch&&!ONLINE.items.length)html+='<div class="empty">'+t('online_no_results')+'</div>';
   return html+'</div>';
 }
@@ -1709,14 +1812,21 @@ function runOnlineLookup(q){
     confirmAsk(t('online_privacy_title'),t('online_privacy_body'),t('online_enable_search'),function(){S.settings.onlineLookup=true;saveKey(K.settings,S.settings);renderSettings();runOnlineLookup(q);});
     return;
   }
-  ONLINE={query:q,loading:true,error:'',items:[],didSearch:true};renderAddResults(q);
-  var fields=['code','product_name','product_name_en','generic_name','brands','serving_size','quantity','nutriments','url'].join(',');
-  var url='https://world.openfoodfacts.org/cgi/search.pl?search_simple=1&action=process&json=1&page_size=10&fields='+encodeURIComponent(fields)+'&search_terms='+encodeURIComponent(q);
-  fetch(url,{method:'GET',headers:{'Accept':'application/json'}}).then(function(r){if(!r.ok)throw new Error('network');return r.json();}).then(function(data){
-    var products=Array.isArray(data.products)?data.products:[];
-    var items=[];products.forEach(function(p,i){var f=mapOpenFoodProduct(p,i);if(f)items.push({food:f,servingText:f.servingText||''});});
-    ONLINE={query:q,loading:false,error:'',items:items.slice(0,8),didSearch:true};renderAddResults(q);
-  }).catch(function(){ONLINE={query:q,loading:false,error:t('online_failed'),items:[],didSearch:true};renderAddResults(q);});
+  var cached=getOnlineCache(q);
+  ONLINE={query:q,loading:true,error:'',notice:'',items:[],didSearch:true};renderAddResults(q);
+  var settled=false;
+  searchOnlineProviders(q).then(function(res){
+    settled=true;
+    var items=(res&&res.items)||[];
+    if(items.length){putOnlineCache(q,items);ONLINE={query:q,loading:false,error:'',notice:'',items:items.slice(0,8),didSearch:true};}
+    else {var c=getOnlineCache(q);ONLINE={query:q,loading:false,error:'',notice:c?t('online_cached'):'',items:c||[],didSearch:true};if(!c)ONLINE.error=t('online_no_results');}
+    renderAddResults(q);
+  }).catch(function(err){
+    var c=getOnlineCache(q)||cached;
+    ONLINE={query:q,loading:false,error:c?'':onlineErrorMessage(err,false),notice:c?t('online_cached'):'',items:c||[],didSearch:true};
+    renderAddResults(q);
+  });
+  setTimeout(function(){if(!settled&&ONLINE.query===q&&ONLINE.loading){ONLINE.notice=t('online_retrying');renderAddResults(q);}},1200);
 }
 function renderAddResults(q){
   var host=$('addResults'),html='';
