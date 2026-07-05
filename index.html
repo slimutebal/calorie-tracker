@@ -496,6 +496,14 @@ body.settings-compact #view-settings .v421-target-box:nth-child(n+3){display:non
 body.settings-compact #view-settings .v421-target-box .l{font-size:9px;margin-bottom:2px}
 body.settings-compact #view-settings .v421-target-box .v{font-size:15px}
 body.settings-compact #view-settings .v421-target-box .s{display:none}
+
+/* ============ V4.2.8d Settings Sticky Micro Mask Fix ============
+   Scoped to Settings only. No sticky logic/layout changes. Extends only the top
+   mask by a few pixels to cover tiny scroll-content bleed near the status area. */
+body.settings-compact #view-settings .settings-sticky-target::before{
+  top:calc(-1 * var(--sat) - 12px);
+  height:calc(var(--sat) + 116px);
+}
 @media(max-width:430px){.compact-header{height:calc(var(--sat) + 84px);padding:calc(var(--sat) + 12px) 16px 16px}.sticky-glass{top:calc(var(--sat) + 8px)}.settings-sticky-target{top:calc(var(--sat) + 8px)}.add-sticky-tools{margin-left:0;margin-right:0}.history-sticky-date{margin-left:0;margin-right:0}}
 
 /* ============ V4.2.6 Add Sticky Header Fix ============ */
@@ -650,42 +658,6 @@ body.history-sticky-active #view-history .history-date-sticky-wrap::before{
   #view-history .history-date-sticky-wrap .history-sticky-date{
     padding-bottom:10px;
   }
-}
-
-
-/* ============ V4.2.8c Settings Sticky Target Mask Fix ============
-   Scoped to Settings only. Do not touch Today/Coach/Add/History. */
-#view-settings{overflow-x:hidden;max-width:100%}
-#view-settings .settings-sticky-target{z-index:27}
-body.settings-compact #view-settings .settings-sticky-target{z-index:28}
-body.settings-compact::after{
-  content:"";
-  position:fixed;
-  left:0;right:0;top:0;
-  height:calc(var(--sat) + 38px);
-  z-index:26;
-  pointer-events:none;
-  background:linear-gradient(to bottom,rgba(245,243,239,1) 0%,rgba(245,243,239,.96) 42%,rgba(245,243,239,0) 100%);
-  -webkit-backdrop-filter:blur(18px) saturate(1.35);
-  backdrop-filter:blur(18px) saturate(1.35);
-}
-[data-theme="dark"] body.settings-compact::after{
-  background:linear-gradient(to bottom,rgba(0,0,0,1) 0%,rgba(0,0,0,.96) 46%,rgba(0,0,0,0) 100%);
-}
-body.settings-compact #view-settings .settings-sticky-target::before{
-  top:calc(-1 * var(--sat) - 18px);
-  height:calc(var(--sat) + 148px);
-  z-index:-1;
-  background:linear-gradient(to bottom,rgba(245,243,239,1) 0%,rgba(245,243,239,.98) 30%,rgba(245,243,239,.86) 54%,rgba(245,243,239,.38) 79%,rgba(245,243,239,0) 100%);
-  -webkit-backdrop-filter:blur(24px) saturate(1.45);
-  backdrop-filter:blur(24px) saturate(1.45);
-}
-[data-theme="dark"] body.settings-compact #view-settings .settings-sticky-target::before{
-  background:linear-gradient(to bottom,rgba(0,0,0,1) 0%,rgba(0,0,0,.96) 32%,rgba(0,0,0,.82) 56%,rgba(0,0,0,.34) 79%,rgba(0,0,0,0) 100%);
-}
-@media(max-width:430px){
-  body.settings-compact::after{height:calc(var(--sat) + 34px)}
-  body.settings-compact #view-settings .settings-sticky-target::before{height:calc(var(--sat) + 138px)}
 }
 
 </style>
@@ -1145,7 +1117,7 @@ body.settings-compact #view-settings .settings-sticky-target::before{
    ================================================================ */
 (function(){
 'use strict';
-var APP_VERSION='4.2.8c';
+var APP_VERSION='4.2.8d';
 var SCHEMA_VERSION=1;
 var NS='calorietrack_id_';
 var K={settings:NS+'settings',logs:NS+'logs_v1',custom:NS+'customfoods_v1',templates:NS+'templates_v1',quick:NS+'quickaccess_v1',onlineCache:NS+'online_lookup_cache_v1',aiMemory:NS+'ai_memory_v1',barcodeCache:NS+'barcode_cache_v1',weight:NS+'weight_v1',mealPlans:NS+'meal_plans_v1',coach:NS+'coach_v1'};

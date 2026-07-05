@@ -1,4 +1,4 @@
-const APP_VERSION = '4.2.8c';
+const APP_VERSION = '4.2.8d';
 const ALLOWED_ORIGINS = new Set([
   'https://slimutebal.github.io',
   'http://localhost:8000',
