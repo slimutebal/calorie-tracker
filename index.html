@@ -496,6 +496,47 @@ body.settings-compact #view-settings .v421-target-box .v{font-size:15px}
 body.settings-compact #view-settings .v421-target-box .s{display:none}
 @media(max-width:430px){.compact-header{height:calc(var(--sat) + 84px);padding:calc(var(--sat) + 12px) 16px 16px}.sticky-glass{top:calc(var(--sat) + 8px)}.settings-sticky-target{top:calc(var(--sat) + 8px)}.add-sticky-tools{margin-left:0;margin-right:0}.history-sticky-date{margin-left:0;margin-right:0}}
 
+/* ============ V4.2.6 Add Sticky Header Fix ============ */
+#view-add .add-sticky-tools{
+  top:calc(var(--sat) + 12px);
+  z-index:23;
+  padding:0 0 18px;
+  margin:0 0 18px;
+  overflow:visible!important;
+}
+#view-add .add-sticky-tools::before{
+  opacity:0;
+  top:calc(-1 * var(--sat) - 18px);
+  height:calc(var(--sat) + 150px);
+  transition:opacity .18s ease;
+}
+body.add-sticky-active #view-add .add-sticky-tools::before{
+  opacity:1;
+  display:block;
+  top:calc(-1 * var(--sat) - 18px);
+  height:calc(var(--sat) + 166px);
+}
+body:not(.add-sticky-active) #view-add .add-sticky-tools::before{display:none;opacity:0}
+#view-add .add-sticky-tools .search{
+  position:relative;
+  z-index:2;
+  margin-bottom:12px;
+}
+#view-add .add-sticky-tools .chips{
+  position:relative;
+  z-index:2;
+  margin:0 -4px -2px;
+  padding:2px 4px 14px;
+  overflow-x:auto;
+  overflow-y:visible;
+}
+#view-add .add-sticky-tools .chip{flex:0 0 auto}
+@media(max-width:430px){
+  #view-add .add-sticky-tools{top:calc(var(--sat) + 12px);padding-bottom:20px;margin-bottom:18px}
+  #view-add .add-sticky-tools .chips{padding-bottom:16px}
+  body.add-sticky-active #view-add .add-sticky-tools::before{height:calc(var(--sat) + 176px)}
+}
+
 </style>
 </head>
 <body>
@@ -951,7 +992,7 @@ body.settings-compact #view-settings .v421-target-box .s{display:none}
    ================================================================ */
 (function(){
 'use strict';
-var APP_VERSION='4.2.5';
+var APP_VERSION='4.2.6';
 var SCHEMA_VERSION=1;
 var NS='calorietrack_id_';
 var K={settings:NS+'settings',logs:NS+'logs_v1',custom:NS+'customfoods_v1',templates:NS+'templates_v1',quick:NS+'quickaccess_v1',onlineCache:NS+'online_lookup_cache_v1',aiMemory:NS+'ai_memory_v1',barcodeCache:NS+'barcode_cache_v1',weight:NS+'weight_v1',mealPlans:NS+'meal_plans_v1',coach:NS+'coach_v1'};
@@ -2228,11 +2269,13 @@ function stickySubtitleFor(v){
 function updateCompactHeader(){
   var h=$('compactHeader');if(!h)return;
   var show=(currentView==='today'||currentView==='coach')&&window.scrollY>54;
+  var addSticky=(currentView==='add')&&window.scrollY>42;
   h.classList.toggle('show',show);
   h.setAttribute('aria-hidden',show?'false':'true');
   $('compactTitle').textContent=t(VIEW_KEYS[currentView]||'view_today');
   $('compactSub').textContent=stickySubtitleFor(currentView);
   document.body.classList.toggle('settings-compact',currentView==='settings'&&window.scrollY>56);
+  document.body.classList.toggle('add-sticky-active',addSticky);
 }
 function requestStickyUpdate(){
   if(stickyTick)return;stickyTick=true;
