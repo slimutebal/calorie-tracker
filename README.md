@@ -1,5 +1,12 @@
 # Calorie Tracker
 
+## What changed in v4.2.5
+
+- Fixed sticky context headers so Add, History, and Settings respect the iPhone safe-area / Dynamic Island region.
+- Moved sticky Search/filter tools, History date strip, and compact Active Target below the safe area instead of attaching to the physical top edge.
+- Kept the iOS-style gradient blur material from v4.2.4, but prevented the controls from being covered by the status bar / Dynamic Island.
+- Bumped the app version to `4.2.5` and the service worker cache to `calorietrack-shell-v31`.
+
 ## What changed in v4.2.4
 
 - Replaced the compact sticky header pill/capsule with a full-width iOS-style gradient blur material.
@@ -95,7 +102,7 @@
 - Bumped the app version to `2.3.4` and the service worker cache to `calorietrack-shell-v21`.
 
 
-**Version:** 4.2.4  
+**Version:** 4.2.5  
 **Repository:** https://github.com/slimutebal/calorie-tracker
 
 Calorie Tracker is a static, mobile-first **Progressive Web App (PWA)** for daily calorie and macronutrient tracking. It includes a built-in food library covering common **Indonesian, Western, Middle Eastern, and Asian** foods, optional multi-source online lookup through the Calorie Tracker API backend proxy, optional barcode lookup, and optional AI scan for meal photos and nutrition labels. It has no account system and no telemetry. All personal food logs stay **only on the device/browser that uses the app**. In this roadmap, v4 is the local coach and goal-based targeting release; optional cloud backup/sync is reserved for v5.

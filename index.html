@@ -469,19 +469,19 @@ nav::before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-e
 .v421-rate-note{font-size:11px;line-height:1.35;color:var(--ink3);margin-top:6px}
 .v421-suggestion-copy{font-size:13px;line-height:1.4;color:var(--ink2);margin-top:8px}
 
-/* ============ V4.2.4 Gradient Sticky Header Material ============ */
+/* ============ V4.2.5 Safe-Area Sticky Header Fix ============ */
 .compact-header{position:fixed;left:0;right:0;top:0;z-index:24;height:calc(var(--sat) + 88px);padding:calc(var(--sat) + 13px) 20px 18px;text-align:center;opacity:0;pointer-events:none;transform:translateY(-10px);transition:opacity .22s ease,transform .22s ease;will-change:opacity,transform;background:transparent;border:0;box-shadow:none}
 .compact-header.show{opacity:1;transform:translateY(0);background:var(--top-sticky-gradient);-webkit-backdrop-filter:blur(22px) saturate(1.45);backdrop-filter:blur(22px) saturate(1.45)}
 .compact-header.show::after{content:"";position:absolute;left:0;right:0;top:0;height:1px;background:var(--top-sticky-border)}
 .compact-title{font-weight:900;font-size:16px;letter-spacing:-.02em;line-height:1.08;color:var(--ink);text-shadow:0 1px 8px rgba(0,0,0,.12)}
 .compact-sub{font-weight:700;font-size:12px;line-height:1.2;color:var(--ink2);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 1px 8px rgba(0,0,0,.10)}
-.sticky-glass{position:sticky;top:0;z-index:21;background:transparent!important;border:0!important;box-shadow:none!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important;isolation:isolate;overflow:visible}
+.sticky-glass{position:sticky;top:calc(var(--sat) + 8px);z-index:21;background:transparent!important;border:0!important;box-shadow:none!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important;isolation:isolate;overflow:visible}
 .sticky-glass::before{content:"";position:absolute;left:50%;top:calc(-1 * var(--sat) - 8px);width:100vw;height:calc(var(--sat) + 112px);transform:translateX(-50%);z-index:-1;pointer-events:none;background:var(--top-sticky-gradient);-webkit-backdrop-filter:blur(22px) saturate(1.45);backdrop-filter:blur(22px) saturate(1.45)}
 .add-sticky-tools{border-radius:0;padding:8px 0 10px;margin:0 0 14px}
 .add-sticky-tools .search{margin-bottom:10px;box-shadow:var(--shadow);background:var(--input-glass)}
 .add-sticky-tools .chips{margin-bottom:0;padding-bottom:1px}
 .history-sticky-date{border-radius:0;padding:8px 0 10px;margin:0 0 14px}
-.settings-sticky-target{position:sticky;top:0;z-index:20;transition:padding .18s ease,border-radius .18s ease,background .18s ease,border-color .18s ease,box-shadow .18s ease;overflow:visible}
+.settings-sticky-target{position:sticky;top:calc(var(--sat) + 8px);z-index:20;transition:padding .18s ease,border-radius .18s ease,background .18s ease,border-color .18s ease,box-shadow .18s ease;overflow:visible}
 body.settings-compact #view-settings .settings-sticky-target{padding:10px 0 12px;border-radius:0;background:transparent!important;border-color:transparent!important;box-shadow:none!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important;isolation:isolate}
 body.settings-compact #view-settings .settings-sticky-target::before{content:"";position:absolute;left:50%;top:calc(-1 * var(--sat) - 8px);width:100vw;height:calc(var(--sat) + 112px);transform:translateX(-50%);z-index:-1;pointer-events:none;background:var(--top-sticky-gradient);-webkit-backdrop-filter:blur(22px) saturate(1.45);backdrop-filter:blur(22px) saturate(1.45)}
 body.settings-compact #view-settings .settings-sticky-target .row.spread{margin-bottom:2px}
@@ -494,7 +494,7 @@ body.settings-compact #view-settings .v421-target-box:nth-child(n+3){display:non
 body.settings-compact #view-settings .v421-target-box .l{font-size:9px;margin-bottom:2px}
 body.settings-compact #view-settings .v421-target-box .v{font-size:15px}
 body.settings-compact #view-settings .v421-target-box .s{display:none}
-@media(max-width:430px){.compact-header{height:calc(var(--sat) + 84px);padding:calc(var(--sat) + 12px) 16px 16px}.sticky-glass{top:0}.add-sticky-tools{margin-left:0;margin-right:0}.history-sticky-date{margin-left:0;margin-right:0}}
+@media(max-width:430px){.compact-header{height:calc(var(--sat) + 84px);padding:calc(var(--sat) + 12px) 16px 16px}.sticky-glass{top:calc(var(--sat) + 8px)}.settings-sticky-target{top:calc(var(--sat) + 8px)}.add-sticky-tools{margin-left:0;margin-right:0}.history-sticky-date{margin-left:0;margin-right:0}}
 
 </style>
 </head>
@@ -951,7 +951,7 @@ body.settings-compact #view-settings .v421-target-box .s{display:none}
    ================================================================ */
 (function(){
 'use strict';
-var APP_VERSION='4.2.4';
+var APP_VERSION='4.2.5';
 var SCHEMA_VERSION=1;
 var NS='calorietrack_id_';
 var K={settings:NS+'settings',logs:NS+'logs_v1',custom:NS+'customfoods_v1',templates:NS+'templates_v1',quick:NS+'quickaccess_v1',onlineCache:NS+'online_lookup_cache_v1',aiMemory:NS+'ai_memory_v1',barcodeCache:NS+'barcode_cache_v1',weight:NS+'weight_v1',mealPlans:NS+'meal_plans_v1',coach:NS+'coach_v1'};
