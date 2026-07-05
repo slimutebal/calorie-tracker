@@ -257,6 +257,25 @@ header.appbar{padding:14px 18px;margin:4px 0 14px;display:flex;align-items:flex-
 .ai-inline-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
 .ai-inline-actions .mini-btn{min-height:34px}
 .ai-memory-note{font-size:12px;line-height:1.45;color:var(--ink2);background:rgba(52,199,89,.10);border:1px solid rgba(52,199,89,.22);border-radius:12px;padding:8px 10px;margin:8px 0 10px}
+
+/* ============ PERSONAL NUTRITION INTELLIGENCE ============ */
+.intel-card .row.spread{align-items:flex-start}
+.intel-badge{font-size:10px;font-weight:900;letter-spacing:.10em;text-transform:uppercase;color:var(--info-text);background:rgba(10,132,255,.12);border:1px solid rgba(10,132,255,.22);border-radius:999px;padding:5px 9px;white-space:nowrap}
+.intel-kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:12px 0 10px}
+.intel-kpi{background:var(--card2);border:1px solid var(--glass-border);border-radius:14px;padding:10px;min-width:0}
+.intel-kpi .l{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink3);font-weight:900;margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.intel-kpi .v{font-size:17px;font-weight:900;letter-spacing:-.03em;line-height:1.05;color:var(--ink)}
+.intel-kpi .s{font-size:11px;color:var(--ink3);margin-top:4px;line-height:1.25}
+.intel-list{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+.intel-item{display:flex;gap:10px;align-items:flex-start;background:var(--card2);border:1px solid var(--glass-border);border-radius:14px;padding:10px 11px}
+.intel-ico{width:28px;height:28px;border-radius:10px;background:var(--input-glass);border:1px solid var(--glass-border);display:flex;align-items:center;justify-content:center;flex:0 0 28px;font-size:14px}
+.intel-text{font-size:13px;line-height:1.35;color:var(--ink2)}
+.intel-text strong{color:var(--ink);font-weight:800}
+.intel-meter{height:7px;border-radius:99px;background:var(--line);overflow:hidden;margin-top:8px}
+.intel-meter i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,var(--prot),var(--kcal1));max-width:100%}
+.intel-empty{color:var(--ink3);font-size:13px;line-height:1.4;padding:4px 0 2px}
+@media (max-width:430px){.intel-kpis{grid-template-columns:1fr}.intel-kpi{display:grid;grid-template-columns:110px 1fr;gap:4px 10px;align-items:center}.intel-kpi .s{grid-column:2}}
+
 @media (max-width:430px){.ai-item-grid{grid-template-columns:1fr 1fr}.ai-item-grid .wide{grid-column:1/-1}}
 .btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;min-height:50px;border-radius:14px;
   font-size:16px;font-weight:700;transition:transform .1s}
@@ -398,6 +417,14 @@ nav::before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-e
           </div>
           <div class="tiny" id="waterLbl" style="margin-top:8px"></div>
         </div>
+
+        <div class="card intel-card">
+          <div class="row spread">
+            <h3 style="margin:0" data-i18n="h_intelligence">Nutrition Intelligence</h3>
+            <span class="intel-badge">V3</span>
+          </div>
+          <div id="dailyInsights"></div>
+        </div>
       </div>
 
       <div class="col-b">
@@ -489,6 +516,13 @@ nav::before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-e
             <span><i style="background:linear-gradient(135deg,var(--kcal1),var(--kcal2))"></i><span data-i18n="lbl_kcal_word">Kalori</span></span>
             <span><i style="background:var(--ink3)"></i><span data-i18n="lbl_target">Target</span></span>
           </div>
+        </div>
+        <div class="card intel-card">
+          <div class="row spread">
+            <h3 style="margin:0" data-i18n="h_weekly_intelligence">Weekly Intelligence</h3>
+            <span class="intel-badge">V3</span>
+          </div>
+          <div id="weeklyInsights"></div>
         </div>
         <div class="card">
           <h3 data-i18n="h_weekly">Ringkasan Mingguan</h3>
@@ -739,7 +773,7 @@ nav::before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-e
    ================================================================ */
 (function(){
 'use strict';
-var APP_VERSION='2.3.4';
+var APP_VERSION='3.0.0';
 var SCHEMA_VERSION=1;
 var NS='calorietrack_id_';
 var K={settings:NS+'settings',logs:NS+'logs_v1',custom:NS+'customfoods_v1',templates:NS+'templates_v1',quick:NS+'quickaccess_v1',onlineCache:NS+'online_lookup_cache_v1',aiMemory:NS+'ai_memory_v1',barcodeCache:NS+'barcode_cache_v1'};
@@ -929,7 +963,7 @@ var I18N={
     h_online_lookup:"Pencarian Makanan Online", opt_off:"Mati", opt_on:"Aktif",
     txt_online_lookup:"Jika aktif, tombol Cari Online hanya mengirim kata kunci pencarian ke Calorie Tracker API. API akan mencari ke Open Food Facts. Catatan, riwayat, dan pengaturan tetap lokal di perangkat ini.",
     txt_builtin_disclaimer:"Nilai gizi merupakan estimasi umum dan dapat berbeda dari makanan asli.",
-    h_trend:"Tren 7 Hari", lbl_kcal_word:"Kalori", h_weekly:"Ringkasan Mingguan",
+    h_trend:"Tren 7 Hari", lbl_kcal_word:"Kalori", h_weekly:"Ringkasan Mingguan", h_intelligence:"Nutrition Intelligence", h_weekly_intelligence:"Weekly Intelligence",
     h_daily_target:"Target Harian",
     lbl_target_kcal:"Kalori (kkal)", lbl_target_protein:"Protein (g)",
     lbl_target_carbs:"Karbo (g)", lbl_target_fat:"Lemak (g)", lbl_target_water:"Air (ml)",
@@ -1063,7 +1097,7 @@ var I18N={
     h_online_lookup:"Online Food Lookup", opt_off:"Off", opt_on:"On",
     txt_online_lookup:"When enabled, Search Online sends only your search keyword to the Calorie Tracker API. The API compares curated restaurant data, Open Food Facts, and USDA when configured. Logs, history, and settings remain local on this device.",
     txt_builtin_disclaimer:"Nutrition values are general estimates and may differ from the actual food.",
-    h_trend:"7-Day Trend", lbl_kcal_word:"Calories", h_weekly:"Weekly Summary",
+    h_trend:"7-Day Trend", lbl_kcal_word:"Calories", h_weekly:"Weekly Summary", h_intelligence:"Nutrition Intelligence", h_weekly_intelligence:"Weekly Intelligence",
     h_daily_target:"Daily Target",
     lbl_target_kcal:"Calories (kcal)", lbl_target_protein:"Protein (g)",
     lbl_target_carbs:"Carbs (g)", lbl_target_fat:"Fat (g)", lbl_target_water:"Water (ml)",
@@ -1073,7 +1107,7 @@ var I18N={
     txt_backup_note:"Export a backup regularly. Clearing Safari data or removing the app from the Home Screen may delete your local data.",
     h_about:"About & Privacy",
     about_p1:'<strong style="color:var(--ink)">Calorie Tracker</strong> is a local app with no server. All food entries, history, and settings are stored <strong style="color:var(--ink)">only on this device</strong> — no login, no data upload, no tracking.',
-    about_p2:"Nutrition values are estimates and may vary by brand, cooking method, recipe, and portion size. This app is for personal tracking only and is not medical advice. Online lookup is optional and only sends the search keyword to the Calorie Tracker API when used; the API compares curated restaurant data, Open Food Facts, and USDA when configured. AI scan is optional and sends the selected image to the Calorie Tracker API/AI provider only when used; images are not stored by the app backend.",
+    about_p2:"Nutrition values are estimates and may vary by brand, cooking method, recipe, and portion size. This app is for personal tracking only and is not medical advice. Online lookup is optional and only sends the search keyword to the Calorie Tracker API when used; the API compares curated restaurant data, Open Food Facts, and USDA when configured. AI scan is optional and sends the selected image to the Calorie Tracker API/AI provider only when used; images are not stored by the app backend. Nutrition Intelligence runs locally from your saved logs and targets.",
     lbl_version:"Version",
     aria_nav:"Main navigation", nav_today:"Today", nav_foods:"Foods", nav_history:"History", nav_settings:"Settings",
     aria_add_food:"Add food",
@@ -1297,6 +1331,96 @@ function dayTotals(dateStr){
   var d=dayObj(dateStr,false),t={kcal:0,protein:0,carbs:0,fat:0};
   d.entries.forEach(function(e){t.kcal+=e.kcal||0;t.protein+=e.protein||0;t.carbs+=e.carbs||0;t.fat+=e.fat||0;});
   return t;
+}
+
+/* ---------------- Personal Nutrition Intelligence ---------------- */
+function tx(en,id){return L()==='en'?en:id;}
+function pct(n){return Math.max(0,Math.min(100,Math.round(n)));}
+function intelItem(icon,html){return '<div class="intel-item"><div class="intel-ico">'+icon+'</div><div class="intel-text">'+html+'</div></div>';}
+function intelKpi(label,value,sub,ratio){
+  var bar=isFinite(ratio)?'<div class="intel-meter"><i style="width:'+pct(ratio*100)+'%"></i></div>':'';
+  return '<div class="intel-kpi"><div class="l">'+esc(label)+'</div><div class="v num">'+value+'</div><div class="s">'+sub+'</div>'+bar+'</div>';
+}
+function aggregateDays(days){
+  var out={days:days,loggedDays:0,entries:[],totals:{kcal:0,protein:0,carbs:0,fat:0,waterMl:0},mealTotals:{},foodTotals:{},best:null,worst:null,within:0};
+  days.forEach(function(ds){
+    var d=dayObj(ds,false),tot=dayTotals(ds),has=d.entries&&d.entries.length;
+    if(has){
+      out.loggedDays++;
+      out.entries=out.entries.concat(d.entries.map(function(e){var x=Object.assign({},e);x.date=ds;return x;}));
+      out.totals.kcal+=tot.kcal;out.totals.protein+=tot.protein;out.totals.carbs+=tot.carbs;out.totals.fat+=tot.fat;
+      if(tot.kcal>=S.settings.targets.kcal*.9&&tot.kcal<=S.settings.targets.kcal*1.1)out.within++;
+      var delta=Math.abs(tot.kcal-S.settings.targets.kcal);
+      if(!out.best||delta<out.best.delta)out.best={date:ds,kcal:tot.kcal,delta:delta};
+      if(!out.worst||delta>out.worst.delta)out.worst={date:ds,kcal:tot.kcal,delta:delta};
+    }
+    out.totals.waterMl+=(d.waterMl||0);
+    (d.entries||[]).forEach(function(e){
+      out.mealTotals[e.meal]=(out.mealTotals[e.meal]||0)+(e.kcal||0);
+      var key=normalize(e.foodName||'');
+      if(!key)return;
+      if(!out.foodTotals[key])out.foodTotals[key]={name:e.foodName,kcal:0,count:0,protein:0,carbs:0,fat:0};
+      out.foodTotals[key].kcal+=e.kcal||0;out.foodTotals[key].count++;out.foodTotals[key].protein+=e.protein||0;out.foodTotals[key].carbs+=e.carbs||0;out.foodTotals[key].fat+=e.fat||0;
+    });
+  });
+  out.avg={
+    kcal:out.loggedDays?out.totals.kcal/out.loggedDays:0,
+    protein:out.loggedDays?out.totals.protein/out.loggedDays:0,
+    carbs:out.loggedDays?out.totals.carbs/out.loggedDays:0,
+    fat:out.loggedDays?out.totals.fat/out.loggedDays:0,
+    waterMl:days.length?out.totals.waterMl/days.length:0
+  };
+  out.topFood=Object.keys(out.foodTotals).map(function(k){return out.foodTotals[k];}).sort(function(a,b){return b.kcal-a.kcal;})[0]||null;
+  out.topMeal=Object.keys(out.mealTotals).map(function(k){return {meal:k,kcal:out.mealTotals[k]};}).sort(function(a,b){return b.kcal-a.kcal;})[0]||null;
+  return out;
+}
+function renderDailyInsights(){
+  var host=$('dailyInsights');if(!host)return;
+  var ds=todayStr(),d=dayObj(ds,false),tot=dayTotals(ds),tg=S.settings.targets,left=tg.kcal-tot.kcal;
+  var week=aggregateDays(lastNDates(7));
+  var kpis='';
+  kpis+=intelKpi(tx('Calories','Kalori'),(left>=0?fmtInt(left):'+'+fmtInt(Math.abs(left)))+' '+t('unit_kkal'),left>=0?tx('remaining today','tersisa hari ini'):tx('over target','melewati target'),tg.kcal?tot.kcal/tg.kcal:0);
+  kpis+=intelKpi('Protein',fmt1(tot.protein)+' g',fmtInt(Math.max(0,tg.protein-tot.protein))+' g '+tx('left','sisa'),tg.protein?tot.protein/tg.protein:0);
+  kpis+=intelKpi(tx('7-day avg','Rata 7 hari'),week.loggedDays?fmtInt(week.avg.kcal)+' '+t('unit_kkal'):'—',week.loggedDays?week.loggedDays+' '+tx('logged days','hari tercatat'):tx('need more data','butuh data'),tg.kcal&&week.loggedDays?week.avg.kcal/tg.kcal:0);
+  var items=[];
+  if(!d.entries.length){
+    items.push(intelItem('📌',tx('Log your first meal today. After a few entries, this card will show calorie, protein, meal timing, and top-contributor patterns.','Catat makanan pertama hari ini. Setelah ada beberapa entri, kartu ini akan membaca pola kalori, protein, waktu makan, dan penyumbang kalori terbesar.')));
+  }else{
+    if(left<0)items.push(intelItem('⚠️',tx('You are <strong>over today\'s calorie target</strong>. Keep the next intake light and prioritize protein or water instead of calorie-dense snacks.','Kamu sudah <strong>melewati target kalori hari ini</strong>. Intake berikutnya sebaiknya ringan, prioritaskan protein atau air dibanding camilan padat kalori.')));
+    else if(left<250)items.push(intelItem('⏳',tx('Calories are nearly used up. You have about <strong>'+fmtInt(left)+' kcal</strong> remaining, so choose a small portion if eating again.','Kalori hampir habis. Sisa sekitar <strong>'+fmtInt(left)+' kkal</strong>, jadi pilih porsi kecil jika makan lagi.')));
+    else items.push(intelItem('✅',tx('You still have <strong>'+fmtInt(left)+' kcal</strong> available today. Use it deliberately rather than filling it accidentally with snacks or sweet drinks.','Masih ada <strong>'+fmtInt(left)+' kkal</strong> hari ini. Gunakan dengan sengaja, bukan habis tanpa sadar lewat camilan atau minuman manis.')));
+    if(tg.protein&&tot.protein<tg.protein*.65&&left>200)items.push(intelItem('💪',tx('Protein is still low. Aim for roughly <strong>'+fmtInt(tg.protein-tot.protein)+' g</strong> more protein if possible.','Protein masih rendah. Targetkan tambahan sekitar <strong>'+fmtInt(tg.protein-tot.protein)+' g</strong> protein jika memungkinkan.')));
+    else if(tg.protein&&tot.protein>=tg.protein*.9)items.push(intelItem('💪',tx('Protein is close to target. Keep the rest of the day balanced.','Protein sudah mendekati target. Sisa hari ini cukup dijaga seimbang.')));
+    if(tg.fat&&tot.fat>tg.fat*.95&&left>0)items.push(intelItem('🧈',tx('Fat intake is near target. Be careful with fried foods, oils, creamy sauces, and cheese for the rest of today.','Asupan lemak sudah dekat target. Hati-hati dengan gorengan, minyak, saus creamy, dan keju untuk sisa hari ini.')));
+    var top=d.entries.slice().sort(function(a,b){return (b.kcal||0)-(a.kcal||0);})[0];
+    if(top&&tot.kcal>0&&(top.kcal/tot.kcal)>=.35)items.push(intelItem('🔎',tx('Biggest contributor today: <strong>'+esc(top.foodName)+'</strong> ('+Math.round(top.kcal/tot.kcal*100)+'% of intake).','Penyumbang terbesar hari ini: <strong>'+esc(top.foodName)+'</strong> ('+Math.round(top.kcal/tot.kcal*100)+'% dari intake).')));
+    if((d.waterMl||0)<(tg.waterMl||2000)*.5)items.push(intelItem('💧',tx('Water intake is still low versus target. Add one glass now if you can.','Air minum masih rendah dibanding target. Tambah satu gelas sekarang jika bisa.')));
+  }
+  if(week.loggedDays>=3){
+    if(week.avg.protein<tg.protein*.75)items.push(intelItem('📈',tx('Weekly pattern: average protein is <strong>'+fmt1(week.avg.protein)+' g/day</strong>, below your '+fmtInt(tg.protein)+' g target.','Pola mingguan: rata-rata protein <strong>'+fmt1(week.avg.protein)+' g/hari</strong>, masih di bawah target '+fmtInt(tg.protein)+' g.')));
+    if(week.topFood&&week.topFood.count>=2)items.push(intelItem('🍽',tx('Recurring calorie source this week: <strong>'+esc(week.topFood.name)+'</strong> logged '+week.topFood.count+' times.','Sumber kalori berulang minggu ini: <strong>'+esc(week.topFood.name)+'</strong> tercatat '+week.topFood.count+' kali.')));
+  }else{
+    items.push(intelItem('🧠',tx('Log at least <strong>3 days</strong> to unlock stronger weekly pattern insights.','Catat minimal <strong>3 hari</strong> agar insight pola mingguan lebih kuat.')));
+  }
+  host.innerHTML='<div class="intel-kpis">'+kpis+'</div><div class="intel-list">'+items.slice(0,5).join('')+'</div>';
+}
+function renderWeeklyInsights(){
+  var host=$('weeklyInsights');if(!host)return;
+  var tg=S.settings.targets,week=aggregateDays(lastNDates(7));
+  if(!week.loggedDays){host.innerHTML='<div class="intel-empty">'+tx('No weekly intelligence yet. Log food for a few days first.','Belum ada weekly intelligence. Catat makanan beberapa hari dulu.')+'</div>';return;}
+  var kpis='';
+  kpis+=intelKpi(tx('Avg calories','Rata kalori'),fmtInt(week.avg.kcal)+' '+t('unit_kkal'),(week.avg.kcal>=tg.kcal?'+':'')+fmtInt(week.avg.kcal-tg.kcal)+' '+t('unit_kkal')+' '+tx('vs target','vs target'),tg.kcal?week.avg.kcal/tg.kcal:0);
+  kpis+=intelKpi('Protein',fmt1(week.avg.protein)+' g/'+tx('day','hari'),fmtInt(tg.protein)+' g '+tx('target','target'),tg.protein?week.avg.protein/tg.protein:0);
+  kpis+=intelKpi(tx('On target','Sesuai target'),week.within+'/'+week.loggedDays,tx('days within ±10%','hari dalam ±10%'),week.loggedDays?week.within/week.loggedDays:0);
+  var items=[];
+  if(week.avg.kcal>tg.kcal*1.1)items.push(intelItem('🔥',tx('Your weekly calorie average is above target. Reducing one high-calorie item per day may be enough.','Rata-rata kalori mingguan di atas target. Mengurangi satu item tinggi kalori per hari mungkin sudah cukup.')));
+  else if(week.avg.kcal<tg.kcal*.8)items.push(intelItem('📉',tx('Your weekly calorie average is far below target. Check whether this is intentional and sustainable.','Rata-rata kalori mingguan jauh di bawah target. Pastikan ini memang disengaja dan masih nyaman dijalankan.')));
+  else items.push(intelItem('🎯',tx('Weekly calorie average is near your target. Keep the same structure and improve food quality where needed.','Rata-rata kalori mingguan dekat target. Pertahankan struktur makan dan perbaiki kualitas makanan jika perlu.')));
+  if(week.avg.protein<tg.protein*.8)items.push(intelItem('💪',tx('Protein is the clearest gap this week: <strong>'+fmt1(week.avg.protein)+' g/day</strong>.','Protein adalah gap paling jelas minggu ini: <strong>'+fmt1(week.avg.protein)+' g/hari</strong>.')));
+  if(week.topFood)items.push(intelItem('🏆',tx('Top calorie contributor: <strong>'+esc(week.topFood.name)+'</strong> · '+fmtInt(week.topFood.kcal)+' kcal total.','Penyumbang kalori terbesar: <strong>'+esc(week.topFood.name)+'</strong> · total '+fmtInt(week.topFood.kcal)+' kkal.')));
+  if(week.topMeal)items.push(intelItem('🕒',tx('Most calories came from <strong>'+mealLabel(week.topMeal.meal)+'</strong>.','Kalori paling banyak berasal dari <strong>'+mealLabel(week.topMeal.meal)+'</strong>.')));
+  if(week.avg.waterMl<(tg.waterMl||2000)*.7)items.push(intelItem('💧',tx('Average water is below target: <strong>'+fmtInt(week.avg.waterMl)+' ml/day</strong>.','Rata-rata air minum di bawah target: <strong>'+fmtInt(week.avg.waterMl)+' ml/hari</strong>.')));
+  host.innerHTML='<div class="intel-kpis">'+kpis+'</div><div class="intel-list">'+items.slice(0,5).join('')+'</div>';
 }
 
 /* ---------------- Recents / favorites ---------------- */
@@ -1983,6 +2107,7 @@ function renderToday(){
     return '<div class="entry" style="pointer-events:none"><div class="info"><div class="n">'+esc(e.foodName)+'</div>'+
       '<div class="s">'+p+t('pct_of_intake')+'</div></div><div class="kc num">'+fmtInt(e.kcal)+' <small>'+t('unit_kkal')+'</small></div></div>';
   }).join('');
+  renderDailyInsights();
   /* onboarding */
   $('onboardCard').innerHTML=S.settings.onboarded?'':(
     '<div class="banner banner-info"><strong>'+t('onboard_title')+'</strong><br>'+
@@ -2461,6 +2586,7 @@ function renderHistory(opts){
       :'<div class="empty">'+t('empty_history_day')+'</div>');
   /* chart 7 days */
   $('chart7').innerHTML=buildChart(lastNDates(7),tg.kcal);
+  renderWeeklyInsights();
   /* weekly stats */
   var days7=lastNDates(7),vals=[],within=0;
   days7.forEach(function(ds){

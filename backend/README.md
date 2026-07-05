@@ -9,7 +9,7 @@ Cloudflare Worker backend for Calorie Tracker online food lookup and optional AI
 - USDA FoodData Central, optional and enabled only when `USDA_API_KEY` is configured as a Cloudflare Worker secret.
 
 
-## v2.3.4 AI scan notes
+## v3.0.0 AI scan notes
 
 - `POST /analyze-image` uses Gemini as the primary vision provider when `GEMINI_API_KEY` is configured.
 - Cloudflare Workers AI is used as fallback when the `AI` binding is configured.
@@ -60,7 +60,7 @@ https://calorie-tracker-api.illofiajie-ia.workers.dev/workers-ai-agree
 Only the search keyword is sent to this Worker. Food logs, history, targets, settings, custom foods, and backups remain local in the PWA.
 
 
-## v2.3.4 additions
+## v3.0.0 additions
 
 - `GET /barcode?code=<ean-or-upc>` looks up a packaged product by barcode/product code through Open Food Facts and returns the same result shape used by `/lookup`.
 - `POST /analyze-image` now supports the AI Scan Quality Bundle fields used by the frontend local correction memory and packaged-product serving flow.

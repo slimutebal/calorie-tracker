@@ -1,4 +1,4 @@
-const APP_VERSION = '2.3.4';
+const APP_VERSION = '3.0.0';
 const ALLOWED_ORIGINS = new Set([
   'https://slimutebal.github.io',
   'http://localhost:8000',
@@ -6,7 +6,7 @@ const ALLOWED_ORIGINS = new Set([
   'http://localhost:8080',
   'http://127.0.0.1:8080'
 ]);
-const USER_AGENT = 'CalorieTracker/2.3.4 (https://github.com/slimutebal/calorie-tracker)';
+const USER_AGENT = 'CalorieTracker/3.0.0 (https://github.com/slimutebal/calorie-tracker)';
 const OFF_SEARCH_URL = 'https://world.openfoodfacts.org/cgi/search.pl';
 const OFF_PRODUCT_URL = 'https://world.openfoodfacts.org/api/v2/product';
 const USDA_SEARCH_URL = 'https://api.nal.usda.gov/fdc/v1/foods/search';
@@ -700,7 +700,7 @@ export default {
         return json({ ok: true, service: 'Calorie Tracker API', version: APP_VERSION, endpoints: ['/lookup?q=cheeseburger', '/barcode?code=8999999000000', 'POST /analyze-image', '/ai-status', '/gemini-models', '/workers-ai-agree'], providers: ['Curated Restaurant Pack', 'Open Food Facts', 'Open Food Facts Barcode', env && env.USDA_API_KEY ? 'USDA FoodData Central' : 'USDA FoodData Central (optional secret not configured)', env && env.GEMINI_API_KEY ? 'Gemini Vision' : 'Gemini Vision (optional secret not configured)', env && env.AI ? 'Cloudflare Workers AI Vision' : 'Cloudflare Workers AI Vision (optional binding not configured)'] }, 200, origin);
       }
       if (url.pathname === '/lookup') return await handleLookup(request, env, ctx, origin);
-      if (url.pathname === '/ai-status') return json({ ok: true, version: APP_VERSION, geminiConfigured: !!(env && env.GEMINI_API_KEY), workersAiConfigured: !!(env && env.AI), geminiModel: env && env.GEMINI_MODEL || GEMINI_MODEL, geminiCandidates: geminiCandidateModels(env).map(geminiModelLabel), workersAiModel: WORKERS_AI_VISION_MODEL, workersAiAgreeEndpoint: '/workers-ai-agree', features: ['ai-scan-quality','local-correction-memory','barcode-lookup','packaged-product-serving-memory'] }, 200, origin);
+      if (url.pathname === '/ai-status') return json({ ok: true, version: APP_VERSION, geminiConfigured: !!(env && env.GEMINI_API_KEY), workersAiConfigured: !!(env && env.AI), geminiModel: env && env.GEMINI_MODEL || GEMINI_MODEL, geminiCandidates: geminiCandidateModels(env).map(geminiModelLabel), workersAiModel: WORKERS_AI_VISION_MODEL, workersAiAgreeEndpoint: '/workers-ai-agree', features: ['ai-scan-quality','local-correction-memory','barcode-lookup','packaged-product-serving-memory','personal-nutrition-intelligence'] }, 200, origin);
       if (url.pathname === '/gemini-models') return await handleGeminiModels(env, origin);
       if (url.pathname === '/workers-ai-agree') return await handleWorkersAiAgree(env, origin);
       if (url.pathname === '/analyze-image') return await handleAnalyzeImage(request, env, ctx, origin);
