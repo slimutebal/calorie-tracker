@@ -1,5 +1,14 @@
 # Calorie Tracker
 
+## What changed in v3.3.0
+
+- Added **Weight & Goal Tracking**: current weight, goal weight, target rate, maintenance-calorie estimate, suggested daily target, and local weight log.
+- Added **Weight + Calorie Trend** in History with local weight trend and calorie average context.
+- Added stronger **Smart Recommendations**: remaining-calorie guidance, explicit protein gap, next-meal suggestions, and goal-rate context.
+- Added **Meal Planning**: plan tomorrow by meal window, kcal, and protein; later log the planned meal into today's food log.
+- Backup/export now includes local weight profile, weight entries, and meal plans.
+- Bumped the app version to `3.3.0` and the service worker cache to `calorietrack-shell-v23`.
+
 ## What changed in v3.0.0
 
 - Added **Personal Nutrition Intelligence** on the Today dashboard: local calorie, protein, water, remaining-calorie, and biggest-contributor guidance.
@@ -19,7 +28,7 @@
 - Bumped the app version to `2.3.4` and the service worker cache to `calorietrack-shell-v21`.
 
 
-**Version:** 3.0.0  
+**Version:** 3.3.0  
 **Repository:** https://github.com/slimutebal/calorie-tracker
 
 Calorie Tracker is a static, mobile-first **Progressive Web App (PWA)** for daily calorie and macronutrient tracking. It includes a built-in food library covering common **Indonesian, Western, Middle Eastern, and Asian** foods, optional multi-source online lookup through the Calorie Tracker API backend proxy, optional barcode lookup, and optional AI scan for meal photos and nutrition labels. It has no account system and no telemetry. All personal food logs stay **only on the device/browser that uses the app**.
@@ -47,7 +56,7 @@ Calorie Tracker is a static, mobile-first **Progressive Web App (PWA)** for dail
 
 ## Features
 
-- **Today dashboard** — calorie ring, consumed/remaining calories, macro progress, water tracker, meal sections, top calorie contributors, and local Personal Nutrition Intelligence.
+- **Today dashboard** — calorie ring, consumed/remaining calories, macro progress, water tracker, meal sections, top calorie contributors, local Personal Nutrition Intelligence, Smart Recommendations, and Meal Planning.
 - **Quick Add** — food search, favorites, recent foods, quantity presets, and household units such as serving, bowl, glass, cup, tablespoon, teaspoon, piece, pack, skewer, and scoop.
 - **Built-in food database** — about 112 foods across Indonesian, Western, Middle Eastern, and Asian cuisines.
 - **Cuisine filter** — All / Indonesian / Western / Middle Eastern / Asian / Custom.
@@ -57,7 +66,7 @@ Calorie Tracker is a static, mobile-first **Progressive Web App (PWA)** for dail
 - **AI Nutrition Label Scan** — optional label photo parsing into a custom food draft.
 - **Meal templates** — combine multiple items and log them again with one tap.
 - **History and trend view** — daily summaries, 7-day trend, weekly average, best/worst day, target adherence, and Weekly Intelligence insights.
-- **Targets** — calories, protein, carbs, fat, and water.
+- **Targets** — calories, protein, carbs, fat, water, weight goal, and suggested daily calorie target.
 - **Language** — English by default; Indonesian available in Settings.
 - **Theme** — Light / Dark / Automatic.
 - **Backup and restore** — export/import JSON and reset with confirmation.
@@ -75,7 +84,7 @@ Calorie Tracker is a static, mobile-first **Progressive Web App (PWA)** for dail
 - No cloud sync.
 - Optional Online Food Lookup sends only the typed search keyword to the Calorie Tracker API when used.
 - Optional AI Scan sends only the selected image to the Calorie Tracker API/AI provider when used. The app backend is designed not to store images.
-- Food logs, history, targets, settings, Nutrition Intelligence, and backups remain local.
+- Food logs, history, targets, settings, weight entries, meal plans, Nutrition Intelligence, and backups remain local.
 - No third-party tracking.
 
 User data is stored locally in the browser using `localStorage` under the `calorietrack_id_*` prefix.
@@ -314,7 +323,6 @@ Keep backups before clearing Safari data, deleting the PWA, changing devices, or
 - Added local-only pattern analysis using stored logs, targets, meal timing, water, macros, and top contributors.
 - Updated app version to `3.0.0`.
 - Service worker cache bumped to `calorietrack-shell-v22`.
-- Re Deploy 2 time
 
 ### v2.2.6
 
