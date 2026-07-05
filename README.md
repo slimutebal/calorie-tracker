@@ -1,15 +1,18 @@
 # Calorie Tracker
 
-## What changed in v2.2.5
+## What changed in v2.2.6
+
+- Fixed AI meal templates so packaged-product servings use the correct serving unit instead of an unavailable default portion unit.
+- Existing AI templates created from packaged products now fall back to the custom food default serving when logged.
 
 - Improved AI scan handling for packaged products, containers, jars, bottles, boxes, sachets, and drink mixes.
 - AI scan now defaults packaged products to **1 serving** instead of treating the whole package/container weight as consumed.
 - Added serving-confirmation fields for packaged products, including serving label and servings-per-container when visible.
 - Improved backend prompt/schema so products such as Nescafe Classic are classified as packaged/drink mix and require serving confirmation.
-- Bumped the app version to `2.2.5` and the service worker cache to `calorietrack-shell-v19`.
+- Bumped the app version to `2.2.6` and the service worker cache to `calorietrack-shell-v20`.
 
 
-**Version:** 2.2.5  
+**Version:** 2.2.6  
 **Repository:** https://github.com/slimutebal/calorie-tracker
 
 Calorie Tracker is a static, mobile-first **Progressive Web App (PWA)** for daily calorie and macronutrient tracking. It includes a built-in food library covering common **Indonesian, Western, Middle Eastern, and Asian** foods, optional multi-source online lookup through the Calorie Tracker API backend proxy, and optional AI scan for meal photos and nutrition labels. It has no account system and no telemetry. All personal food logs stay **only on the device/browser that uses the app**.
@@ -167,13 +170,13 @@ https://slimutebal.github.io/calorie-tracker/
 This app uses a service worker cache. When you change app files, update the cache version in `service-worker.js`:
 
 ```js
-const CACHE_VERSION = 'calorietrack-shell-v19';
+const CACHE_VERSION = 'calorietrack-shell-v20';
 ```
 
 For future releases, increase it again, for example:
 
 ```js
-const CACHE_VERSION = 'calorietrack-shell-v19';
+const CACHE_VERSION = 'calorietrack-shell-v20';
 ```
 
 After uploading an update:
@@ -297,14 +300,14 @@ Keep backups before clearing Safari data, deleting the PWA, changing devices, or
 
 ## Release notes
 
-### v2.2.5
+### v2.2.6
 
 - Improved AI scan serving interpretation for packaged products and drink mixes.
 - Prevented AI scan from treating package/container weight as the consumed amount.
 - Added packaged-product review UI with serving-confirmation guidance and servings-per-container display when available.
 - Updated backend AI prompt/schema with `itemType`, `isPackagedProduct`, `servingLabel`, `servingsPerContainer`, and `requiresServingConfirmation` fields.
-- Updated app version to `2.2.5`.
-- Service worker cache bumped to `calorietrack-shell-v19`.
+- Updated app version to `2.2.6`.
+- Service worker cache bumped to `calorietrack-shell-v20`.
 
 ### v2.2.0
 

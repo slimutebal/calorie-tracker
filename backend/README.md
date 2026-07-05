@@ -9,7 +9,7 @@ Cloudflare Worker backend for Calorie Tracker online food lookup and optional AI
 - USDA FoodData Central, optional and enabled only when `USDA_API_KEY` is configured as a Cloudflare Worker secret.
 
 
-## v2.2.5 AI scan notes
+## v2.2.6 AI scan notes
 
 - `POST /analyze-image` uses Gemini as the primary vision provider when `GEMINI_API_KEY` is configured.
 - Cloudflare Workers AI is used as fallback when the `AI` binding is configured.

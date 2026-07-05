@@ -1,4 +1,4 @@
-const APP_VERSION = '2.2.5';
+const APP_VERSION = '2.2.6';
 const ALLOWED_ORIGINS = new Set([
   'https://slimutebal.github.io',
   'http://localhost:8000',
@@ -6,7 +6,7 @@ const ALLOWED_ORIGINS = new Set([
   'http://localhost:8080',
   'http://127.0.0.1:8080'
 ]);
-const USER_AGENT = 'CalorieTracker/2.2.5 (https://github.com/slimutebal/calorie-tracker)';
+const USER_AGENT = 'CalorieTracker/2.2.6 (https://github.com/slimutebal/calorie-tracker)';
 const OFF_SEARCH_URL = 'https://world.openfoodfacts.org/cgi/search.pl';
 const USDA_SEARCH_URL = 'https://api.nal.usda.gov/fdc/v1/foods/search';
 const CACHE_TTL_SECONDS = 60 * 60 * 24 * 7;
