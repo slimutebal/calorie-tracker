@@ -379,6 +379,31 @@ nav::before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-e
 .v330-foot{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
 .v330-note{font-size:12px;line-height:1.35;color:var(--ink3);margin-top:8px}
 
+
+/* ============ V4.0 Local AI Nutrition Coach ============ */
+.v400-card h4{margin:0 0 8px;font-size:15px;font-weight:900;letter-spacing:-.01em}
+.v400-coach-hero{display:grid;gap:10px;margin-top:10px}
+.v400-verdict{border:1px solid var(--glass-border);background:linear-gradient(135deg,var(--card2),var(--card));border-radius:16px;padding:13px 14px;box-shadow:var(--shadow)}
+.v400-verdict .k{font-size:10px;text-transform:uppercase;letter-spacing:.09em;color:var(--ink3);font-weight:900;margin-bottom:5px}
+.v400-verdict .v{font-size:18px;line-height:1.15;font-weight:900;color:var(--ink);letter-spacing:-.02em}
+.v400-actions{display:grid;gap:8px;margin-top:10px}
+.v400-action{display:flex;gap:10px;align-items:flex-start;border:1px solid var(--glass-border);background:var(--card2);border-radius:14px;padding:10px 11px}
+.v400-action .ico{width:27px;height:27px;border-radius:999px;background:var(--input-glass);display:grid;place-items:center;flex:none}
+.v400-action .txt{font-size:13px;line-height:1.36;color:var(--ink2)}
+.v400-action .txt strong{color:var(--ink)}
+.v400-coach-kpis{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:10px}
+@media(max-width:520px){.v400-coach-kpis{grid-template-columns:1fr}}
+.v400-kpi{border:1px solid var(--glass-border);background:var(--card2);border-radius:14px;padding:10px 11px}
+.v400-kpi .l{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink3);font-weight:900;margin-bottom:4px}
+.v400-kpi .v{font-size:17px;font-weight:900;letter-spacing:-.02em;color:var(--ink)}
+.v400-kpi .s{font-size:12px;color:var(--ink2);line-height:1.3;margin-top:3px}
+.v400-foot{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.v400-note{font-size:12px;line-height:1.35;color:var(--ink3);margin-top:8px}
+.v400-plan-preview{border:1px dashed var(--glass-border);border-radius:14px;padding:10px 11px;background:var(--input-glass);margin-top:10px}
+.v400-plan-preview .rowline{display:flex;justify-content:space-between;gap:10px;font-size:13px;padding:5px 0;border-bottom:1px solid var(--glass-border)}
+.v400-plan-preview .rowline:last-child{border-bottom:0}
+.v400-pill{display:inline-flex;align-items:center;gap:6px;border-radius:999px;border:1px solid var(--glass-border);background:var(--card2);padding:5px 8px;font-size:11px;font-weight:900;color:var(--ink3);text-transform:uppercase;letter-spacing:.05em}
+
 </style>
 </head>
 <body>
@@ -794,10 +819,10 @@ nav::before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-e
    ================================================================ */
 (function(){
 'use strict';
-var APP_VERSION='3.3.0';
+var APP_VERSION='4.0.0';
 var SCHEMA_VERSION=1;
 var NS='calorietrack_id_';
-var K={settings:NS+'settings',logs:NS+'logs_v1',custom:NS+'customfoods_v1',templates:NS+'templates_v1',quick:NS+'quickaccess_v1',onlineCache:NS+'online_lookup_cache_v1',aiMemory:NS+'ai_memory_v1',barcodeCache:NS+'barcode_cache_v1',weight:NS+'weight_v1',mealPlans:NS+'meal_plans_v1'};
+var K={settings:NS+'settings',logs:NS+'logs_v1',custom:NS+'customfoods_v1',templates:NS+'templates_v1',quick:NS+'quickaccess_v1',onlineCache:NS+'online_lookup_cache_v1',aiMemory:NS+'ai_memory_v1',barcodeCache:NS+'barcode_cache_v1',weight:NS+'weight_v1',mealPlans:NS+'meal_plans_v1',coach:NS+'coach_v1'};
 
 /* ---------------- Built-in food DB (public, static) ---------------- */
 var FOOD_DB={dbVersion:1,foods:[
@@ -994,7 +1019,7 @@ var I18N={
     txt_backup_note:"Ekspor cadangan secara berkala. Menghapus data Safari atau menghapus aplikasi dari Home Screen dapat menghapus data lokal Anda.",
     h_about:"Tentang & Privasi",
     about_p1:'<strong style="color:var(--ink)">Calorie Tracker</strong> adalah aplikasi lokal tanpa server. Semua catatan makanan, riwayat, dan pengaturan tersimpan <strong style="color:var(--ink)">hanya di perangkat ini</strong> — tidak ada login, tidak ada unggahan data, tidak ada pelacakan.',
-    about_p2:"Nilai nutrisi adalah estimasi dan dapat berbeda tergantung merek, metode memasak, resep, dan ukuran porsi. Aplikasi ini hanya untuk pelacakan pribadi dan bukan nasihat medis. Pencarian online bersifat opsional dan hanya mengirim kata kunci pencarian ke Calorie Tracker API saat digunakan; API membandingkan data restoran kurasi, Open Food Facts, dan USDA jika dikonfigurasi. AI scan bersifat opsional dan mengirim gambar terpilih ke Calorie Tracker API/penyedia AI hanya saat digunakan; gambar tidak disimpan oleh backend app.",
+    about_p2:"Nilai nutrisi adalah estimasi dan dapat berbeda tergantung merek, metode memasak, resep, dan ukuran porsi. Aplikasi ini hanya untuk pelacakan pribadi dan bukan nasihat medis. Pencarian online bersifat opsional dan hanya mengirim kata kunci pencarian ke Calorie Tracker API saat digunakan; API membandingkan data restoran kurasi, Open Food Facts, dan USDA jika dikonfigurasi. AI scan bersifat opsional dan mengirim gambar terpilih ke Calorie Tracker API/penyedia AI hanya saat digunakan; gambar tidak disimpan oleh backend app. Nutrition Intelligence, weight tracking, meal planning, dan Local AI Nutrition Coach berjalan lokal dari catatan, target, entri berat, dan plan yang tersimpan.",
     lbl_version:"Versi",
     aria_nav:"Navigasi utama", nav_today:"Hari Ini", nav_foods:"Makanan", nav_history:"Riwayat", nav_settings:"Setelan",
     aria_add_food:"Tambah makanan",
@@ -1128,7 +1153,7 @@ var I18N={
     txt_backup_note:"Export a backup regularly. Clearing Safari data or removing the app from the Home Screen may delete your local data.",
     h_about:"About & Privacy",
     about_p1:'<strong style="color:var(--ink)">Calorie Tracker</strong> is a local app with no server. All food entries, history, and settings are stored <strong style="color:var(--ink)">only on this device</strong> — no login, no data upload, no tracking.',
-    about_p2:"Nutrition values are estimates and may vary by brand, cooking method, recipe, and portion size. This app is for personal tracking only and is not medical advice. Online lookup is optional and only sends the search keyword to the Calorie Tracker API when used; the API compares curated restaurant data, Open Food Facts, and USDA when configured. AI scan is optional and sends the selected image to the Calorie Tracker API/AI provider only when used; images are not stored by the app backend. Nutrition Intelligence, weight tracking, and meal planning run locally from your saved logs, targets, weight entries, and plans.",
+    about_p2:"Nutrition values are estimates and may vary by brand, cooking method, recipe, and portion size. This app is for personal tracking only and is not medical advice. Online lookup is optional and only sends the search keyword to the Calorie Tracker API when used; the API compares curated restaurant data, Open Food Facts, and USDA when configured. AI scan is optional and sends the selected image to the Calorie Tracker API/AI provider only when used; images are not stored by the app backend. Nutrition Intelligence, weight tracking, meal planning, and the Local AI Nutrition Coach run locally from your saved logs, targets, weight entries, and plans.",
     lbl_version:"Version",
     aria_nav:"Main navigation", nav_today:"Today", nav_foods:"Foods", nav_history:"History", nav_settings:"Settings",
     aria_add_food:"Add food",
@@ -1253,7 +1278,8 @@ var DEFAULTS={
   settings:{schemaVersion:SCHEMA_VERSION,targets:{kcal:2000,protein:100,carbs:250,fat:65,waterMl:2000},theme:"auto",language:"en",onlineLookup:false,aiScanConsent:false,onboarded:false},
   logs:{},custom:[],templates:[],quick:{favorites:[],recents:[]},onlineCache:{},aiMemory:{corrections:{}},barcodeCache:{},
   weight:{profile:{currentKg:null,goalKg:null,weeklyRateKg:-0.5,maintenanceKcal:null},entries:[]},
-  mealPlans:{}
+  mealPlans:{},
+  coach:{preferences:{mode:'balanced'},notes:[]}
 };
 var S={};var corrupted=[];
 function clone(o){return JSON.parse(JSON.stringify(o));}
@@ -1279,6 +1305,7 @@ function loadAll(){
   S.barcodeCache=loadKey(K.barcodeCache,DEFAULTS.barcodeCache);
   S.weight=loadKey(K.weight,DEFAULTS.weight);
   S.mealPlans=loadKey(K.mealPlans,DEFAULTS.mealPlans);
+  S.coach=loadKey(K.coach,DEFAULTS.coach);
   if(!S.onlineCache||typeof S.onlineCache!=='object'||Array.isArray(S.onlineCache))S.onlineCache={};
   if(!S.aiMemory||typeof S.aiMemory!=='object'||Array.isArray(S.aiMemory))S.aiMemory={corrections:{}};
   if(!S.aiMemory.corrections||typeof S.aiMemory.corrections!=='object'||Array.isArray(S.aiMemory.corrections))S.aiMemory.corrections={};
@@ -1287,6 +1314,9 @@ function loadAll(){
   if(!S.weight.profile||typeof S.weight.profile!=='object')S.weight.profile=clone(DEFAULTS.weight.profile);
   if(!Array.isArray(S.weight.entries))S.weight.entries=[];
   if(!S.mealPlans||typeof S.mealPlans!=='object'||Array.isArray(S.mealPlans))S.mealPlans={};
+  if(!S.coach||typeof S.coach!=='object'||Array.isArray(S.coach))S.coach=clone(DEFAULTS.coach);
+  if(!S.coach.preferences||typeof S.coach.preferences!=='object')S.coach.preferences=clone(DEFAULTS.coach.preferences);
+  if(!Array.isArray(S.coach.notes))S.coach.notes=[];
   if(!Array.isArray(S.custom))S.custom=[];
   if(!Array.isArray(S.templates))S.templates=[];
   if(!S.quick||typeof S.quick!=='object')S.quick=clone(DEFAULTS.quick);
@@ -2706,7 +2736,7 @@ function downloadJSON(filename,obj){
 $('btnExport').addEventListener('click',function(){
   downloadJSON('calorietrack-backup-'+todayStr()+'.json',{
     app:'calorietrack-id',schemaVersion:SCHEMA_VERSION,appVersion:APP_VERSION,exportedAt:new Date().toISOString(),
-    settings:S.settings,logs:S.logs,customFoods:S.custom,templates:S.templates,quickAccess:S.quick,aiMemory:S.aiMemory,barcodeCache:S.barcodeCache,weight:S.weight,mealPlans:S.mealPlans
+    settings:S.settings,logs:S.logs,customFoods:S.custom,templates:S.templates,quickAccess:S.quick,aiMemory:S.aiMemory,barcodeCache:S.barcodeCache,weight:S.weight,mealPlans:S.mealPlans,coach:S.coach
   });
   toast(t('toast_backup_downloaded'));
 });
@@ -2741,13 +2771,16 @@ $('importFile').addEventListener('change',function(){
         S.barcodeCache=(obj.barcodeCache&&typeof obj.barcodeCache==='object')?obj.barcodeCache:clone(DEFAULTS.barcodeCache);
         S.weight=(obj.weight&&typeof obj.weight==='object')?obj.weight:clone(DEFAULTS.weight);
         S.mealPlans=(obj.mealPlans&&typeof obj.mealPlans==='object'&&!Array.isArray(obj.mealPlans))?obj.mealPlans:clone(DEFAULTS.mealPlans);
+        S.coach=(obj.coach&&typeof obj.coach==='object'&&!Array.isArray(obj.coach))?obj.coach:clone(DEFAULTS.coach);
         if(!S.weight.profile||typeof S.weight.profile!=='object')S.weight.profile=clone(DEFAULTS.weight.profile);
+        if(!S.coach.preferences||typeof S.coach.preferences!=='object')S.coach.preferences=clone(DEFAULTS.coach.preferences);
+        if(!Array.isArray(S.coach.notes))S.coach.notes=[];
         if(!Array.isArray(S.weight.entries))S.weight.entries=[];
         if(!S.aiMemory.corrections||typeof S.aiMemory.corrections!=='object')S.aiMemory.corrections={};
         if(!Array.isArray(S.quick.favorites))S.quick.favorites=[];
         if(!Array.isArray(S.quick.recents))S.quick.recents=[];
         saveKey(K.settings,S.settings);saveKey(K.logs,S.logs);saveKey(K.custom,S.custom);
-        saveKey(K.templates,S.templates);saveKey(K.quick,S.quick);saveKey(K.aiMemory,S.aiMemory);saveKey(K.barcodeCache,S.barcodeCache);saveKey(K.weight,S.weight);saveKey(K.mealPlans,S.mealPlans);
+        saveKey(K.templates,S.templates);saveKey(K.quick,S.quick);saveKey(K.aiMemory,S.aiMemory);saveKey(K.barcodeCache,S.barcodeCache);saveKey(K.weight,S.weight);saveKey(K.mealPlans,S.mealPlans);saveKey(K.coach,S.coach);
         applyI18n();renderAll();applyTheme();toast(t('toast_backup_imported'));
       });
   };
@@ -2766,7 +2799,7 @@ var bootDate=todayStr();
 document.addEventListener('visibilitychange',function(){
   if(document.visibilityState==='visible'&&todayStr()!==bootDate){bootDate=todayStr();renderAll();}
 });
-function renderAll(){ensureV330UI();renderToday();renderFoods();renderHistory();renderSettings();renderV330All();if(currentView==='add')renderAddResults($('searchInput').value);}
+function renderAll(){ensureV330UI();ensureV400UI();renderToday();renderFoods();renderHistory();renderSettings();renderV330All();renderV400All();if(currentView==='add')renderAddResults($('searchInput').value);}
 loadAll();applyI18n();applyTheme();renderAll();showView('today');
 
 
@@ -2904,6 +2937,133 @@ if(!window.__v330Bound){window.__v330Bound=true;document.addEventListener('click
   if(e.target.closest('#v330SaveWeightGoal')){saveV330WeightGoal(false);return;}
   if(e.target.closest('#v330LogWeight')){saveV330WeightGoal(true);return;}
   if(e.target.closest('#v330ApplyTarget')){applyV330SuggestedTarget();return;}
+});}
+
+
+/* ---------------- V4.0.0 Local AI Nutrition Coach ---------------- */
+function ensureV400State(){
+  if(!S.coach||typeof S.coach!=='object'||Array.isArray(S.coach))S.coach=clone(DEFAULTS.coach);
+  if(!S.coach.preferences||typeof S.coach.preferences!=='object')S.coach.preferences=clone(DEFAULTS.coach.preferences);
+  if(!Array.isArray(S.coach.notes))S.coach.notes=[];
+  if(!S.coach.preferences.mode)S.coach.preferences.mode='balanced';
+}
+function ensureV400UI(){
+  if($('v400DailyCoach'))return;
+  var todayCol=document.querySelector('#view-today .col-b');
+  if(todayCol){
+    var card=document.createElement('div');card.className='card intel-card v400-card';card.id='v400DailyCoach';
+    todayCol.insertBefore(card,todayCol.firstChild);
+  }
+  var histCol=document.querySelector('#view-history .col-b');
+  if(histCol){
+    var weekly=document.createElement('div');weekly.className='card intel-card v400-card';weekly.id='v400WeeklyCoach';
+    var before=$('weeklyInsights')?$('weeklyInsights').closest('.card'):null;
+    histCol.insertBefore(weekly,before||histCol.firstChild);
+  }
+  var setView=$('view-settings');
+  if(setView){
+    var sc=document.createElement('div');sc.className='card v400-card';sc.id='v400CoachSettings';
+    var dataCard=setView.querySelector('#btnExport')?$('btnExport').closest('.card'):null;
+    setView.insertBefore(sc,dataCard||setView.firstChild);
+  }
+}
+function v400ModeLabel(mode){return mode==='strict'?tx('Strict cut','Cut ketat'):mode==='gentle'?tx('Gentle','Ringan'):tx('Balanced','Seimbang');}
+function v400TopFood(days){var a=aggregateDays(days);return a.topFood;}
+function v400ProteinLowDays(days){var target=S.settings.targets.protein||0,c=0;days.forEach(function(ds){if(dayTotals(ds).protein<target*0.8)c++;});return c;}
+function v400OverDays(days){var target=S.settings.targets.kcal||0,c=0;days.forEach(function(ds){if(dayTotals(ds).kcal>target*1.1)c++;});return c;}
+function v400UnderDays(days){var target=S.settings.targets.kcal||0,c=0;days.forEach(function(ds){var k=dayTotals(ds).kcal;if(k>0&&k<target*0.8)c++;});return c;}
+function v400CoachSnapshot(){
+  ensureV400State();ensureV330State();
+  var today=todayStr(),tot=dayTotals(today),tg=S.settings.targets,days7=lastNDates(7),week=aggregateDays(days7),left=(tg.kcal||0)-tot.kcal,proteinGap=Math.max(0,(tg.protein||0)-tot.protein),water=(dayObj(today,false)||{}).waterMl||0;
+  var topToday=(dayObj(today,false)&&dayObj(today,false).entries||[]).slice().sort(function(a,b){return (b.kcal||0)-(a.kcal||0);})[0]||null;
+  var topWeek=v400TopFood(days7),lowProteinDays=v400ProteinLowDays(days7),overDays=v400OverDays(days7),underDays=v400UnderDays(days7),weight=weightForToday(),p=S.weight.profile,latest=lastWeightEntry();
+  var mode=S.coach.preferences.mode||'balanced';
+  return {today:today,tot:tot,tg:tg,week:week,left:left,proteinGap:proteinGap,water:water,topToday:topToday,topWeek:topWeek,lowProteinDays:lowProteinDays,overDays:overDays,underDays:underDays,weight:weight,profile:p,latestWeight:latest,mode:mode,suggestedKcal:suggestedTargetKcal()};
+}
+function v400DailyActions(s){
+  var out=[];
+  if(s.left<0)out.push(['🛑',tx('Stop chasing macros today. You are over by <strong>'+fmtInt(Math.abs(s.left))+' kcal</strong>; keep the rest to water or unsweetened drinks unless truly hungry.','Jangan kejar makro lagi hari ini. Kamu over <strong>'+fmtInt(Math.abs(s.left))+' kkal</strong>; sisanya cukup air/minuman tanpa gula kecuali benar-benar lapar.')]);
+  else if(s.left<300)out.push(['⏳',tx('Calories are tight: keep the next intake under <strong>'+fmtInt(Math.max(120,s.left))+' kcal</strong>.','Kalori sudah sempit: jaga intake berikutnya di bawah <strong>'+fmtInt(Math.max(120,s.left))+' kkal</strong>.')]);
+  else out.push(['🎯',tx('You have <strong>'+fmtInt(s.left)+' kcal</strong> left. Use it for protein first, then vegetables, then carbs.','Sisa <strong>'+fmtInt(s.left)+' kkal</strong>. Pakai untuk protein dulu, lalu sayur, baru karbo.')]);
+  if(s.proteinGap>=35)out.push(['💪',tx('Protein is still low. Add <strong>30–45 g protein</strong>: chicken breast, eggs + yogurt, tuna, tofu/tempeh, or lean meat.','Protein masih rendah. Tambah <strong>30–45 g protein</strong>: dada ayam, telur + yogurt, tuna, tahu/tempe, atau daging rendah lemak.')]);
+  else if(s.proteinGap>=15)out.push(['💪',tx('Protein gap is moderate. Add <strong>15–30 g protein</strong> in the next meal.','Gap protein sedang. Tambah <strong>15–30 g protein</strong> di makan berikutnya.')]);
+  else out.push(['✅',tx('Protein target is close. Keep the next meal simple and avoid liquid calories.','Target protein sudah dekat. Jaga makan berikutnya sederhana dan hindari kalori cair.')]);
+  if(s.water<(s.tg.waterMl||0)*0.6)out.push(['💧',tx('Hydration is behind. Drink 1–2 glasses before the next meal.','Air minum tertinggal. Minum 1–2 gelas sebelum makan berikutnya.')]);
+  if(s.topToday)out.push(['🔎',tx('Largest calorie source today: <strong>'+esc(s.topToday.foodName||s.topToday.name||'food')+'</strong>. Adjust the next meal around it.','Penyumbang kalori terbesar hari ini: <strong>'+esc(s.topToday.foodName||s.topToday.name||'makanan')+'</strong>. Sesuaikan makan berikutnya dari sana.')]);
+  return out.slice(0,4);
+}
+function v400Verdict(s){
+  if(s.tot.kcal===0)return tx('No meals logged yet. Start with a clear first entry, then the coach can guide the day.','Belum ada makanan tercatat. Mulai dengan satu log yang jelas, lalu coach bisa mengarahkan hari ini.');
+  if(s.left<0)return tx('Today is over target. The best move is damage control, not adding more food.','Hari ini sudah over target. Langkah terbaik adalah kontrol kerusakan, bukan tambah makanan lagi.');
+  if(s.proteinGap>=35&&s.left>250)return tx('Calories are still available, but protein is behind. Prioritize lean protein next.','Kalori masih tersedia, tapi protein tertinggal. Prioritaskan protein rendah lemak berikutnya.');
+  if(s.left<300)return tx('You are close to the calorie limit. Keep the rest light and controlled.','Kamu sudah dekat batas kalori. Sisanya harus ringan dan terkontrol.');
+  return tx('You are on track. Keep the next meal protein-focused and moderate in carbs.','Kamu masih on track. Makan berikutnya fokus protein dan karbo secukupnya.');
+}
+function v400NextMealSuggestion(s){
+  if(s.left<150)return tx('Water, black coffee/tea, or stop eating if not hungry.','Air, kopi/teh tanpa gula, atau stop makan jika tidak lapar.');
+  if(s.left<350)return tx('Eggs, tofu/tempeh, or small chicken portion with vegetables.','Telur, tahu/tempe, atau ayam porsi kecil dengan sayur.');
+  if(s.proteinGap>=35)return tx('Grilled/boiled chicken + vegetables; add half rice portion only if still hungry.','Ayam panggang/rebus + sayur; tambah setengah porsi nasi hanya jika masih lapar.');
+  if(s.proteinGap>=15)return tx('Eggs or chicken with vegetables; keep sweet drinks out.','Telur atau ayam dengan sayur; hindari minuman manis.');
+  return tx('Balanced plate: protein, vegetables, moderate carbs.','Piring seimbang: protein, sayur, karbo sedang.');
+}
+function renderV400DailyCoach(){
+  var host=$('v400DailyCoach');if(!host)return;var s=v400CoachSnapshot(),acts=v400DailyActions(s);
+  host.innerHTML='<div class="row spread"><h3 style="margin:0">'+tx('Local AI Nutrition Coach','Local AI Nutrition Coach')+'</h3><span class="intel-badge">V4</span></div>'+ 
+    '<div class="v400-coach-hero"><div class="v400-verdict"><div class="k">'+tx('Coach verdict','Verdict coach')+'</div><div class="v">'+v400Verdict(s)+'</div></div></div>'+ 
+    '<div class="v400-coach-kpis"><div class="v400-kpi"><div class="l">'+tx('Next meal budget','Budget makan berikutnya')+'</div><div class="v num">'+(s.left>0?fmtInt(s.left):'0')+' '+t('unit_kkal')+'</div><div class="s">'+tx('remaining today','sisa hari ini')+'</div></div>'+ 
+    '<div class="v400-kpi"><div class="l">'+tx('Protein move','Langkah protein')+'</div><div class="v num">'+fmtInt(s.proteinGap)+' g</div><div class="s">'+tx('gap to target','gap ke target')+'</div></div>'+ 
+    '<div class="v400-kpi"><div class="l">'+tx('Coach mode','Mode coach')+'</div><div class="v">'+v400ModeLabel(s.mode)+'</div><div class="s">'+tx('local rules only','aturan lokal saja')+'</div></div></div>'+ 
+    '<div class="v400-actions">'+acts.map(function(r){return '<div class="v400-action"><div class="ico">'+r[0]+'</div><div class="txt">'+r[1]+'</div></div>';}).join('')+'</div>'+ 
+    '<div class="v400-plan-preview"><div class="rowline"><strong>'+tx('What should I eat next?','Apa sebaiknya makan berikutnya?')+'</strong><span>'+esc(v400NextMealSuggestion(s))+'</span></div></div>'+ 
+    '<div class="v400-foot"><button class="btn btn-ghost" id="v400SaveNote">'+tx('Save coach note','Simpan catatan coach')+'</button><button class="btn" id="v400CoachPlan">'+tx('Suggest tomorrow plan','Sarankan plan besok')+'</button></div>'+ 
+    '<div class="v400-note">'+tx('Runs locally from your logs, targets, weight, and meal plans. It does not upload your food history.','Berjalan lokal dari log, target, berat, dan meal plan. Riwayat makanan tidak diunggah.')+'</div>';
+}
+function v400BuildTomorrowPlan(){
+  var s=v400CoachSnapshot(),leftTarget=s.suggestedKcal||S.settings.targets.kcal||1800,proteinTarget=S.settings.targets.protein||100;
+  var breakfastP=Math.round(proteinTarget*0.25),lunchP=Math.round(proteinTarget*0.35),dinnerP=Math.round(proteinTarget*0.30),snackP=Math.max(0,proteinTarget-breakfastP-lunchP-dinnerP);
+  var rows=[
+    {meal:'sarapan',text:tx('Coffee + eggs / yogurt / lean protein','Kopi + telur / yogurt / protein rendah lemak'),kcal:Math.round(leftTarget*0.25),protein:breakfastP},
+    {meal:'makan_siang',text:tx('Protein-first lunch + rice half/moderate portion + vegetables','Makan siang protein dulu + nasi setengah/sedang + sayur'),kcal:Math.round(leftTarget*0.35),protein:lunchP},
+    {meal:'makan_malam',text:tx('Light dinner: lean protein + vegetables; carbs only if calories remain','Dinner ringan: protein rendah lemak + sayur; karbo jika kalori masih cukup'),kcal:Math.round(leftTarget*0.28),protein:dinnerP},
+    {meal:'camilan',text:tx('Protein snack / fruit; avoid sweet drinks','Snack protein / buah; hindari minuman manis'),kcal:Math.max(100,Math.round(leftTarget*0.12)),protein:snackP}
+  ];
+  setPlan(tomorrowStr(),rows);toast(tx('Coach plan generated for tomorrow','Plan coach untuk besok dibuat'));renderAll();showView('today');
+}
+function v400SaveCoachNote(){
+  var s=v400CoachSnapshot();var note={id:uid('coach'),date:todayStr(),createdAt:new Date().toISOString(),verdict:v400Verdict(s).replace(/<[^>]+>/g,''),remainingKcal:Math.round(s.left),proteinGap:Math.round(s.proteinGap),suggestion:v400NextMealSuggestion(s)};
+  ensureV400State();S.coach.notes.unshift(note);S.coach.notes=S.coach.notes.slice(0,60);saveKey(K.coach,S.coach);toast(tx('Coach note saved','Catatan coach tersimpan'));renderV400Settings();
+}
+function renderV400WeeklyCoach(){
+  var host=$('v400WeeklyCoach');if(!host)return;var s=v400CoachSnapshot(),w=s.week,avg=w.loggedDays?w.avg.kcal:0,proteinAvg=w.loggedDays?w.avg.protein:0,target=S.settings.targets.kcal||0;
+  var recs=[];
+  if(!w.loggedDays)recs.push(['📝',tx('No weekly data yet. Log meals for several days to unlock a useful review.','Belum ada data mingguan. Catat makanan beberapa hari untuk review yang berguna.')]);
+  else {
+    if(s.overDays>=2)recs.push(['⚠️',tx('You exceeded target on <strong>'+s.overDays+'</strong> days. Set dinner guardrails and avoid liquid calories.','Kamu melewati target di <strong>'+s.overDays+'</strong> hari. Buat batas dinner dan hindari kalori cair.')]);
+    if(s.lowProteinDays>=3)recs.push(['💪',tx('Protein was low on <strong>'+s.lowProteinDays+'</strong> days. Add a protein anchor at breakfast/lunch.','Protein rendah di <strong>'+s.lowProteinDays+'</strong> hari. Tambahkan anchor protein saat sarapan/makan siang.')]);
+    if(s.topWeek)recs.push(['🔎',tx('Biggest weekly source: <strong>'+esc(s.topWeek.name)+'</strong>. Reduce frequency or portion if progress stalls.','Sumber kalori mingguan terbesar: <strong>'+esc(s.topWeek.name)+'</strong>. Kurangi frekuensi atau porsi jika progres mandek.')]);
+    recs.push(['📌',tx('Next week strategy: keep the same calorie target, raise protein consistency, and pre-plan dinner.','Strategi minggu depan: target kalori tetap, konsistensi protein naik, dan dinner direncanakan lebih dulu.')]);
+  }
+  var adherence=w.loggedDays?Math.round((7-s.overDays-s.underDays)/7*100):0;
+  host.innerHTML='<div class="row spread"><h3 style="margin:0">'+tx('Weekly Coach Review','Weekly Coach Review')+'</h3><span class="intel-badge">V4</span></div>'+ 
+    '<div class="v400-coach-kpis"><div class="v400-kpi"><div class="l">'+tx('Average kcal','Rata-rata kcal')+'</div><div class="v num">'+(w.loggedDays?fmtInt(avg):'—')+'</div><div class="s">'+tx('7-day daily average','rata-rata harian 7 hari')+'</div></div>'+ 
+    '<div class="v400-kpi"><div class="l">'+tx('Average protein','Rata-rata protein')+'</div><div class="v num">'+(w.loggedDays?fmtInt(proteinAvg)+' g':'—')+'</div><div class="s">'+tx('daily average','rata-rata harian')+'</div></div>'+ 
+    '<div class="v400-kpi"><div class="l">'+tx('Target control','Kontrol target')+'</div><div class="v num">'+(w.loggedDays?adherence+'%':'—')+'</div><div class="s">'+tx('rough adherence','adherence kasar')+'</div></div></div>'+ 
+    '<div class="v400-actions">'+recs.map(function(r){return '<div class="v400-action"><div class="ico">'+r[0]+'</div><div class="txt">'+r[1]+'</div></div>';}).join('')+'</div>'+ 
+    '<div class="v400-note">'+tx('This is local coaching logic. Treat it as decision support, not medical advice.','Ini logika coaching lokal. Perlakukan sebagai bantuan keputusan, bukan nasihat medis.')+'</div>';
+}
+function renderV400Settings(){
+  var host=$('v400CoachSettings');if(!host)return;ensureV400State();var mode=S.coach.preferences.mode||'balanced';var notes=S.coach.notes||[];
+  host.innerHTML='<div class="row spread"><h3 style="margin:0">'+tx('Local Coach Settings','Setelan Local Coach')+'</h3><span class="intel-badge">V4</span></div>'+ 
+    '<div class="field" style="margin-top:10px"><label>'+tx('Coach mode','Mode coach')+'</label><select class="input" id="v400CoachMode"><option value="gentle" '+(mode==='gentle'?'selected':'')+'>'+tx('Gentle — softer reminders','Ringan — pengingat lebih lembut')+'</option><option value="balanced" '+(mode==='balanced'?'selected':'')+'>'+tx('Balanced — default','Seimbang — default')+'</option><option value="strict" '+(mode==='strict'?'selected':'')+'>'+tx('Strict cut — more conservative with calories','Cut ketat — lebih konservatif dengan kalori')+'</option></select></div>'+ 
+    '<div class="v400-foot"><button class="btn btn-ghost" id="v400SaveCoachSettings">'+tx('Save coach settings','Simpan setelan coach')+'</button></div>'+ 
+    '<div class="v400-note">'+tx('Saved coach notes','Catatan coach tersimpan')+': <span class="num">'+notes.length+'</span>. '+tx('Included in JSON backup.','Ikut dalam backup JSON.')+'</div>';
+}
+function saveV400CoachSettings(){ensureV400State();var el=$('v400CoachMode');S.coach.preferences.mode=el?el.value:'balanced';saveKey(K.coach,S.coach);renderV400All();toast(tx('Coach settings saved','Setelan coach tersimpan'));}
+function renderV400All(){ensureV400UI();ensureV400State();renderV400DailyCoach();renderV400WeeklyCoach();renderV400Settings();}
+if(!window.__v400Bound){window.__v400Bound=true;document.addEventListener('click',function(e){
+  if(e.target.closest('#v400SaveNote')){v400SaveCoachNote();return;}
+  if(e.target.closest('#v400CoachPlan')){v400BuildTomorrowPlan();return;}
+  if(e.target.closest('#v400SaveCoachSettings')){saveV400CoachSettings();return;}
 });}
 
 /* ---------------- Service worker ---------------- */

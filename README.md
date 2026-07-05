@@ -1,12 +1,23 @@
 # Calorie Tracker
 
+## What changed in v4.0.0
+
+- Re-scoped the roadmap: **v4 is now Local AI Nutrition Coach**; optional cloud backup/sync moves to v5.
+- Added **Local AI Nutrition Coach** on Today: coach verdict, next-meal budget, protein move, and local action list.
+- Added **What should I eat next?** guidance based on remaining calories, protein gap, water progress, and today’s top calorie source.
+- Added **Weekly Coach Review** in History: 7-day calorie average, protein average, target-control estimate, top weekly source, and next-week strategy.
+- Added **Coach Plan Generator**: creates a tomorrow meal plan from current targets, goal rate, and protein target.
+- Added **Coach Notes** and **Coach Mode** settings. Coach notes are local and included in JSON backup.
+- No cloud sync, account, or food-log upload was added; the coach runs locally from saved logs, targets, weight entries, and meal plans.
+- Bumped the app version to `4.0.0` and the service worker cache to `calorietrack-shell-v24`.
+
 ## What changed in v3.3.0
 
 - Added **Weight & Goal Tracking**: current weight, goal weight, target rate, maintenance-calorie estimate, suggested daily target, and local weight log.
 - Added **Weight + Calorie Trend** in History with local weight trend and calorie average context.
 - Added stronger **Smart Recommendations**: remaining-calorie guidance, explicit protein gap, next-meal suggestions, and goal-rate context.
 - Added **Meal Planning**: plan tomorrow by meal window, kcal, and protein; later log the planned meal into today's food log.
-- Backup/export now includes local weight profile, weight entries, and meal plans.
+- Backup/export now includes local weight profile, weight entries, meal plans, AI memory, barcode cache, and coach notes.
 - Bumped the app version to `3.3.0` and the service worker cache to `calorietrack-shell-v23`.
 
 ## What changed in v3.0.0
@@ -28,10 +39,10 @@
 - Bumped the app version to `2.3.4` and the service worker cache to `calorietrack-shell-v21`.
 
 
-**Version:** 3.3.0  
+**Version:** 4.0.0  
 **Repository:** https://github.com/slimutebal/calorie-tracker
 
-Calorie Tracker is a static, mobile-first **Progressive Web App (PWA)** for daily calorie and macronutrient tracking. It includes a built-in food library covering common **Indonesian, Western, Middle Eastern, and Asian** foods, optional multi-source online lookup through the Calorie Tracker API backend proxy, optional barcode lookup, and optional AI scan for meal photos and nutrition labels. It has no account system and no telemetry. All personal food logs stay **only on the device/browser that uses the app**.
+Calorie Tracker is a static, mobile-first **Progressive Web App (PWA)** for daily calorie and macronutrient tracking. It includes a built-in food library covering common **Indonesian, Western, Middle Eastern, and Asian** foods, optional multi-source online lookup through the Calorie Tracker API backend proxy, optional barcode lookup, and optional AI scan for meal photos and nutrition labels. It has no account system and no telemetry. All personal food logs stay **only on the device/browser that uses the app**. In this roadmap, v4 is the local coach release; optional cloud backup/sync is reserved for v5.
 
 > **Nutrition disclaimer:** all nutrition values are estimates. Actual values may vary by brand, recipe, cooking method, oil amount, and portion size. This app is for personal tracking only and is not medical or dietary advice.
 
@@ -56,7 +67,7 @@ Calorie Tracker is a static, mobile-first **Progressive Web App (PWA)** for dail
 
 ## Features
 
-- **Today dashboard** — calorie ring, consumed/remaining calories, macro progress, water tracker, meal sections, top calorie contributors, local Personal Nutrition Intelligence, Smart Recommendations, and Meal Planning.
+- **Today dashboard** — calorie ring, consumed/remaining calories, macro progress, water tracker, meal sections, top calorie contributors, local Personal Nutrition Intelligence, Smart Recommendations, Meal Planning, and Local AI Nutrition Coach.
 - **Quick Add** — food search, favorites, recent foods, quantity presets, and household units such as serving, bowl, glass, cup, tablespoon, teaspoon, piece, pack, skewer, and scoop.
 - **Built-in food database** — about 112 foods across Indonesian, Western, Middle Eastern, and Asian cuisines.
 - **Cuisine filter** — All / Indonesian / Western / Middle Eastern / Asian / Custom.
@@ -66,7 +77,7 @@ Calorie Tracker is a static, mobile-first **Progressive Web App (PWA)** for dail
 - **AI Nutrition Label Scan** — optional label photo parsing into a custom food draft.
 - **Meal templates** — combine multiple items and log them again with one tap.
 - **History and trend view** — daily summaries, 7-day trend, weekly average, best/worst day, target adherence, and Weekly Intelligence insights.
-- **Targets** — calories, protein, carbs, fat, water, weight goal, and suggested daily calorie target.
+- **Targets** — calories, protein, carbs, fat, water, weight goal, suggested daily calorie target, local coach mode, and coach notes.
 - **Language** — English by default; Indonesian available in Settings.
 - **Theme** — Light / Dark / Automatic.
 - **Backup and restore** — export/import JSON and reset with confirmation.
