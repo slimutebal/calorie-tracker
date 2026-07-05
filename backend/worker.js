@@ -1,4 +1,4 @@
-const APP_VERSION = '2.2.6';
+const APP_VERSION = '2.3.4';
 const ALLOWED_ORIGINS = new Set([
   'https://slimutebal.github.io',
   'http://localhost:8000',
@@ -6,8 +6,9 @@ const ALLOWED_ORIGINS = new Set([
   'http://localhost:8080',
   'http://127.0.0.1:8080'
 ]);
-const USER_AGENT = 'CalorieTracker/2.2.6 (https://github.com/slimutebal/calorie-tracker)';
+const USER_AGENT = 'CalorieTracker/2.3.4 (https://github.com/slimutebal/calorie-tracker)';
 const OFF_SEARCH_URL = 'https://world.openfoodfacts.org/cgi/search.pl';
+const OFF_PRODUCT_URL = 'https://world.openfoodfacts.org/api/v2/product';
 const USDA_SEARCH_URL = 'https://api.nal.usda.gov/fdc/v1/foods/search';
 const CACHE_TTL_SECONDS = 60 * 60 * 24 * 7;
 const TIMEOUT_MS = 8500;
@@ -289,6 +290,21 @@ async function openFoodFactsSearch(query) {
   const products = Array.isArray(data.products) ? data.products : [];
   return products.map(mapOpenFoodProduct).filter(Boolean).slice(0, 8);
 }
+async function openFoodFactsBarcode(code) {
+  const clean = String(code || '').replace(/[^0-9]/g, '');
+  if (!clean || clean.length < 6 || clean.length > 18) return [];
+  const fields = ['code','product_name','product_name_en','generic_name','brands','serving_size','quantity','nutriments','url'].join(',');
+  const url = `${OFF_PRODUCT_URL}/${encodeURIComponent(clean)}.json?fields=${encodeURIComponent(fields)}`;
+  const data = await fetchJson(url);
+  const product = data && data.product;
+  if (!product) return [];
+  const mapped = mapOpenFoodProduct(product, 0);
+  if (!mapped) return [];
+  mapped.source = 'Open Food Facts Barcode';
+  mapped.provider = 'barcode';
+  mapped.confidence = mapped.confidence === 'low' ? 'medium' : mapped.confidence;
+  return [mapped];
+}
 function curatedScore(food, query) {
   const q = normalizeText(query);
   const name = normalizeText(`${food.brand} ${food.name}`);
@@ -415,12 +431,12 @@ async function lookup(query, env) {
 
 function aiPrompt(mode, lang = 'en') {
   const language = lang === 'id' ? 'Indonesian' : 'English';
-  const common = `You are a cautious nutrition assistant for a calorie tracker. Return JSON only. Use ${language} food names when useful, but keep common restaurant/product names unchanged. Do not claim medical accuracy. If portion size is uncertain, use confidence low or medium. Numbers are estimates only. Never treat the physical weight of a package, bottle, jar, box, sachet, or container as the amount consumed.`;
+  const common = `You are a cautious nutrition assistant for a calorie tracker. Return JSON only. Use ${language} food names when useful, but keep common restaurant/product names unchanged. Do not claim medical accuracy. If portion size is uncertain, use confidence low or medium. Numbers are estimates only. Never treat the physical weight of a package, bottle, jar, box, sachet, or container as the amount consumed. Prefer explicit serving counts and nutrition-label values over visual guesses. Include nutrition confidence in notes when uncertain.`;
   const schema = `Return exactly this JSON shape: {"mode":"meal|label","items":[{"name":"food/product name","itemType":"ready_to_eat|packaged_product|ingredient|drink_mix|nutrition_label|unknown","isPackagedProduct":false,"isConsumedPortionVisible":true,"estimatedQuantity":"1 serving / 1 glass / 150 g etc","estimatedGrams":100,"servingLabel":"1 serving","servingsPerContainer":null,"defaultServingCount":1,"requiresServingConfirmation":false,"calories":0,"protein":0,"carbs":0,"fat":0,"confidence":"low|medium|high","notes":"short note"}],"warnings":["..."]}.`;
   if (mode === 'label') {
     return `${common}\nTask: Read the nutrition label in the image. Extract one custom food entry from the label. ${schema} Use calories/macros per serving when visible. If serving size is visible, put it in servingLabel and estimatedQuantity. If servings per container is visible, put the number in servingsPerContainer. If serving size is not visible, set requiresServingConfirmation=true and say so in warnings. Use numbers only for calories/protein/carbs/fat. Use null for estimatedGrams if serving grams are not visible instead of inventing a package weight.`;
   }
-  return `${common}\nTask: Analyze the meal or product photo. ${schema}\nCritical serving rules:\n- If the image shows a ready-to-eat portion on a plate, bowl, cup, or hand, estimate the consumed portion and grams.\n- If the image shows a product package/container/jar/bottle/box/sachet/tub/can, classify it as packaged_product, ingredient, or drink_mix. Set isPackagedProduct=true and isConsumedPortionVisible=false. Do NOT estimate consumed grams from the container size.\n- For packaged products, default to 1 serving only, not the whole package. Use servingLabel/estimatedQuantity such as "1 serving", "1 glass", "1 cup", or the visible serving text.\n- If the package says it makes 100 cups/glasses/servings, set servingsPerContainer=100 and defaultServingCount=1.\n- For coffee powder or drink mix such as Nescafe Classic, output a 1 prepared glass/cup serving and note that sugar, milk, or creamer changes calories. Do not output 200 g unless the user is clearly consuming 200 g.\n- If nutrition per serving is not visible, use calories/macros only if highly obvious; otherwise use 0 and requiresServingConfirmation=true.\nInclude hidden-oil/sauce/sugar uncertainty in warnings. Use numbers only for calories/protein/carbs/fat.`;
+  return `${common}\nTask: Analyze the meal or product photo. ${schema}\nCritical serving rules:\n- If the image shows a ready-to-eat portion on a plate, bowl, cup, or hand, estimate the consumed portion and grams.\n- If the image shows a product package/container/jar/bottle/box/sachet/tub/can, classify it as packaged_product, ingredient, or drink_mix. Set isPackagedProduct=true and isConsumedPortionVisible=false. Do NOT estimate consumed grams from the container size.\n- For packaged products, default to 1 serving only, not the whole package. Use servingLabel/estimatedQuantity such as "1 serving", "1 glass", "1 cup", or the visible serving text.\n- If the package says it makes 100 cups/glasses/servings, set servingsPerContainer=100 and defaultServingCount=1.\n- For coffee powder or drink mix such as Nescafe Classic, output a 1 prepared glass/cup serving and note that sugar, milk, or creamer changes calories. Do not output 200 g unless the user is clearly consuming 200 g.\n- If nutrition per serving is not visible, use calories/macros only if highly obvious; otherwise use 0 and requiresServingConfirmation=true.\nInclude hidden-oil/sauce/sugar uncertainty in warnings. For ambiguous packaged products, recommend scanning barcode or nutrition label. Use numbers only for calories/protein/carbs/fat.`;
 }
 function stripJsonText(text) {
   let t = String(text || '').trim();
@@ -605,6 +621,36 @@ async function handleAnalyzeImage(request, env, ctx, origin) {
   return json({ ok: false, version: APP_VERSION, error: notConfigured ? 'AI_SCAN_NOT_CONFIGURED' : 'AI_SCAN_FAILED', provider: 'none', message, errors: errors.slice(0, 8) }, notConfigured ? 501 : 502, origin);
 }
 
+async function handleBarcode(request, env, ctx, origin) {
+  const url = new URL(request.url);
+  const code = String(url.searchParams.get('code') || '').replace(/[^0-9]/g, '');
+  if (!code || code.length < 6) return json({ ok: false, version: APP_VERSION, error: 'missing_barcode', results: [] }, 400, origin);
+  if (code.length > 18) return json({ ok: false, version: APP_VERSION, error: 'barcode_too_long', results: [] }, 400, origin);
+
+  const cacheUrl = new URL(request.url);
+  cacheUrl.pathname = '/__cache/barcode-v234';
+  cacheUrl.search = `?code=${encodeURIComponent(code)}`;
+  const cacheKey = new Request(cacheUrl.toString(), request);
+  const cache = caches.default;
+  const cached = await cache.match(cacheKey);
+  if (cached) {
+    const headers = new Headers(cached.headers);
+    Object.entries(corsHeaders(origin)).forEach(([k, v]) => headers.set(k, v));
+    headers.set('X-Calorie-Tracker-Cache', 'HIT');
+    return new Response(cached.body, { status: cached.status, headers });
+  }
+
+  try {
+    const results = await openFoodFactsBarcode(code);
+    const payload = { ok: true, version: APP_VERSION, provider: 'Open Food Facts Barcode', matchedCode: code, upstream: ['Open Food Facts'], results };
+    const res = json(payload, 200, origin);
+    ctx && ctx.waitUntil && ctx.waitUntil(cache.put(cacheKey, res.clone()));
+    return res;
+  } catch (err) {
+    return json({ ok: false, version: APP_VERSION, error: 'barcode_lookup_failed', message: String(err && err.message || err), results: [] }, 502, origin);
+  }
+}
+
 async function handleLookup(request, env, ctx, origin) {
   const url = new URL(request.url);
   const q = (url.searchParams.get('q') || '').trim();
@@ -651,10 +697,10 @@ export default {
     const url = new URL(request.url);
     try {
       if (url.pathname === '/' || url.pathname === '') {
-        return json({ ok: true, service: 'Calorie Tracker API', version: APP_VERSION, endpoints: ['/lookup?q=cheeseburger', 'POST /analyze-image', '/ai-status', '/gemini-models', '/workers-ai-agree'], providers: ['Curated Restaurant Pack', 'Open Food Facts', env && env.USDA_API_KEY ? 'USDA FoodData Central' : 'USDA FoodData Central (optional secret not configured)', env && env.GEMINI_API_KEY ? 'Gemini Vision' : 'Gemini Vision (optional secret not configured)', env && env.AI ? 'Cloudflare Workers AI Vision' : 'Cloudflare Workers AI Vision (optional binding not configured)'] }, 200, origin);
+        return json({ ok: true, service: 'Calorie Tracker API', version: APP_VERSION, endpoints: ['/lookup?q=cheeseburger', '/barcode?code=8999999000000', 'POST /analyze-image', '/ai-status', '/gemini-models', '/workers-ai-agree'], providers: ['Curated Restaurant Pack', 'Open Food Facts', 'Open Food Facts Barcode', env && env.USDA_API_KEY ? 'USDA FoodData Central' : 'USDA FoodData Central (optional secret not configured)', env && env.GEMINI_API_KEY ? 'Gemini Vision' : 'Gemini Vision (optional secret not configured)', env && env.AI ? 'Cloudflare Workers AI Vision' : 'Cloudflare Workers AI Vision (optional binding not configured)'] }, 200, origin);
       }
       if (url.pathname === '/lookup') return await handleLookup(request, env, ctx, origin);
-      if (url.pathname === '/ai-status') return json({ ok: true, version: APP_VERSION, geminiConfigured: !!(env && env.GEMINI_API_KEY), workersAiConfigured: !!(env && env.AI), geminiModel: env && env.GEMINI_MODEL || GEMINI_MODEL, geminiCandidates: geminiCandidateModels(env).map(geminiModelLabel), workersAiModel: WORKERS_AI_VISION_MODEL, workersAiAgreeEndpoint: '/workers-ai-agree' }, 200, origin);
+      if (url.pathname === '/ai-status') return json({ ok: true, version: APP_VERSION, geminiConfigured: !!(env && env.GEMINI_API_KEY), workersAiConfigured: !!(env && env.AI), geminiModel: env && env.GEMINI_MODEL || GEMINI_MODEL, geminiCandidates: geminiCandidateModels(env).map(geminiModelLabel), workersAiModel: WORKERS_AI_VISION_MODEL, workersAiAgreeEndpoint: '/workers-ai-agree', features: ['ai-scan-quality','local-correction-memory','barcode-lookup','packaged-product-serving-memory'] }, 200, origin);
       if (url.pathname === '/gemini-models') return await handleGeminiModels(env, origin);
       if (url.pathname === '/workers-ai-agree') return await handleWorkersAiAgree(env, origin);
       if (url.pathname === '/analyze-image') return await handleAnalyzeImage(request, env, ctx, origin);

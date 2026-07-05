@@ -248,6 +248,15 @@ header.appbar{padding:14px 18px;margin:4px 0 14px;display:flex;align-items:flex-
 .ai-item-grid label{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink3);font-weight:800;margin:0 0 4px}
 .ai-item-grid input{min-height:40px;padding:9px 10px;font-size:14px;border-radius:11px}
 .ai-warnings{margin-top:10px;color:var(--ink2);font-size:12px;line-height:1.45}
+.ai-actions.ai-actions-3{grid-template-columns:1fr 1fr}
+.ai-actions.ai-actions-3 #btnBarcodeLookup{grid-column:1/-1}
+.ai-quality{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:8px 0 10px}
+.ai-quality .qbox{background:var(--card);border:1px solid var(--glass-border);border-radius:12px;padding:8px 10px}
+.ai-quality .qbox .l{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink3);font-weight:800;margin-bottom:3px}
+.ai-quality .qbox .v{font-size:13px;font-weight:700;color:var(--ink);line-height:1.25}
+.ai-inline-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.ai-inline-actions .mini-btn{min-height:34px}
+.ai-memory-note{font-size:12px;line-height:1.45;color:var(--ink2);background:rgba(52,199,89,.10);border:1px solid rgba(52,199,89,.22);border-radius:12px;padding:8px 10px;margin:8px 0 10px}
 @media (max-width:430px){.ai-item-grid{grid-template-columns:1fr 1fr}.ai-item-grid .wide{grid-column:1/-1}}
 .btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;min-height:50px;border-radius:14px;
   font-size:16px;font-weight:700;transition:transform .1s}
@@ -433,9 +442,10 @@ nav::before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-e
         </div>
         <span class="ai-mode-pill">AI</span>
       </div>
-      <div class="ai-actions">
+      <div class="ai-actions ai-actions-3">
         <button class="btn btn-ghost" id="btnScanMeal" data-i18n="btn_scan_meal">📷 Scan Meal</button>
         <button class="btn btn-ghost" id="btnScanLabel" data-i18n="btn_scan_label">🏷 Scan Label</button>
+        <button class="btn btn-ghost" id="btnBarcodeLookup" data-i18n="btn_barcode_lookup">🔢 Barcode / Product Code</button>
       </div>
     </div>
     <div id="addResults"></div>
@@ -729,10 +739,10 @@ nav::before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-e
    ================================================================ */
 (function(){
 'use strict';
-var APP_VERSION='2.2.6';
+var APP_VERSION='2.3.4';
 var SCHEMA_VERSION=1;
 var NS='calorietrack_id_';
-var K={settings:NS+'settings',logs:NS+'logs_v1',custom:NS+'customfoods_v1',templates:NS+'templates_v1',quick:NS+'quickaccess_v1',onlineCache:NS+'online_lookup_cache_v1'};
+var K={settings:NS+'settings',logs:NS+'logs_v1',custom:NS+'customfoods_v1',templates:NS+'templates_v1',quick:NS+'quickaccess_v1',onlineCache:NS+'online_lookup_cache_v1',aiMemory:NS+'ai_memory_v1',barcodeCache:NS+'barcode_cache_v1'};
 
 /* ---------------- Built-in food DB (public, static) ---------------- */
 var FOOD_DB={dbVersion:1,foods:[
@@ -875,10 +885,10 @@ var MEAL_SHORT={
   camilan:{id:"Camilan",en:"Snack"}
 };
 var MEAL_ORDER=["sarapan","makan_siang","makan_malam","camilan"];
-var ALL_UNITS=["porsi","mangkuk","gelas","cangkir","sendok makan","sendok teh","butir","potong","bungkus","tusuk","buah","centong"];
+var ALL_UNITS=["porsi","sajian","mangkuk","gelas","cangkir","sendok makan","sendok teh","butir","potong","bungkus","tusuk","buah","centong"];
 var UNIT_LABELS={
   gram:{id:"gram",en:"gram"}, ml:{id:"ml",en:"ml"},
-  porsi:{id:"porsi",en:"serving"}, mangkuk:{id:"mangkuk",en:"bowl"},
+  porsi:{id:"porsi",en:"serving"}, sajian:{id:"sajian",en:"serving"}, mangkuk:{id:"mangkuk",en:"bowl"},
   gelas:{id:"gelas",en:"glass"}, cangkir:{id:"cangkir",en:"cup"},
   "sendok makan":{id:"sendok makan",en:"tbsp"}, "sendok teh":{id:"sendok teh",en:"tsp"},
   butir:{id:"butir",en:"piece"}, potong:{id:"potong",en:"piece"},
@@ -901,7 +911,7 @@ var I18N={
     cuisine_all:"Semua", cuisine_indonesian:"Indonesia", cuisine_western:"Barat",
     cuisine_middle_eastern:"Timur Tengah", cuisine_asian:"Asia", cuisine_custom:"Custom",
     h_ai_scan:"AI Scan", txt_ai_scan:"Pindai foto makanan atau label nutrisi. Estimasi AI harus ditinjau sebelum disimpan.",
-    btn_scan_meal:"📷 Scan Makanan", btn_scan_label:"🏷 Scan Label",
+    btn_scan_meal:"📷 Scan Makanan", btn_scan_label:"🏷 Scan Label", btn_barcode_lookup:"🔢 Barcode / Kode Produk",
     ai_title_meal:"AI Meal Scan", ai_title_label:"AI Label Scan",
     ai_sub_meal:"Ambil atau pilih foto makanan. Konfirmasi estimasi sebelum disimpan.",
     ai_sub_label:"Ambil atau pilih foto label nutrisi. Edit hasil sebelum disimpan sebagai makanan custom.",
@@ -913,6 +923,9 @@ var I18N={
     ai_item_name:"Nama", ai_item_qty:"Porsi", ai_item_grams:"Gram", ai_item_kcal:"kkal", ai_item_p:"P", ai_item_c:"K", ai_item_f:"L",
     ai_empty:"AI tidak menemukan item yang bisa dipakai. Coba foto lain atau input manual.",
     ai_template_name:"AI meal", toast_ai_logged:"AI meal disimpan ke hari ini", toast_ai_template:"AI meal disimpan sebagai template", toast_ai_custom:"Hasil label disimpan sebagai makanan custom",
+    ai_quality_detected:"Terdeteksi", ai_quality_portion:"Asumsi porsi", ai_quality_nutrition:"Keyakinan nutrisi", ai_quality_memory:"Memakai koreksi lokal sebelumnya.",
+    btn_ai_correct:"Sudah benar", btn_ai_edit_portion:"Edit porsi", btn_ai_wrong:"Makanan salah", btn_ai_scan_label:"Scan label",
+    barcode_prompt:"Masukkan atau scan kode barcode produk", barcode_searching:"Mencari barcode…", barcode_not_found:"Barcode tidak ditemukan. Coba Scan Label atau input manual.", barcode_ready:"Produk barcode siap dipakai", barcode_invalid:"Kode barcode tidak valid.",
     h_online_lookup:"Pencarian Makanan Online", opt_off:"Mati", opt_on:"Aktif",
     txt_online_lookup:"Jika aktif, tombol Cari Online hanya mengirim kata kunci pencarian ke Calorie Tracker API. API akan mencari ke Open Food Facts. Catatan, riwayat, dan pengaturan tetap lokal di perangkat ini.",
     txt_builtin_disclaimer:"Nilai gizi merupakan estimasi umum dan dapat berbeda dari makanan asli.",
@@ -1032,7 +1045,7 @@ var I18N={
     cuisine_all:"All", cuisine_indonesian:"Indonesian", cuisine_western:"Western",
     cuisine_middle_eastern:"Middle Eastern", cuisine_asian:"Asian", cuisine_custom:"Custom",
     h_ai_scan:"AI Scan", txt_ai_scan:"Scan a meal photo or nutrition label. AI estimates must be reviewed before saving.",
-    btn_scan_meal:"📷 Scan Meal", btn_scan_label:"🏷 Scan Label",
+    btn_scan_meal:"📷 Scan Meal", btn_scan_label:"🏷 Scan Label", btn_barcode_lookup:"🔢 Barcode / Product Code",
     ai_title_meal:"AI Meal Scan", ai_title_label:"AI Label Scan",
     ai_sub_meal:"Take or choose a food photo. Confirm the estimate before saving.",
     ai_sub_label:"Take or choose a nutrition label photo. Edit the result before saving as a custom food.",
@@ -1044,6 +1057,9 @@ var I18N={
     ai_item_name:"Name", ai_item_qty:"Portion", ai_item_grams:"Gram", ai_item_kcal:"kcal", ai_item_p:"P", ai_item_c:"C", ai_item_f:"F",
     ai_empty:"AI did not find usable items. Try another photo or add manually.",
     ai_template_name:"AI meal", toast_ai_logged:"AI meal saved to today", toast_ai_template:"AI meal saved as template", toast_ai_custom:"Label result saved as custom food",
+    ai_quality_detected:"Detected", ai_quality_portion:"Assumed portion", ai_quality_nutrition:"Nutrition confidence", ai_quality_memory:"Using your previous local correction.",
+    btn_ai_correct:"Looks correct", btn_ai_edit_portion:"Edit portion", btn_ai_wrong:"Wrong food", btn_ai_scan_label:"Scan label",
+    barcode_prompt:"Enter or scan the product barcode", barcode_searching:"Searching barcode…", barcode_not_found:"Barcode not found. Try Scan Label or add manually.", barcode_ready:"Barcode product ready to use", barcode_invalid:"Invalid barcode code.",
     h_online_lookup:"Online Food Lookup", opt_off:"Off", opt_on:"On",
     txt_online_lookup:"When enabled, Search Online sends only your search keyword to the Calorie Tracker API. The API compares curated restaurant data, Open Food Facts, and USDA when configured. Logs, history, and settings remain local on this device.",
     txt_builtin_disclaimer:"Nutrition values are general estimates and may differ from the actual food.",
@@ -1180,7 +1196,7 @@ function applyI18n(){
 /* ---------------- Storage ---------------- */
 var DEFAULTS={
   settings:{schemaVersion:SCHEMA_VERSION,targets:{kcal:2000,protein:100,carbs:250,fat:65,waterMl:2000},theme:"auto",language:"en",onlineLookup:false,aiScanConsent:false,onboarded:false},
-  logs:{},custom:[],templates:[],quick:{favorites:[],recents:[]},onlineCache:{}
+  logs:{},custom:[],templates:[],quick:{favorites:[],recents:[]},onlineCache:{},aiMemory:{corrections:{}},barcodeCache:{}
 };
 var S={};var corrupted=[];
 function clone(o){return JSON.parse(JSON.stringify(o));}
@@ -1202,7 +1218,12 @@ function loadAll(){
   S.templates=loadKey(K.templates,DEFAULTS.templates);
   S.quick=loadKey(K.quick,DEFAULTS.quick);
   S.onlineCache=loadKey(K.onlineCache,DEFAULTS.onlineCache);
+  S.aiMemory=loadKey(K.aiMemory,DEFAULTS.aiMemory);
+  S.barcodeCache=loadKey(K.barcodeCache,DEFAULTS.barcodeCache);
   if(!S.onlineCache||typeof S.onlineCache!=='object'||Array.isArray(S.onlineCache))S.onlineCache={};
+  if(!S.aiMemory||typeof S.aiMemory!=='object'||Array.isArray(S.aiMemory))S.aiMemory={corrections:{}};
+  if(!S.aiMemory.corrections||typeof S.aiMemory.corrections!=='object'||Array.isArray(S.aiMemory.corrections))S.aiMemory.corrections={};
+  if(!S.barcodeCache||typeof S.barcodeCache!=='object'||Array.isArray(S.barcodeCache))S.barcodeCache={};
   if(!Array.isArray(S.custom))S.custom=[];
   if(!Array.isArray(S.templates))S.templates=[];
   if(!S.quick||typeof S.quick!=='object')S.quick=clone(DEFAULTS.quick);
@@ -1611,9 +1632,9 @@ function logTemplate(tplId){
 }
 
 /* ---------------- AI scan ---------------- */
-var AI_SCAN={mode:'meal',file:null,dataUrl:'',base64:'',mimeType:'image/jpeg',items:[],warnings:[],provider:''};
+var AI_SCAN={mode:'meal',file:null,dataUrl:'',base64:'',mimeType:'image/jpeg',items:[],warnings:[],provider:'',confirmed:false};
 function resetAiState(mode){
-  AI_SCAN={mode:mode||'meal',file:null,dataUrl:'',base64:'',mimeType:'image/jpeg',items:[],warnings:[],provider:''};
+  AI_SCAN={mode:mode||'meal',file:null,dataUrl:'',base64:'',mimeType:'image/jpeg',items:[],warnings:[],provider:'',confirmed:false};
   $('aiFile').value='';
   $('aiPreview').removeAttribute('src');$('aiPreview').style.display='none';
   $('aiAnalyze').disabled=true;$('aiStatus').textContent='';$('aiResults').innerHTML='';
@@ -1696,6 +1717,38 @@ function normalizeAiItems(items){
     };
   }).filter(function(x){return x.name;});
 }
+
+function aiMemoryKey(name){return normalize(String(name||'')).trim().replace(/\s+/g,' ').slice(0,90);}
+function applyAiMemory(items){
+  if(!S.aiMemory||!S.aiMemory.corrections)return items;
+  return items.map(function(it){
+    var key=aiMemoryKey(it.name),mem=S.aiMemory.corrections[key];
+    if(!mem)return it;
+    var x=clone(it);
+    ['estimatedQuantity','estimatedGrams','servingLabel','servingsPerContainer','defaultServingCount','calories','protein','carbs','fat','itemType','isPackagedProduct'].forEach(function(k){if(mem[k]!=null&&mem[k]!=='' )x[k]=mem[k];});
+    x.requiresServingConfirmation=mem.requiresServingConfirmation!=null?mem.requiresServingConfirmation:x.requiresServingConfirmation;
+    x.confidence='high';x.memoryApplied=true;
+    x.notes=(x.notes?x.notes+' ':'')+t('ai_quality_memory');
+    return x;
+  });
+}
+function rememberAiCorrections(items){
+  if(!items||!items.length)return;
+  if(!S.aiMemory||typeof S.aiMemory!=='object')S.aiMemory={corrections:{}};
+  if(!S.aiMemory.corrections||typeof S.aiMemory.corrections!=='object')S.aiMemory.corrections={};
+  items.forEach(function(it){
+    var key=aiMemoryKey(it.name);if(!key)return;
+    S.aiMemory.corrections[key]={name:it.name,itemType:it.itemType||'unknown',isPackagedProduct:!!it.isPackagedProduct,estimatedQuantity:it.estimatedQuantity||'1 serving',estimatedGrams:it.estimatedGrams||1,servingLabel:it.servingLabel||it.estimatedQuantity||'1 serving',servingsPerContainer:it.servingsPerContainer||null,defaultServingCount:it.defaultServingCount||1,requiresServingConfirmation:!!it.requiresServingConfirmation,calories:Math.max(0,parseNum(it.calories)||0),protein:Math.max(0,parseNum(it.protein)||0),carbs:Math.max(0,parseNum(it.carbs)||0),fat:Math.max(0,parseNum(it.fat)||0),updatedAt:Date.now()};
+  });
+  var keys=Object.keys(S.aiMemory.corrections).sort(function(a,b){return (S.aiMemory.corrections[b].updatedAt||0)-(S.aiMemory.corrections[a].updatedAt||0);});
+  keys.slice(150).forEach(function(k){delete S.aiMemory.corrections[k];});
+  saveKey(K.aiMemory,S.aiMemory);
+}
+function aiNutritionConfidence(it){
+  if(it.memoryApplied)return L()==='en'?'High · local correction':'Tinggi · koreksi lokal';
+  if(it.isPackagedProduct&&(!it.calories||it.calories<=0))return L()==='en'?'Low · scan label recommended':'Rendah · disarankan scan label';
+  return confidenceLabel(it.confidence);
+}
 function renderAiResults(){
   if(!AI_SCAN.items.length){$('aiResults').innerHTML='<div class="empty">'+t('ai_empty')+'</div>';return;}
   var html=AI_SCAN.items.map(function(it,i){
@@ -1706,7 +1759,20 @@ function renderAiResults(){
       var spc=it.servingsPerContainer?(' · '+(L()==='en'?'servings/container':'sajian/kemasan')+': '+fmt1(it.servingsPerContainer)):'';
       packNote='<div class="ai-pack-note">'+esc(L()==='en'?'Package/container detected. The app uses 1 serving by default, not the whole package. Confirm serving size before saving.':'Produk/kemasan terdeteksi. App memakai default 1 sajian, bukan seluruh kemasan. Konfirmasi ukuran sajian sebelum simpan.')+esc(spc)+'</div>';
     }
-    return '<div class="ai-item" data-ai-item="'+i+'" data-ai-packaged="'+(it.isPackagedProduct?'1':'0')+'" data-ai-type="'+esc(it.itemType||'unknown')+'"><div class="ai-item-head"><div class="ai-item-title">'+esc(it.name)+(typeLabel?'<span class="badge-est ai-type-badge">'+esc(typeLabel)+'</span>':'')+'</div><span class="badge-est confidence">'+confidenceLabel(it.confidence)+'</span></div>'+packNote+
+    var memNote=it.memoryApplied?'<div class="ai-memory-note">'+esc(t('ai_quality_memory'))+'</div>':'';
+    var quality='<div class="ai-quality">'+
+      '<div class="qbox"><div class="l">'+esc(t('ai_quality_detected'))+'</div><div class="v">'+esc(it.name)+'</div></div>'+ 
+      '<div class="qbox"><div class="l">'+esc(t('ai_quality_portion'))+'</div><div class="v">'+esc(it.estimatedQuantity||'1 serving')+'</div></div>'+ 
+      '<div class="qbox"><div class="l">Confidence</div><div class="v">'+esc(confidenceLabel(it.confidence))+'</div></div>'+ 
+      '<div class="qbox"><div class="l">'+esc(t('ai_quality_nutrition'))+'</div><div class="v">'+esc(aiNutritionConfidence(it))+'</div></div>'+ 
+      '</div>';
+    var inline='<div class="ai-inline-actions">'+
+      '<button class="mini-btn primary" type="button" data-ai-good="'+i+'">'+esc(t('btn_ai_correct'))+'</button>'+ 
+      '<button class="mini-btn" type="button" data-ai-edit="'+i+'">'+esc(t('btn_ai_edit_portion'))+'</button>'+ 
+      '<button class="mini-btn" type="button" data-ai-wrong="'+i+'">'+esc(t('btn_ai_wrong'))+'</button>'+ 
+      '<button class="mini-btn" type="button" data-ai-scan-label="1">'+esc(t('btn_ai_scan_label'))+'</button>'+ 
+      '</div>';
+    return '<div class="ai-item" data-ai-item="'+i+'" data-ai-packaged="'+(it.isPackagedProduct?'1':'0')+'" data-ai-type="'+esc(it.itemType||'unknown')+'"><div class="ai-item-head"><div class="ai-item-title">'+esc(it.name)+(typeLabel?'<span class="badge-est ai-type-badge">'+esc(typeLabel)+'</span>':'')+'</div><span class="badge-est confidence">'+confidenceLabel(it.confidence)+'</span></div>'+packNote+memNote+quality+
       '<div class="ai-item-grid">'+
       '<div class="field wide"><label>'+t('ai_item_name')+'</label><input class="input" data-ai-field="name" value="'+esc(it.name)+'"></div>'+ 
       '<div class="field"><label>'+t('ai_item_qty')+'</label><input class="input" data-ai-field="qty" value="'+esc(it.estimatedQuantity)+'"></div>'+ 
@@ -1715,7 +1781,7 @@ function renderAiResults(){
       '<div class="field"><label>'+t('ai_item_p')+'</label><input class="input num" inputmode="decimal" data-ai-field="protein" value="'+esc(it.protein)+'"></div>'+ 
       '<div class="field"><label>'+t('ai_item_c')+'</label><input class="input num" inputmode="decimal" data-ai-field="carbs" value="'+esc(it.carbs)+'"></div>'+ 
       '<div class="field"><label>'+t('ai_item_f')+'</label><input class="input num" inputmode="decimal" data-ai-field="fat" value="'+esc(it.fat)+'"></div>'+ 
-      '</div>'+(it.notes?'<div class="tiny" style="margin-top:8px">'+esc(it.notes)+'</div>':'')+'</div>';
+      '</div>'+inline+(it.notes?'<div class="tiny" style="margin-top:8px">'+esc(it.notes)+'</div>':'')+'</div>';
   }).join('');
   if(AI_SCAN.warnings&&AI_SCAN.warnings.length)html+='<div class="ai-warnings">'+AI_SCAN.warnings.map(esc).join('<br>')+'</div>';
   $('aiResults').innerHTML=html;
@@ -1743,6 +1809,7 @@ function saveAiItemAsCustom(it){
 }
 function saveAiMealToLog(){
   var items=readAiItemsFromForm();if(!items.length){toast(t('ai_empty'));return;}
+  rememberAiCorrections(items);
   var d=dayObj(todayStr(),true),meal=defaultMealNow(),total=0;
   items.forEach(function(it){
     var id=saveAiItemAsCustom(it);var food=getFood(id),unit=firstServingUnit(food),c=compute(food,1,unit);if(!c)return;
@@ -1753,6 +1820,7 @@ function saveAiMealToLog(){
 }
 function saveAiMealTemplate(){
   var items=readAiItemsFromForm();if(!items.length){toast(t('ai_empty'));return;}
+  rememberAiCorrections(items);
   var tplItems=items.map(function(it){var id=saveAiItemAsCustom(it);var food=getFood(id);return {foodRef:id,qty:1,unit:firstServingUnit(food)};});
   var name=(items[0]&&items[0].name?items[0].name:t('ai_template_name'))+' · AI';
   S.templates.unshift({id:uid('t'),name:name,items:tplItems,favorite:false,fromAi:true});
@@ -1760,7 +1828,7 @@ function saveAiMealTemplate(){
 }
 function saveAiLabelCustom(){
   var items=readAiItemsFromForm();if(!items.length){toast(t('ai_empty'));return;}
-  saveAiItemAsCustom(items[0]);saveKey(K.custom,S.custom);closeLayers();renderAll();toast(t('toast_ai_custom'));
+  rememberAiCorrections(items);saveAiItemAsCustom(items[0]);saveKey(K.custom,S.custom);closeLayers();renderAll();toast(t('toast_ai_custom'));
 }
 function startAiAnalyze(){
   if(!AI_SCAN.base64){toast(t('ai_no_image'));return;}
@@ -1768,9 +1836,9 @@ function startAiAnalyze(){
     $('aiAnalyze').disabled=true;$('aiStatus').textContent=t('ai_analyzing');$('aiResults').innerHTML='';$('aiMealActions').style.display='none';$('aiLabelActions').style.display='none';
     aiFetchAnalyze().then(function(data){
       if(!data||data.ok===false){var e=new Error(data&&data.error||'ai_failed');e.data=data;throw e;}
-      AI_SCAN.provider=data.provider||'';AI_SCAN.items=normalizeAiItems(data.items);AI_SCAN.warnings=Array.isArray(data.warnings)?data.warnings:[];
+      AI_SCAN.provider=data.provider||'';AI_SCAN.items=applyAiMemory(normalizeAiItems(data.items));AI_SCAN.warnings=Array.isArray(data.warnings)?data.warnings:[];
       $('aiProvider').textContent=AI_SCAN.provider||'AI';$('aiStatus').textContent=t('ai_need_review');renderAiResults();
-    }).catch(function(err){var msg=aiErrorText(err);$('aiStatus').textContent=msg;$('aiResults').innerHTML='<div class="empty"><div style="margin-top:10px"><button class="btn btn-ghost" type="button" onclick="closeLayers()">'+esc(t('btn_cancel'))+'</button></div></div>';})
+    }).catch(function(err){var msg=aiErrorText(err);$('aiStatus').textContent=msg;$('aiResults').innerHTML='<div class="empty"><div style="margin-top:10px"><button class="btn btn-ghost" type="button" data-ai-error-cancel="1">'+esc(t('btn_cancel'))+'</button></div></div>';})
       .finally(function(){$('aiAnalyze').disabled=false;});
   };
   if(!S.settings.aiScanConsent){
@@ -1792,6 +1860,47 @@ $('aiCancel').addEventListener('click',closeLayers);$('aiCancel2').addEventListe
 $('aiSaveLog').addEventListener('click',saveAiMealToLog);
 $('aiSaveTemplate').addEventListener('click',saveAiMealTemplate);
 $('aiSaveCustom').addEventListener('click',saveAiLabelCustom);
+
+$('aiResults').addEventListener('click',function(e){
+  var b=e.target.closest('button');if(!b)return;
+  if(b.hasAttribute('data-ai-error-cancel')){closeLayers();return;}
+  if(b.hasAttribute('data-ai-good')){AI_SCAN.confirmed=true;toast(t('btn_ai_correct'));return;}
+  if(b.hasAttribute('data-ai-edit')){var box=b.closest('[data-ai-item]'),inp=box&&box.querySelector('[data-ai-field="qty"]');if(inp){inp.focus();inp.select&&inp.select();}return;}
+  if(b.hasAttribute('data-ai-wrong')){var box2=b.closest('[data-ai-item]'),inp2=box2&&box2.querySelector('[data-ai-field="name"]');if(inp2){inp2.focus();inp2.select&&inp2.select();}return;}
+  if(b.hasAttribute('data-ai-scan-label')){openAiSheet('label');return;}
+});
+function cleanBarcodeCode(code){return String(code||'').replace(/[^0-9]/g,'').slice(0,32);}
+function barcodeLookup(code){
+  var c=cleanBarcodeCode(code);if(c.length<6)return Promise.reject(new Error('invalid_barcode'));
+  if(S.barcodeCache&&S.barcodeCache[c]&&Date.now()-(S.barcodeCache[c].savedAt||0)<ONLINE_CACHE_MAX_AGE)return Promise.resolve(clone(S.barcodeCache[c].data));
+  var url=BARCODE_API_URL+'?code='+encodeURIComponent(c)+'&lang='+(S.settings.language||'en');
+  return fetchJsonWithTimeout(url,ONLINE_TIMEOUT_MS+4000).then(function(data){
+    if(!S.barcodeCache||typeof S.barcodeCache!=='object')S.barcodeCache={};
+    S.barcodeCache[c]={savedAt:Date.now(),data:data};
+    var keys=Object.keys(S.barcodeCache).sort(function(a,b){return (S.barcodeCache[b].savedAt||0)-(S.barcodeCache[a].savedAt||0);});
+    keys.slice(60).forEach(function(k){delete S.barcodeCache[k];});
+    saveKey(K.barcodeCache,S.barcodeCache);
+    return data;
+  });
+}
+function startBarcodeLookup(){
+  var code=window.prompt(t('barcode_prompt'),'');
+  if(code==null)return;
+  code=cleanBarcodeCode(code);
+  if(code.length<6){toast(t('barcode_invalid'));return;}
+  toast(t('barcode_searching'));
+  barcodeLookup(code).then(function(data){
+    var results=Array.isArray(data.results)?data.results:[];
+    if(!results.length){toast(t('barcode_not_found'));return;}
+    var food=mapLookupApiResult(results[0],0);
+    if(!food){toast(t('barcode_not_found'));return;}
+    var id=saveOnlineAsCustom(food,true);
+    renderAll();
+    openFoodSheet({foodRef:id,mode:'new'});
+    toast(t('barcode_ready'));
+  }).catch(function(err){toast(err&&err.message==='invalid_barcode'?t('barcode_invalid'):t('barcode_not_found'));});
+}
+$('btnBarcodeLookup').addEventListener('click',startBarcodeLookup);
 
 /* ---------------- Views / nav ---------------- */
 var VIEW_KEYS={today:'view_today',add:'view_add',foods:'view_foods',history:'view_history',settings:'view_settings'};
@@ -1926,6 +2035,7 @@ var ONLINE_CACHE_LIMIT=32;
 var ONLINE_TIMEOUT_MS=9000;
 var LOOKUP_API_URL='https://calorie-tracker-api.illofiajie-ia.workers.dev/lookup';
 var ANALYZE_API_URL='https://calorie-tracker-api.illofiajie-ia.workers.dev/analyze-image';
+var BARCODE_API_URL='https://calorie-tracker-api.illofiajie-ia.workers.dev/barcode';
 var ONLINE_PROVIDERS=[];
 function onlineEnabled(){return !!S.settings.onlineLookup;}
 function isCustomFood(f){return f.id.indexOf('custom:')===0;}
@@ -2441,7 +2551,7 @@ function downloadJSON(filename,obj){
 $('btnExport').addEventListener('click',function(){
   downloadJSON('calorietrack-backup-'+todayStr()+'.json',{
     app:'calorietrack-id',schemaVersion:SCHEMA_VERSION,appVersion:APP_VERSION,exportedAt:new Date().toISOString(),
-    settings:S.settings,logs:S.logs,customFoods:S.custom,templates:S.templates,quickAccess:S.quick
+    settings:S.settings,logs:S.logs,customFoods:S.custom,templates:S.templates,quickAccess:S.quick,aiMemory:S.aiMemory,barcodeCache:S.barcodeCache
   });
   toast(t('toast_backup_downloaded'));
 });
@@ -2472,10 +2582,13 @@ $('importFile').addEventListener('change',function(){
         S.custom=Array.isArray(obj.customFoods)?obj.customFoods:[];
         S.templates=Array.isArray(obj.templates)?obj.templates:[];
         S.quick=(obj.quickAccess&&typeof obj.quickAccess==='object')?obj.quickAccess:clone(DEFAULTS.quick);
+        S.aiMemory=(obj.aiMemory&&typeof obj.aiMemory==='object')?obj.aiMemory:clone(DEFAULTS.aiMemory);
+        S.barcodeCache=(obj.barcodeCache&&typeof obj.barcodeCache==='object')?obj.barcodeCache:clone(DEFAULTS.barcodeCache);
+        if(!S.aiMemory.corrections||typeof S.aiMemory.corrections!=='object')S.aiMemory.corrections={};
         if(!Array.isArray(S.quick.favorites))S.quick.favorites=[];
         if(!Array.isArray(S.quick.recents))S.quick.recents=[];
         saveKey(K.settings,S.settings);saveKey(K.logs,S.logs);saveKey(K.custom,S.custom);
-        saveKey(K.templates,S.templates);saveKey(K.quick,S.quick);
+        saveKey(K.templates,S.templates);saveKey(K.quick,S.quick);saveKey(K.aiMemory,S.aiMemory);saveKey(K.barcodeCache,S.barcodeCache);
         applyI18n();renderAll();applyTheme();toast(t('toast_backup_imported'));
       });
   };

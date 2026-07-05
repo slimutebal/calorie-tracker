@@ -1,21 +1,20 @@
 # Calorie Tracker
 
-## What changed in v2.2.6
+## What changed in v2.3.4
 
-- Fixed AI meal templates so packaged-product servings use the correct serving unit instead of an unavailable default portion unit.
-- Existing AI templates created from packaged products now fall back to the custom food default serving when logged.
+- Added **AI Scan Quality Bundle**: clearer AI review cards with detected item, assumed portion, confidence, and nutrition-confidence notes.
+- Added **Local Correction Memory**: when you correct an AI scan result, the app remembers the correction locally and reuses it for the same food/product next time.
+- Added **Packaged Product Serving Memory**: products such as Nescafe Classic, jars, sachets, bottles, and boxes reuse the corrected serving default instead of guessing the whole package.
+- Added **Barcode / Product Code lookup** using the backend `/barcode` endpoint with Open Food Facts product lookup.
+- Added quick AI review actions: Looks Correct, Edit Portion, Wrong Food, and Scan Label.
+- Improved AI prompt guidance for packaged products, barcode/label handoff, hidden sugar/oil/sauce uncertainty, and serving confirmation.
+- Bumped the app version to `2.3.4` and the service worker cache to `calorietrack-shell-v21`.
 
-- Improved AI scan handling for packaged products, containers, jars, bottles, boxes, sachets, and drink mixes.
-- AI scan now defaults packaged products to **1 serving** instead of treating the whole package/container weight as consumed.
-- Added serving-confirmation fields for packaged products, including serving label and servings-per-container when visible.
-- Improved backend prompt/schema so products such as Nescafe Classic are classified as packaged/drink mix and require serving confirmation.
-- Bumped the app version to `2.2.6` and the service worker cache to `calorietrack-shell-v20`.
 
-
-**Version:** 2.2.6  
+**Version:** 2.3.4  
 **Repository:** https://github.com/slimutebal/calorie-tracker
 
-Calorie Tracker is a static, mobile-first **Progressive Web App (PWA)** for daily calorie and macronutrient tracking. It includes a built-in food library covering common **Indonesian, Western, Middle Eastern, and Asian** foods, optional multi-source online lookup through the Calorie Tracker API backend proxy, and optional AI scan for meal photos and nutrition labels. It has no account system and no telemetry. All personal food logs stay **only on the device/browser that uses the app**.
+Calorie Tracker is a static, mobile-first **Progressive Web App (PWA)** for daily calorie and macronutrient tracking. It includes a built-in food library covering common **Indonesian, Western, Middle Eastern, and Asian** foods, optional multi-source online lookup through the Calorie Tracker API backend proxy, optional barcode lookup, and optional AI scan for meal photos and nutrition labels. It has no account system and no telemetry. All personal food logs stay **only on the device/browser that uses the app**.
 
 > **Nutrition disclaimer:** all nutrition values are estimates. Actual values may vary by brand, recipe, cooking method, oil amount, and portion size. This app is for personal tracking only and is not medical or dietary advice.
 
@@ -45,8 +44,8 @@ Calorie Tracker is a static, mobile-first **Progressive Web App (PWA)** for dail
 - **Built-in food database** — about 112 foods across Indonesian, Western, Middle Eastern, and Asian cuisines.
 - **Cuisine filter** — All / Indonesian / Western / Middle Eastern / Asian / Custom.
 - **Custom foods** — create, edit, delete, search, favorite, and reuse your own foods.
-- **Online Food Lookup** — optionally search through the Calorie Tracker API backend proxy with curated restaurant data, Open Food Facts, and optional USDA results, then use, edit, or save selected results locally.
-- **AI Meal Scan** — optional meal photo analysis through the backend. Results must be reviewed/edited before saving.
+- **Online Food Lookup** — optionally search through the Calorie Tracker API backend proxy with curated restaurant data, Open Food Facts, barcode/product-code lookup, and optional USDA results, then use, edit, or save selected results locally.
+- **AI Meal Scan** — optional meal photo analysis through the backend. Results must be reviewed/edited before saving; corrected results can be remembered locally for future scans.
 - **AI Nutrition Label Scan** — optional label photo parsing into a custom food draft.
 - **Meal templates** — combine multiple items and log them again with one tap.
 - **History and trend view** — daily summaries, 7-day trend, weekly average, best/worst day, and target adherence.
@@ -92,7 +91,7 @@ manifest.webmanifest  # PWA metadata for Add to Home Screen
 service-worker.js     # Offline app-shell cache
 assets/icons/         # icon-192.png, icon-512.png, apple-touch-icon.png
 README.md             # Project notes and deployment guide
-backend/worker.js     # Cloudflare Worker lookup proxy + AI scan endpoint
+backend/worker.js     # Cloudflare Worker lookup proxy + barcode lookup + AI scan endpoint
 ```
 
 ---
