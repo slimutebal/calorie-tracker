@@ -1,6 +1,6 @@
 # Calorie Tracker
 
-**Version:** 2.2.0  
+**Version:** 2.2.1  
 **Repository:** https://github.com/slimutebal/calorie-tracker
 
 Calorie Tracker is a static, mobile-first **Progressive Web App (PWA)** for daily calorie and macronutrient tracking. It includes a built-in food library covering common **Indonesian, Western, Middle Eastern, and Asian** foods, optional multi-source online lookup through the Calorie Tracker API backend proxy, and optional AI scan for meal photos and nutrition labels. It has no account system and no telemetry. All personal food logs stay **only on the device/browser that uses the app**.
@@ -8,6 +8,12 @@ Calorie Tracker is a static, mobile-first **Progressive Web App (PWA)** for dail
 > **Nutrition disclaimer:** all nutrition values are estimates. Actual values may vary by brand, recipe, cooking method, oil amount, and portion size. This app is for personal tracking only and is not medical or dietary advice.
 
 ---
+
+## What changed in v2.2.1
+
+- Fixed Scan Meal and Scan Label buttons so they now open the AI scan sheet and trigger the image picker/analyze flow.
+- Added the missing frontend AI scan event handlers, image compression, analyze request, editable review form, Save Today, Save Template, and Save Custom actions.
+- Bumped the app version to `2.2.1` and the service worker cache to `calorietrack-shell-v15`.
 
 ## What changed in v2.2.0
 
@@ -74,7 +80,7 @@ manifest.webmanifest  # PWA metadata for Add to Home Screen
 service-worker.js     # Offline app-shell cache
 assets/icons/         # icon-192.png, icon-512.png, apple-touch-icon.png
 README.md             # Project notes and deployment guide
-backend/worker.js     # Cloudflare Worker lookup proxy + AI scan endpoint for v2.2.0
+backend/worker.js     # Cloudflare Worker lookup proxy + AI scan endpoint
 ```
 
 ---
@@ -152,13 +158,13 @@ https://slimutebal.github.io/calorie-tracker/
 This app uses a service worker cache. When you change app files, update the cache version in `service-worker.js`:
 
 ```js
-const CACHE_VERSION = 'calorietrack-shell-v14';
+const CACHE_VERSION = 'calorietrack-shell-v15';
 ```
 
 For future releases, increase it again, for example:
 
 ```js
-const CACHE_VERSION = 'calorietrack-shell-v14';
+const CACHE_VERSION = 'calorietrack-shell-v15';
 ```
 
 After uploading an update:
