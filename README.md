@@ -1,11 +1,12 @@
 # Calorie Tracker
 
-## What changed in v4.2.7
+## What changed in v4.2.8
 
 - Fixed the Add page sticky search/filter header so it no longer creates a clipped or empty-looking header area when the page first opens.
 - Kept the Add page search and cuisine chips sticky after scrolling, but only shows the gradient header material after the user scrolls.
 - Added extra bottom breathing room so filter chips are not visually cut by content passing behind them.
-- Bumped the app version to `4.2.7` and the service worker cache to `calorietrack-shell-v33`.
+- Reduced the History sticky gradient height and prevented it from covering the large History title at the top.
+- Bumped the app version to `4.2.8` and the service worker cache to `calorietrack-shell-v34`.
 
 ## What changed in v4.2.5
 
@@ -109,7 +110,7 @@
 - Bumped the app version to `2.3.4` and the service worker cache to `calorietrack-shell-v21`.
 
 
-**Version:** 4.2.7  
+**Version:** 4.2.8  
 **Repository:** https://github.com/slimutebal/calorie-tracker
 
 Calorie Tracker is a static, mobile-first **Progressive Web App (PWA)** for daily calorie and macronutrient tracking. It includes a built-in food library covering common **Indonesian, Western, Middle Eastern, and Asian** foods, optional multi-source online lookup through the Calorie Tracker API backend proxy, optional barcode lookup, and optional AI scan for meal photos and nutrition labels. It has no account system and no telemetry. All personal food logs stay **only on the device/browser that uses the app**. In this roadmap, v4 is the local coach and goal-based targeting release; optional cloud backup/sync is reserved for v5.

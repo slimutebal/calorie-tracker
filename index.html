@@ -561,6 +561,44 @@ body.add-sticky-active #view-add .add-sticky-tools::before{
   body.add-sticky-active #view-add .add-sticky-tools::before{height:calc(var(--sat) + 144px)}
 }
 
+/* ============ V4.2.8 History Sticky Date Fix ============ */
+html,body,#app{max-width:100%;overflow-x:hidden}
+#view-history{overflow-x:hidden}
+#view-history .history-sticky-date{
+  top:calc(var(--sat) + 12px);
+  z-index:23;
+  width:100%;
+  max-width:100%;
+  box-sizing:border-box;
+  display:flex;
+  flex-wrap:nowrap;
+  gap:8px;
+  overflow-x:auto;
+  overflow-y:visible;
+  -webkit-overflow-scrolling:touch;
+  overscroll-behavior-x:contain;
+  touch-action:pan-x pan-y;
+  padding:0 2px 12px;
+  margin:0 0 12px;
+}
+#view-history .history-sticky-date::before{
+  display:none;
+  opacity:0;
+  top:calc(-1 * var(--sat) - 12px);
+  height:calc(var(--sat) + 126px);
+  background:var(--add-sticky-gradient);
+  transition:opacity .18s ease;
+}
+body.history-sticky-active #view-history .history-sticky-date::before{
+  display:block;
+  opacity:1;
+}
+#view-history .history-sticky-date .dstile{flex:0 0 52px}
+@media(max-width:430px){
+  #view-history .history-sticky-date{padding-bottom:12px;margin-bottom:12px}
+  body.history-sticky-active #view-history .history-sticky-date::before{height:calc(var(--sat) + 128px)}
+}
+
 </style>
 </head>
 <body>
@@ -1016,7 +1054,7 @@ body.add-sticky-active #view-add .add-sticky-tools::before{
    ================================================================ */
 (function(){
 'use strict';
-var APP_VERSION='4.2.7';
+var APP_VERSION='4.2.8';
 var SCHEMA_VERSION=1;
 var NS='calorietrack_id_';
 var K={settings:NS+'settings',logs:NS+'logs_v1',custom:NS+'customfoods_v1',templates:NS+'templates_v1',quick:NS+'quickaccess_v1',onlineCache:NS+'online_lookup_cache_v1',aiMemory:NS+'ai_memory_v1',barcodeCache:NS+'barcode_cache_v1',weight:NS+'weight_v1',mealPlans:NS+'meal_plans_v1',coach:NS+'coach_v1'};
@@ -2294,12 +2332,14 @@ function updateCompactHeader(){
   var h=$('compactHeader');if(!h)return;
   var show=(currentView==='today'||currentView==='coach')&&window.scrollY>54;
   var addSticky=(currentView==='add')&&window.scrollY>42;
+  var historySticky=(currentView==='history')&&window.scrollY>42;
   h.classList.toggle('show',show);
   h.setAttribute('aria-hidden',show?'false':'true');
   $('compactTitle').textContent=t(VIEW_KEYS[currentView]||'view_today');
   $('compactSub').textContent=stickySubtitleFor(currentView);
   document.body.classList.toggle('settings-compact',currentView==='settings'&&window.scrollY>56);
   document.body.classList.toggle('add-sticky-active',addSticky);
+  document.body.classList.toggle('history-sticky-active',historySticky);
 }
 function requestStickyUpdate(){
   if(stickyTick)return;stickyTick=true;
