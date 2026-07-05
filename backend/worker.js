@@ -1,4 +1,4 @@
-const APP_VERSION = '2.2.3';
+const APP_VERSION = '2.2.4';
 const ALLOWED_ORIGINS = new Set([
   'https://slimutebal.github.io',
   'http://localhost:8000',
@@ -6,7 +6,7 @@ const ALLOWED_ORIGINS = new Set([
   'http://localhost:8080',
   'http://127.0.0.1:8080'
 ]);
-const USER_AGENT = 'CalorieTracker/2.2.3 (https://github.com/slimutebal/calorie-tracker)';
+const USER_AGENT = 'CalorieTracker/2.2.4 (https://github.com/slimutebal/calorie-tracker)';
 const OFF_SEARCH_URL = 'https://world.openfoodfacts.org/cgi/search.pl';
 const USDA_SEARCH_URL = 'https://api.nal.usda.gov/fdc/v1/foods/search';
 const CACHE_TTL_SECONDS = 60 * 60 * 24 * 7;
@@ -14,7 +14,7 @@ const TIMEOUT_MS = 8500;
 const AI_TIMEOUT_MS = 25000;
 const MAX_IMAGE_BASE64_CHARS = 4_800_000;
 const GEMINI_MODEL = 'gemini-2.0-flash';
-const GEMINI_FALLBACK_MODELS = ['gemini-2.0-flash', 'gemini-1.5-flash'];
+const GEMINI_FALLBACK_MODELS = ['gemini-2.0-flash', 'gemini-2.0-flash-lite', 'gemini-2.5-flash', 'gemini-2.5-flash-lite'];
 const WORKERS_AI_VISION_MODEL = '@cf/meta/llama-3.2-11b-vision-instruct';
 
 const CURATED_RESTAURANTS = [
@@ -452,13 +452,38 @@ function safeNumber(v) {
   const n = Number(v);
   return Number.isFinite(n) && n >= 0 ? Math.round(n * 10) / 10 : 0;
 }
+function geminiModelPath(model) {
+  const m = String(model || GEMINI_MODEL).trim();
+  return m.startsWith('models/') ? m : `models/${m}`;
+}
+function geminiModelLabel(model) {
+  return geminiModelPath(model).replace(/^models\//, '');
+}
+function geminiCandidateModels(env) {
+  const values = [];
+  if (env && env.GEMINI_MODEL) values.push(env.GEMINI_MODEL);
+  values.push(GEMINI_MODEL, ...GEMINI_FALLBACK_MODELS);
+  const seen = new Set();
+  return values.filter((m) => {
+    const label = geminiModelLabel(m);
+    if (!label || seen.has(label)) return false;
+    seen.add(label);
+    return true;
+  });
+}
+function isGeminiModelNotFoundError(err) {
+  const msg = String(err && err.message || err || '').toLowerCase();
+  return msg.includes('404') || msg.includes('not found') || msg.includes('not supported');
+}
 async function callGeminiAnalyze(env, payload) {
   if (!env || !env.GEMINI_API_KEY) throw new Error('gemini_not_configured');
-  const models = env.GEMINI_MODEL ? [env.GEMINI_MODEL] : GEMINI_FALLBACK_MODELS;
-  let lastError = null;
+  const models = geminiCandidateModels(env);
+  const errors = [];
   for (const model of models) {
+    const modelPath = geminiModelPath(model);
+    const modelLabel = geminiModelLabel(model);
     try {
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(env.GEMINI_API_KEY)}`;
+      const url = `https://generativelanguage.googleapis.com/v1beta/${modelPath}:generateContent?key=${encodeURIComponent(env.GEMINI_API_KEY)}`;
       const body = {
         contents: [{ role: 'user', parts: [
           { text: aiPrompt(payload.mode, payload.lang) },
@@ -470,10 +495,42 @@ async function callGeminiAnalyze(env, payload) {
       const text = data && data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts && data.candidates[0].content.parts.map((p) => p.text || '').join('\n');
       if (!text) throw new Error('gemini_empty');
       const parsed = JSON.parse(stripJsonText(text));
-      return normalizeAIResponse(parsed, `Gemini (${model})`, payload.mode);
-    } catch (e) { lastError = e; }
+      return normalizeAIResponse(parsed, `Gemini (${modelLabel})`, payload.mode);
+    } catch (e) {
+      const msg = e && e.message ? e.message : String(e);
+      errors.push(`${modelLabel}:${msg}`);
+      // Keep trying only for model compatibility or transient upstream failures.
+      // This avoids silently hiding permanent malformed-image or prompt errors behind obsolete model fallbacks.
+      continue;
+    }
   }
-  throw new Error(lastError && lastError.message ? lastError.message : 'gemini_failed');
+  const err = new Error('gemini_failed');
+  err.providerErrors = errors.slice(0, 4);
+  throw err;
+}
+async function handleGeminiModels(env, origin) {
+  if (!env || !env.GEMINI_API_KEY) return json({ ok: false, version: APP_VERSION, error: 'gemini_not_configured' }, 501, origin);
+  const url = `https://generativelanguage.googleapis.com/v1beta/models?key=${encodeURIComponent(env.GEMINI_API_KEY)}`;
+  try {
+    const data = await fetchJsonRequest(url, { method: 'GET', headers: { 'Accept': 'application/json' } }, TIMEOUT_MS);
+    const models = (Array.isArray(data.models) ? data.models : []).map((m) => ({
+      name: m.name,
+      displayName: m.displayName || '',
+      supportedGenerationMethods: m.supportedGenerationMethods || []
+    })).filter((m) => (m.supportedGenerationMethods || []).includes('generateContent'));
+    return json({ ok: true, version: APP_VERSION, defaultModel: GEMINI_MODEL, candidateModels: geminiCandidateModels(env).map(geminiModelPath), generateContentModels: models.slice(0, 60) }, 200, origin);
+  } catch (e) {
+    return json({ ok: false, version: APP_VERSION, error: 'gemini_models_failed', message: String(e && e.message || e) }, 502, origin);
+  }
+}
+async function handleWorkersAiAgree(env, origin) {
+  if (!env || !env.AI) return json({ ok: false, version: APP_VERSION, error: 'workers_ai_not_configured' }, 501, origin);
+  try {
+    const result = await env.AI.run(WORKERS_AI_VISION_MODEL, { prompt: 'agree' });
+    return json({ ok: true, version: APP_VERSION, message: 'Workers AI model license agreement submitted.', model: WORKERS_AI_VISION_MODEL, result }, 200, origin);
+  } catch (e) {
+    return json({ ok: false, version: APP_VERSION, error: 'workers_ai_agree_failed', message: String(e && e.message || e), model: WORKERS_AI_VISION_MODEL }, 502, origin);
+  }
 }
 async function callWorkersAIAnalyze(env, payload) {
   if (!env || !env.AI) throw new Error('workers_ai_not_configured');
@@ -504,11 +561,20 @@ async function handleAnalyzeImage(request, env, ctx, origin) {
   const payload = { mode, imageBase64, mimeType, lang: body.lang === 'id' ? 'id' : 'en' };
   const errors = [];
   try { return json(await callGeminiAnalyze(env, payload), 200, origin); }
-  catch (e) { errors.push(`gemini:${e.message || e}`); }
+  catch (e) {
+    errors.push('gemini:' + (e && e.message ? e.message : String(e)));
+    if (e && Array.isArray(e.providerErrors)) errors.push(...e.providerErrors.map((x) => 'gemini_model:' + x));
+  }
   try { return json(await callWorkersAIAnalyze(env, payload), 200, origin); }
-  catch (e) { errors.push(`workers_ai:${e.message || e}`); }
+  catch (e) { errors.push('workers_ai:' + (e && e.message ? e.message : String(e))); }
   const notConfigured = errors.every((e) => e.includes('not_configured'));
-  return json({ ok: false, version: APP_VERSION, error: notConfigured ? 'AI_SCAN_NOT_CONFIGURED' : 'AI_SCAN_FAILED', provider: 'none', errors }, notConfigured ? 501 : 502, origin);
+  const workersAiNeedsAgree = errors.some((e) => e.toLowerCase().includes('prompt') && e.toLowerCase().includes('agree'));
+  const message = notConfigured
+    ? 'AI scan is not configured on the backend yet.'
+    : workersAiNeedsAgree
+      ? 'AI provider is not ready. Open /workers-ai-agree once, then try again.'
+      : 'AI provider is not ready or the image could not be analyzed. Check /ai-status and try again.';
+  return json({ ok: false, version: APP_VERSION, error: notConfigured ? 'AI_SCAN_NOT_CONFIGURED' : 'AI_SCAN_FAILED', provider: 'none', message, errors: errors.slice(0, 8) }, notConfigured ? 501 : 502, origin);
 }
 
 async function handleLookup(request, env, ctx, origin) {
@@ -557,10 +623,12 @@ export default {
     const url = new URL(request.url);
     try {
       if (url.pathname === '/' || url.pathname === '') {
-        return json({ ok: true, service: 'Calorie Tracker API', version: APP_VERSION, endpoints: ['/lookup?q=cheeseburger', 'POST /analyze-image', '/ai-status'], providers: ['Curated Restaurant Pack', 'Open Food Facts', env && env.USDA_API_KEY ? 'USDA FoodData Central' : 'USDA FoodData Central (optional secret not configured)', env && env.GEMINI_API_KEY ? 'Gemini Vision' : 'Gemini Vision (optional secret not configured)', env && env.AI ? 'Cloudflare Workers AI Vision' : 'Cloudflare Workers AI Vision (optional binding not configured)'] }, 200, origin);
+        return json({ ok: true, service: 'Calorie Tracker API', version: APP_VERSION, endpoints: ['/lookup?q=cheeseburger', 'POST /analyze-image', '/ai-status', '/gemini-models', '/workers-ai-agree'], providers: ['Curated Restaurant Pack', 'Open Food Facts', env && env.USDA_API_KEY ? 'USDA FoodData Central' : 'USDA FoodData Central (optional secret not configured)', env && env.GEMINI_API_KEY ? 'Gemini Vision' : 'Gemini Vision (optional secret not configured)', env && env.AI ? 'Cloudflare Workers AI Vision' : 'Cloudflare Workers AI Vision (optional binding not configured)'] }, 200, origin);
       }
       if (url.pathname === '/lookup') return await handleLookup(request, env, ctx, origin);
-      if (url.pathname === '/ai-status') return json({ ok: true, version: APP_VERSION, geminiConfigured: !!(env && env.GEMINI_API_KEY), workersAiConfigured: !!(env && env.AI), geminiModel: env && env.GEMINI_MODEL || GEMINI_MODEL }, 200, origin);
+      if (url.pathname === '/ai-status') return json({ ok: true, version: APP_VERSION, geminiConfigured: !!(env && env.GEMINI_API_KEY), workersAiConfigured: !!(env && env.AI), geminiModel: env && env.GEMINI_MODEL || GEMINI_MODEL, geminiCandidates: geminiCandidateModels(env).map(geminiModelLabel), workersAiModel: WORKERS_AI_VISION_MODEL, workersAiAgreeEndpoint: '/workers-ai-agree' }, 200, origin);
+      if (url.pathname === '/gemini-models') return await handleGeminiModels(env, origin);
+      if (url.pathname === '/workers-ai-agree') return await handleWorkersAiAgree(env, origin);
       if (url.pathname === '/analyze-image') return await handleAnalyzeImage(request, env, ctx, origin);
       return json({ ok: false, error: 'not_found' }, 404, origin);
     } catch (err) {
