@@ -1,13 +1,12 @@
 # Calorie Tracker
 
-## What changed in v4.2.8a
-
-- Fixed the History page date strip only, starting from the stable v4.2.7 baseline.
-- Kept the large History title at the top, then only the date strip remains sticky while scrolling.
-- Made the History date strip horizontally scrollable without widening the page.
-- Tuned the History sticky gradient so it is shorter and does not clip date bubbles.
-- Did not change Add, Today, Coach, or Settings page behavior.
-- Bumped the app version to `4.2.8a` and the service worker cache to `calorietrack-shell-v34a`.
+## What changed in v4.2.8b
+- Fixed the History date strip from the stable v4.2.7 baseline.
+- Kept the large History title only at the top; while scrolling, only the date strip remains sticky.
+- Fixed the History date strip vertical position and sticky behavior.
+- Kept horizontal scrolling for the date strip.
+- Scoped the patch to the History page only; Today, Coach, Add, and Settings were not changed.
+- Bumped the app version to `4.2.8b` and the service worker cache to `calorietrack-shell-v34b`.
 
 ## What changed in v4.2.7
 
@@ -118,7 +117,7 @@
 - Bumped the app version to `2.3.4` and the service worker cache to `calorietrack-shell-v21`.
 
 
-**Version:** 4.2.8a  
+**Version:** 4.2.8b  
 **Repository:** https://github.com/slimutebal/calorie-tracker
 
 Calorie Tracker is a static, mobile-first **Progressive Web App (PWA)** for daily calorie and macronutrient tracking. It includes a built-in food library covering common **Indonesian, Western, Middle Eastern, and Asian** foods, optional multi-source online lookup through the Calorie Tracker API backend proxy, optional barcode lookup, and optional AI scan for meal photos and nutrition labels. It has no account system and no telemetry. All personal food logs stay **only on the device/browser that uses the app**. In this roadmap, v4 is the local coach and goal-based targeting release; optional cloud backup/sync is reserved for v5.

@@ -562,80 +562,94 @@ body.add-sticky-active #view-add .add-sticky-tools::before{
 }
 
 
-/* ============ V4.2.8a History Sticky Date Strip Fix ============
-   Scoped to History only. Do not reuse these rules for Add/Today/Coach/Settings. */
+/* ============ V4.2.8b History Sticky Date Position Fix ============
+   Scoped to History only. Do not touch Add/Today/Coach/Settings sticky behavior. */
 #view-history{
-  overflow-x:hidden;
   max-width:100%;
 }
-#view-history .history-date-sticky-shell{
+#view-history .history-date-sticky-wrap{
   position:sticky;
   top:calc(var(--sat) + 12px);
   z-index:23;
   margin:0 0 14px;
-  padding:4px 0 12px;
+  padding:0 0 10px;
   overflow:visible;
   background:transparent;
   border:0;
   box-shadow:none;
   isolation:isolate;
 }
-#view-history .history-date-sticky-shell::before{
+#view-history .history-date-sticky-wrap::before{
   content:"";
   position:absolute;
-  left:0;
-  right:0;
+  left:50%;
   top:calc(-1 * var(--sat) - 12px);
-  height:calc(var(--sat) + 96px);
+  width:100vw;
+  height:calc(var(--sat) + 92px);
+  transform:translateX(-50%);
   z-index:-1;
   pointer-events:none;
   opacity:0;
-  display:none;
   background:linear-gradient(to bottom,
-    rgba(245,243,239,.94) 0%,
-    rgba(245,243,239,.78) 38%,
-    rgba(245,243,239,.28) 68%,
+    rgba(245,243,239,.92) 0%,
+    rgba(245,243,239,.70) 38%,
+    rgba(245,243,239,.22) 72%,
     rgba(245,243,239,0) 100%);
   -webkit-backdrop-filter:blur(20px) saturate(1.35);
   backdrop-filter:blur(20px) saturate(1.35);
   transition:opacity .18s ease;
 }
-[data-theme="dark"] #view-history .history-date-sticky-shell::before{
+[data-theme="dark"] #view-history .history-date-sticky-wrap::before{
   background:linear-gradient(to bottom,
-    rgba(0,0,0,.94) 0%,
-    rgba(0,0,0,.72) 38%,
-    rgba(0,0,0,.24) 68%,
+    rgba(0,0,0,.92) 0%,
+    rgba(0,0,0,.70) 38%,
+    rgba(0,0,0,.22) 72%,
     rgba(0,0,0,0) 100%);
 }
-body.history-sticky-active #view-history .history-date-sticky-shell::before{
-  display:block;
+body.history-sticky-active #view-history .history-date-sticky-wrap::before{
   opacity:1;
 }
-#view-history .history-date-strip{
+#view-history .history-date-sticky-wrap .history-sticky-date{
+  position:relative;
+  z-index:2;
   display:flex;
   flex-wrap:nowrap;
   gap:8px;
   width:100%;
   max-width:100%;
+  min-width:0;
   margin:0;
-  padding:2px 2px 10px;
+  padding:3px 2px 10px;
   overflow-x:auto;
   overflow-y:visible;
+  background:transparent!important;
+  border:0!important;
+  box-shadow:none!important;
+  -webkit-backdrop-filter:none!important;
+  backdrop-filter:none!important;
   scrollbar-width:none;
   -webkit-overflow-scrolling:touch;
   overscroll-behavior-x:contain;
   touch-action:pan-x;
 }
-#view-history .history-date-strip::-webkit-scrollbar{display:none}
-#view-history .history-date-strip .dstile{
+#view-history .history-date-sticky-wrap .history-sticky-date::-webkit-scrollbar{display:none}
+#view-history .history-date-sticky-wrap .history-sticky-date .dstile{
   flex:0 0 52px;
   position:relative;
-  z-index:2;
+  z-index:3;
 }
 @media(max-width:430px){
-  #view-history .history-date-sticky-shell{top:calc(var(--sat) + 12px);padding-bottom:13px;margin-bottom:14px}
-  #view-history .history-date-sticky-shell::before{height:calc(var(--sat) + 102px)}
-  #view-history .history-date-strip{padding-bottom:11px}
+  #view-history .history-date-sticky-wrap{
+    top:calc(var(--sat) + 12px);
+    padding-bottom:10px;
+    margin-bottom:14px;
+  }
+  #view-history .history-date-sticky-wrap::before{
+    height:calc(var(--sat) + 96px);
+  }
+  #view-history .history-date-sticky-wrap .history-sticky-date{
+    padding-bottom:10px;
+  }
 }
 
 </style>
@@ -815,8 +829,8 @@ body.history-sticky-active #view-history .history-date-sticky-shell::before{
 
   <!-- ============ HISTORY ============ -->
   <section class="view" id="view-history">
-    <div class="history-date-sticky-shell" id="historyDateShell">
-      <div class="datestrip history-date-strip" id="dateStrip"></div>
+    <div class="history-date-sticky-wrap" id="historyDateShell">
+      <div class="datestrip history-sticky-date" id="dateStrip"></div>
     </div>
     <div class="cols2">
       <div class="col-a">
@@ -1095,7 +1109,7 @@ body.history-sticky-active #view-history .history-date-sticky-shell::before{
    ================================================================ */
 (function(){
 'use strict';
-var APP_VERSION='4.2.8a';
+var APP_VERSION='4.2.8b';
 var SCHEMA_VERSION=1;
 var NS='calorietrack_id_';
 var K={settings:NS+'settings',logs:NS+'logs_v1',custom:NS+'customfoods_v1',templates:NS+'templates_v1',quick:NS+'quickaccess_v1',onlineCache:NS+'online_lookup_cache_v1',aiMemory:NS+'ai_memory_v1',barcodeCache:NS+'barcode_cache_v1',weight:NS+'weight_v1',mealPlans:NS+'meal_plans_v1',coach:NS+'coach_v1'};
