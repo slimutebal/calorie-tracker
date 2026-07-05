@@ -1,4 +1,4 @@
-const APP_VERSION = '2.2.1';
+const APP_VERSION = '2.2.3';
 const ALLOWED_ORIGINS = new Set([
   'https://slimutebal.github.io',
   'http://localhost:8000',
@@ -6,7 +6,7 @@ const ALLOWED_ORIGINS = new Set([
   'http://localhost:8080',
   'http://127.0.0.1:8080'
 ]);
-const USER_AGENT = 'CalorieTracker/2.2.1 (https://github.com/slimutebal/calorie-tracker)';
+const USER_AGENT = 'CalorieTracker/2.2.3 (https://github.com/slimutebal/calorie-tracker)';
 const OFF_SEARCH_URL = 'https://world.openfoodfacts.org/cgi/search.pl';
 const USDA_SEARCH_URL = 'https://api.nal.usda.gov/fdc/v1/foods/search';
 const CACHE_TTL_SECONDS = 60 * 60 * 24 * 7;
@@ -14,6 +14,7 @@ const TIMEOUT_MS = 8500;
 const AI_TIMEOUT_MS = 25000;
 const MAX_IMAGE_BASE64_CHARS = 4_800_000;
 const GEMINI_MODEL = 'gemini-2.0-flash';
+const GEMINI_FALLBACK_MODELS = ['gemini-2.0-flash', 'gemini-1.5-flash'];
 const WORKERS_AI_VISION_MODEL = '@cf/meta/llama-3.2-11b-vision-instruct';
 
 const CURATED_RESTAURANTS = [
@@ -247,6 +248,17 @@ async function fetchJson(url, timeoutMs = TIMEOUT_MS, headers = {}) {
   if (!res.ok) throw new Error(`upstream_${res.status}`);
   return await res.json();
 }
+async function fetchJsonRequest(url, options = {}, timeoutMs = TIMEOUT_MS) {
+  const res = await withTimeoutFetch(url, options, timeoutMs);
+  const text = await res.text();
+  let data = null;
+  try { data = text ? JSON.parse(text) : null; } catch (_) { data = { raw: text.slice(0, 500) }; }
+  if (!res.ok) {
+    const msg = data && (data.error && data.error.message || data.error || data.message || data.raw) || `upstream_${res.status}`;
+    throw new Error(`upstream_${res.status}:${String(msg).slice(0, 180)}`);
+  }
+  return data;
+}
 function mapOpenFoodProduct(p, i) {
   const name = String(p.product_name_en || p.product_name || p.generic_name || '').trim();
   if (!name) return null;
@@ -442,20 +454,26 @@ function safeNumber(v) {
 }
 async function callGeminiAnalyze(env, payload) {
   if (!env || !env.GEMINI_API_KEY) throw new Error('gemini_not_configured');
-  const model = env.GEMINI_MODEL || GEMINI_MODEL;
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(env.GEMINI_API_KEY)}`;
-  const body = {
-    contents: [{ role: 'user', parts: [
-      { text: aiPrompt(payload.mode, payload.lang) },
-      { inline_data: { mime_type: payload.mimeType, data: payload.imageBase64 } }
-    ]}],
-    generationConfig: { temperature: 0.2, maxOutputTokens: 1600, responseMimeType: 'application/json' }
-  };
-  const data = await fetchJson(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }, AI_TIMEOUT_MS);
-  const text = data && data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts && data.candidates[0].content.parts.map((p) => p.text || '').join('\n');
-  if (!text) throw new Error('gemini_empty');
-  const parsed = JSON.parse(stripJsonText(text));
-  return normalizeAIResponse(parsed, `Gemini (${model})`, payload.mode);
+  const models = env.GEMINI_MODEL ? [env.GEMINI_MODEL] : GEMINI_FALLBACK_MODELS;
+  let lastError = null;
+  for (const model of models) {
+    try {
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(env.GEMINI_API_KEY)}`;
+      const body = {
+        contents: [{ role: 'user', parts: [
+          { text: aiPrompt(payload.mode, payload.lang) },
+          { inline_data: { mime_type: payload.mimeType, data: payload.imageBase64 } }
+        ]}],
+        generationConfig: { temperature: 0.2, maxOutputTokens: 1600, responseMimeType: 'application/json' }
+      };
+      const data = await fetchJsonRequest(url, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' }, body: JSON.stringify(body) }, AI_TIMEOUT_MS);
+      const text = data && data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts && data.candidates[0].content.parts.map((p) => p.text || '').join('\n');
+      if (!text) throw new Error('gemini_empty');
+      const parsed = JSON.parse(stripJsonText(text));
+      return normalizeAIResponse(parsed, `Gemini (${model})`, payload.mode);
+    } catch (e) { lastError = e; }
+  }
+  throw new Error(lastError && lastError.message ? lastError.message : 'gemini_failed');
 }
 async function callWorkersAIAnalyze(env, payload) {
   if (!env || !env.AI) throw new Error('workers_ai_not_configured');
@@ -539,9 +557,10 @@ export default {
     const url = new URL(request.url);
     try {
       if (url.pathname === '/' || url.pathname === '') {
-        return json({ ok: true, service: 'Calorie Tracker API', version: APP_VERSION, endpoints: ['/lookup?q=cheeseburger', 'POST /analyze-image'], providers: ['Curated Restaurant Pack', 'Open Food Facts', env && env.USDA_API_KEY ? 'USDA FoodData Central' : 'USDA FoodData Central (optional secret not configured)', env && env.GEMINI_API_KEY ? 'Gemini Vision' : 'Gemini Vision (optional secret not configured)', env && env.AI ? 'Cloudflare Workers AI Vision' : 'Cloudflare Workers AI Vision (optional binding not configured)'] }, 200, origin);
+        return json({ ok: true, service: 'Calorie Tracker API', version: APP_VERSION, endpoints: ['/lookup?q=cheeseburger', 'POST /analyze-image', '/ai-status'], providers: ['Curated Restaurant Pack', 'Open Food Facts', env && env.USDA_API_KEY ? 'USDA FoodData Central' : 'USDA FoodData Central (optional secret not configured)', env && env.GEMINI_API_KEY ? 'Gemini Vision' : 'Gemini Vision (optional secret not configured)', env && env.AI ? 'Cloudflare Workers AI Vision' : 'Cloudflare Workers AI Vision (optional binding not configured)'] }, 200, origin);
       }
       if (url.pathname === '/lookup') return await handleLookup(request, env, ctx, origin);
+      if (url.pathname === '/ai-status') return json({ ok: true, version: APP_VERSION, geminiConfigured: !!(env && env.GEMINI_API_KEY), workersAiConfigured: !!(env && env.AI), geminiModel: env && env.GEMINI_MODEL || GEMINI_MODEL }, 200, origin);
       if (url.pathname === '/analyze-image') return await handleAnalyzeImage(request, env, ctx, origin);
       return json({ ok: false, error: 'not_found' }, 404, origin);
     } catch (err) {

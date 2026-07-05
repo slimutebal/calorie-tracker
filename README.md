@@ -1,6 +1,14 @@
 # Calorie Tracker
 
-**Version:** 2.2.1  
+## What changed in v2.2.3
+
+- Fixed the AI scan backend request path so Gemini image analysis uses a real POST request instead of the lookup-only GET helper.
+- Added a visible close button to the AI scan sheet so users can exit even after an analysis error.
+- Improved AI scan error messages with backend diagnostics for setup/API issues.
+- Bumped the app version to `2.2.3` and the service worker cache to `calorietrack-shell-v17`.
+
+
+**Version:** 2.2.3  
 **Repository:** https://github.com/slimutebal/calorie-tracker
 
 Calorie Tracker is a static, mobile-first **Progressive Web App (PWA)** for daily calorie and macronutrient tracking. It includes a built-in food library covering common **Indonesian, Western, Middle Eastern, and Asian** foods, optional multi-source online lookup through the Calorie Tracker API backend proxy, and optional AI scan for meal photos and nutrition labels. It has no account system and no telemetry. All personal food logs stay **only on the device/browser that uses the app**.
@@ -158,13 +166,13 @@ https://slimutebal.github.io/calorie-tracker/
 This app uses a service worker cache. When you change app files, update the cache version in `service-worker.js`:
 
 ```js
-const CACHE_VERSION = 'calorietrack-shell-v15';
+const CACHE_VERSION = 'calorietrack-shell-v17';
 ```
 
 For future releases, increase it again, for example:
 
 ```js
-const CACHE_VERSION = 'calorietrack-shell-v15';
+const CACHE_VERSION = 'calorietrack-shell-v17';
 ```
 
 After uploading an update:
