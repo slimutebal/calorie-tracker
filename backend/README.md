@@ -9,10 +9,12 @@ Cloudflare Worker backend for Calorie Tracker online food lookup and optional AI
 - USDA FoodData Central, optional and enabled only when `USDA_API_KEY` is configured as a Cloudflare Worker secret.
 
 
-## v2.2.4 AI scan notes
+## v2.2.5 AI scan notes
 
 - `POST /analyze-image` uses Gemini as the primary vision provider when `GEMINI_API_KEY` is configured.
 - Cloudflare Workers AI is used as fallback when the `AI` binding is configured.
+- AI scan now distinguishes ready-to-eat portions from packaged products, jars, bottles, sachets, boxes, and drink mixes.
+- Packaged products default to 1 serving and require serving confirmation instead of using the whole container/package weight.
 - `GET /ai-status` reports AI configuration.
 - `GET /gemini-models` lists Gemini models available to the configured API key.
 - `GET /workers-ai-agree` submits the required Workers AI Llama Vision license agreement once before fallback use.

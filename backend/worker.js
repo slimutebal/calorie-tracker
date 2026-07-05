@@ -1,4 +1,4 @@
-const APP_VERSION = '2.2.4';
+const APP_VERSION = '2.2.5';
 const ALLOWED_ORIGINS = new Set([
   'https://slimutebal.github.io',
   'http://localhost:8000',
@@ -6,7 +6,7 @@ const ALLOWED_ORIGINS = new Set([
   'http://localhost:8080',
   'http://127.0.0.1:8080'
 ]);
-const USER_AGENT = 'CalorieTracker/2.2.4 (https://github.com/slimutebal/calorie-tracker)';
+const USER_AGENT = 'CalorieTracker/2.2.5 (https://github.com/slimutebal/calorie-tracker)';
 const OFF_SEARCH_URL = 'https://world.openfoodfacts.org/cgi/search.pl';
 const USDA_SEARCH_URL = 'https://api.nal.usda.gov/fdc/v1/foods/search';
 const CACHE_TTL_SECONDS = 60 * 60 * 24 * 7;
@@ -415,11 +415,12 @@ async function lookup(query, env) {
 
 function aiPrompt(mode, lang = 'en') {
   const language = lang === 'id' ? 'Indonesian' : 'English';
-  const common = `You are a cautious nutrition assistant for a calorie tracker. Return JSON only. Use ${language} food names when useful, but keep common restaurant/product names unchanged. Do not claim medical accuracy. If portion size is uncertain, use confidence low or medium. Numbers are estimates only.`;
+  const common = `You are a cautious nutrition assistant for a calorie tracker. Return JSON only. Use ${language} food names when useful, but keep common restaurant/product names unchanged. Do not claim medical accuracy. If portion size is uncertain, use confidence low or medium. Numbers are estimates only. Never treat the physical weight of a package, bottle, jar, box, sachet, or container as the amount consumed.`;
+  const schema = `Return exactly this JSON shape: {"mode":"meal|label","items":[{"name":"food/product name","itemType":"ready_to_eat|packaged_product|ingredient|drink_mix|nutrition_label|unknown","isPackagedProduct":false,"isConsumedPortionVisible":true,"estimatedQuantity":"1 serving / 1 glass / 150 g etc","estimatedGrams":100,"servingLabel":"1 serving","servingsPerContainer":null,"defaultServingCount":1,"requiresServingConfirmation":false,"calories":0,"protein":0,"carbs":0,"fat":0,"confidence":"low|medium|high","notes":"short note"}],"warnings":["..."]}.`;
   if (mode === 'label') {
-    return `${common}\nTask: Read the nutrition label in the image. Extract one custom food entry. Return exactly this JSON shape: {"mode":"label","items":[{"name":"product or food name","estimatedQuantity":"serving label","estimatedGrams":100,"calories":0,"protein":0,"carbs":0,"fat":0,"confidence":"low|medium|high","notes":"short note"}],"warnings":["..."]}. Use calories/macros per serving when visible. If serving size is not visible, use estimatedGrams 100 and say so in warnings. Use numbers only for calories/protein/carbs/fat.`;
+    return `${common}\nTask: Read the nutrition label in the image. Extract one custom food entry from the label. ${schema} Use calories/macros per serving when visible. If serving size is visible, put it in servingLabel and estimatedQuantity. If servings per container is visible, put the number in servingsPerContainer. If serving size is not visible, set requiresServingConfirmation=true and say so in warnings. Use numbers only for calories/protein/carbs/fat. Use null for estimatedGrams if serving grams are not visible instead of inventing a package weight.`;
   }
-  return `${common}\nTask: Analyze the meal photo. Identify visible food/drink items and estimate portion size and nutrition per visible item. Return exactly this JSON shape: {"mode":"meal","items":[{"name":"food item","estimatedQuantity":"1 piece / 150 g / 1 bowl etc","estimatedGrams":100,"calories":0,"protein":0,"carbs":0,"fat":0,"confidence":"low|medium|high","notes":"short note"}],"warnings":["..."]}. Include hidden-oil/sauce uncertainty in warnings. Use numbers only for calories/protein/carbs/fat.`;
+  return `${common}\nTask: Analyze the meal or product photo. ${schema}\nCritical serving rules:\n- If the image shows a ready-to-eat portion on a plate, bowl, cup, or hand, estimate the consumed portion and grams.\n- If the image shows a product package/container/jar/bottle/box/sachet/tub/can, classify it as packaged_product, ingredient, or drink_mix. Set isPackagedProduct=true and isConsumedPortionVisible=false. Do NOT estimate consumed grams from the container size.\n- For packaged products, default to 1 serving only, not the whole package. Use servingLabel/estimatedQuantity such as "1 serving", "1 glass", "1 cup", or the visible serving text.\n- If the package says it makes 100 cups/glasses/servings, set servingsPerContainer=100 and defaultServingCount=1.\n- For coffee powder or drink mix such as Nescafe Classic, output a 1 prepared glass/cup serving and note that sugar, milk, or creamer changes calories. Do not output 200 g unless the user is clearly consuming 200 g.\n- If nutrition per serving is not visible, use calories/macros only if highly obvious; otherwise use 0 and requiresServingConfirmation=true.\nInclude hidden-oil/sauce/sugar uncertainty in warnings. Use numbers only for calories/protein/carbs/fat.`;
 }
 function stripJsonText(text) {
   let t = String(text || '').trim();
@@ -431,22 +432,49 @@ function stripJsonText(text) {
 function normalizeAIResponse(obj, provider, mode) {
   const rawItems = Array.isArray(obj && obj.items) ? obj.items : [];
   const items = rawItems.slice(0, 8).map((it, idx) => {
-    const grams = Number(it.estimatedGrams ?? it.grams ?? it.weightGrams ?? 100);
+    const itemType = String(it.itemType || it.type || '').toLowerCase().replace(/[^a-z_]/g, '') || 'unknown';
+    const isPackagedProduct = Boolean(it.isPackagedProduct || it.packaged || ['packaged_product','drink_mix','ingredient','nutrition_label'].includes(itemType));
+    const isConsumedPortionVisible = it.isConsumedPortionVisible === false ? false : !isPackagedProduct;
+    const requiresServingConfirmation = Boolean(it.requiresServingConfirmation || isPackagedProduct || it.estimatedGrams == null || it.estimatedGrams === '');
+    const gramsRaw = it.estimatedGrams ?? it.grams ?? it.weightGrams;
+    const grams = Number(gramsRaw);
+    const estimatedGrams = Number.isFinite(grams) && grams > 0 && !requiresServingConfirmation ? Math.round(grams) : null;
+    let notes = String(it.notes || '').slice(0, 220);
+    if (isPackagedProduct) {
+      const packNote = 'Packaged product: default to 1 serving; do not log the whole container unless you actually consumed it.';
+      notes = notes ? `${notes} ${packNote}` : packNote;
+    }
     return {
       name: String(it.name || it.foodName || it.item || `AI item ${idx + 1}`).slice(0, 80),
-      estimatedQuantity: String(it.estimatedQuantity || it.quantity || it.serving || '1 serving').slice(0, 80),
-      estimatedGrams: Number.isFinite(grams) && grams > 0 ? Math.round(grams) : 100,
+      itemType,
+      isPackagedProduct,
+      isConsumedPortionVisible,
+      estimatedQuantity: String(it.estimatedQuantity || it.quantity || it.serving || it.servingLabel || '1 serving').slice(0, 90),
+      estimatedGrams,
+      servingLabel: String(it.servingLabel || it.serving || it.estimatedQuantity || '1 serving').slice(0, 90),
+      servingsPerContainer: safeNullableNumber(it.servingsPerContainer),
+      defaultServingCount: safePositiveNumber(it.defaultServingCount, 1),
+      requiresServingConfirmation,
       calories: safeNumber(it.calories ?? it.kcal),
       protein: safeNumber(it.protein),
       carbs: safeNumber(it.carbs ?? it.carbohydrates),
       fat: safeNumber(it.fat),
-      confidence: ['low','medium','high'].includes(String(it.confidence || '').toLowerCase()) ? String(it.confidence).toLowerCase() : 'medium',
-      notes: String(it.notes || '').slice(0, 160)
+      confidence: ['low','medium','high'].includes(String(it.confidence || '').toLowerCase()) ? String(it.confidence).toLowerCase() : (isPackagedProduct ? 'low' : 'medium'),
+      notes
     };
-  }).filter((x) => x.name && (x.calories || x.estimatedGrams));
+  }).filter((x) => x.name && (x.calories || x.estimatedGrams || x.isPackagedProduct));
   const warnings = Array.isArray(obj && obj.warnings) ? obj.warnings.map((x) => String(x).slice(0, 180)).slice(0, 5) : [];
+  if (items.some((x) => x.isPackagedProduct)) warnings.push('Packaged products are logged as 1 serving by default. Confirm serving size before saving.');
   warnings.push('AI estimates can be wrong. Confirm portions and nutrition before saving.');
   return { ok: true, version: APP_VERSION, provider, mode, items, warnings: [...new Set(warnings)] };
+}
+function safeNullableNumber(v) {
+  const n = Number(v);
+  return Number.isFinite(n) && n > 0 ? Math.round(n * 10) / 10 : null;
+}
+function safePositiveNumber(v, fallback = 1) {
+  const n = Number(v);
+  return Number.isFinite(n) && n > 0 ? Math.round(n * 10) / 10 : fallback;
 }
 function safeNumber(v) {
   const n = Number(v);

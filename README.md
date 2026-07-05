@@ -1,15 +1,15 @@
 # Calorie Tracker
 
-## What changed in v2.2.4
+## What changed in v2.2.5
 
-- Removed the deprecated Gemini `gemini-1.5-flash` fallback from the Worker AI scan flow.
-- Added Gemini model compatibility handling and a `/gemini-models` diagnostic endpoint.
-- Added `/workers-ai-agree` to submit the required Cloudflare Workers AI vision model agreement once before fallback use.
-- Cleaned AI scan error display so provider stack traces no longer fill the mobile sheet.
-- Bumped the app version to `2.2.4` and the service worker cache to `calorietrack-shell-v18`.
+- Improved AI scan handling for packaged products, containers, jars, bottles, boxes, sachets, and drink mixes.
+- AI scan now defaults packaged products to **1 serving** instead of treating the whole package/container weight as consumed.
+- Added serving-confirmation fields for packaged products, including serving label and servings-per-container when visible.
+- Improved backend prompt/schema so products such as Nescafe Classic are classified as packaged/drink mix and require serving confirmation.
+- Bumped the app version to `2.2.5` and the service worker cache to `calorietrack-shell-v19`.
 
 
-**Version:** 2.2.4  
+**Version:** 2.2.5  
 **Repository:** https://github.com/slimutebal/calorie-tracker
 
 Calorie Tracker is a static, mobile-first **Progressive Web App (PWA)** for daily calorie and macronutrient tracking. It includes a built-in food library covering common **Indonesian, Western, Middle Eastern, and Asian** foods, optional multi-source online lookup through the Calorie Tracker API backend proxy, and optional AI scan for meal photos and nutrition labels. It has no account system and no telemetry. All personal food logs stay **only on the device/browser that uses the app**.
@@ -167,13 +167,13 @@ https://slimutebal.github.io/calorie-tracker/
 This app uses a service worker cache. When you change app files, update the cache version in `service-worker.js`:
 
 ```js
-const CACHE_VERSION = 'calorietrack-shell-v18';
+const CACHE_VERSION = 'calorietrack-shell-v19';
 ```
 
 For future releases, increase it again, for example:
 
 ```js
-const CACHE_VERSION = 'calorietrack-shell-v18';
+const CACHE_VERSION = 'calorietrack-shell-v19';
 ```
 
 After uploading an update:
@@ -285,7 +285,7 @@ Keep backups before clearing Safari data, deleting the PWA, changing devices, or
 - No push notifications.
 - Online lookup depends on the Cloudflare Worker lookup API, curated pack coverage, Open Food Facts availability, optional USDA configuration, rate limits, and data completeness.
 - AI scan depends on Gemini configuration, Workers AI binding fallback, provider limits, network quality, and image clarity.
-- AI scan estimates can be wrong, especially for hidden oil, sauces, mixed dishes, and portion sizes.
+- AI scan estimates can be wrong, especially for hidden oil, sauces, mixed dishes, packaged-product serving sizes, and portion sizes.
 - The app caches successful online lookups locally, but first-time searches still require a working network/API response.
 - Restaurant/local foods use curated estimates where official nutrition data is not available; verify portion and brand values when accuracy matters.
 - No barcode scanner.
@@ -297,14 +297,14 @@ Keep backups before clearing Safari data, deleting the PWA, changing devices, or
 
 ## Release notes
 
-### v2.2.4
+### v2.2.5
 
-- Removed deprecated Gemini 1.5 fallback model usage from AI scan.
-- Added `/gemini-models` endpoint for Gemini model diagnostics.
-- Added `/workers-ai-agree` endpoint to activate the Workers AI Llama Vision fallback license agreement.
-- Simplified user-facing AI scan errors and kept detailed provider diagnostics out of the mobile sheet.
-- Updated app version to `2.2.4`.
-- Service worker cache bumped to `calorietrack-shell-v18`.
+- Improved AI scan serving interpretation for packaged products and drink mixes.
+- Prevented AI scan from treating package/container weight as the consumed amount.
+- Added packaged-product review UI with serving-confirmation guidance and servings-per-container display when available.
+- Updated backend AI prompt/schema with `itemType`, `isPackagedProduct`, `servingLabel`, `servingsPerContainer`, and `requiresServingConfirmation` fields.
+- Updated app version to `2.2.5`.
+- Service worker cache bumped to `calorietrack-shell-v19`.
 
 ### v2.2.0
 

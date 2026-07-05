@@ -235,6 +235,8 @@ header.appbar{padding:14px 18px;margin:4px 0 14px;display:flex;align-items:flex-
 
 .ai-preview{display:none;width:100%;max-height:260px;object-fit:cover;border-radius:16px;margin:12px 0;border:1px solid var(--glass-border);box-shadow:var(--shadow)}
 .ai-warning{font-size:12px;line-height:1.45;color:var(--ink2);background:rgba(255,159,10,.12);border:1px solid rgba(255,159,10,.24);border-radius:14px;padding:10px 12px;margin:12px 0}
+.ai-pack-note{font-size:12px;line-height:1.45;color:var(--ink2);background:rgba(255,159,10,.12);border:1px solid rgba(255,159,10,.26);border-radius:12px;padding:8px 10px;margin:8px 0 10px}
+.ai-type-badge{margin-left:6px}
 .ai-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
 .ai-mode-pill{display:inline-flex;align-items:center;justify-content:center;min-height:28px;padding:5px 10px;border-radius:999px;border:1px solid var(--glass-border);background:var(--card2);font-size:11px;font-weight:800;letter-spacing:.08em;color:var(--ink2);text-transform:uppercase}
 .ai-result-list{display:flex;flex-direction:column;gap:10px;margin-top:12px}
@@ -727,7 +729,7 @@ nav::before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-e
    ================================================================ */
 (function(){
 'use strict';
-var APP_VERSION='2.2.4';
+var APP_VERSION='2.2.5';
 var SCHEMA_VERSION=1;
 var NS='calorietrack_id_';
 var K={settings:NS+'settings',logs:NS+'logs_v1',custom:NS+'customfoods_v1',templates:NS+'templates_v1',quick:NS+'quickaccess_v1',onlineCache:NS+'online_lookup_cache_v1'};
@@ -1651,19 +1653,51 @@ function aiErrorText(err){
   if(err&&err.data&&err.data.message)return String(err.data.message);
   return L()==='en'?'AI provider is not ready or the image could not be analyzed. Try again or check backend AI status.':'Penyedia AI belum siap atau gambar tidak bisa dianalisis. Coba lagi atau cek status AI backend.';
 }
+function aiBool(v){return v===true||v==='true'||v===1||v==='1';}
 function normalizeAiItems(items){
   return (Array.isArray(items)?items:[]).slice(0,8).map(function(it,i){
-    return {name:String(it.name||('AI item '+(i+1))).slice(0,80),estimatedQuantity:String(it.estimatedQuantity||it.quantity||'1 serving').slice(0,80),estimatedGrams:Math.max(1,Math.round(parseNum(it.estimatedGrams||it.grams||100)||100)),calories:Math.max(0,parseNum(it.calories||it.kcal)||0),protein:Math.max(0,parseNum(it.protein)||0),carbs:Math.max(0,parseNum(it.carbs||it.carbohydrates)||0),fat:Math.max(0,parseNum(it.fat)||0),confidence:String(it.confidence||'medium').toLowerCase(),notes:String(it.notes||'').slice(0,160)};
+    var itemType=String(it.itemType||it.type||'unknown').toLowerCase().replace(/[^a-z_]/g,'')||'unknown';
+    var packaged=aiBool(it.isPackagedProduct)||['packaged_product','drink_mix','ingredient','nutrition_label'].indexOf(itemType)>=0;
+    var needs=aiBool(it.requiresServingConfirmation)||packaged||it.estimatedGrams==null||it.estimatedGrams==='';
+    var g=parseNum(it.estimatedGrams||it.grams||it.weightGrams);
+    var grams=(g>0&&!needs)?Math.round(g):null;
+    var notes=String(it.notes||'').slice(0,220);
+    if(packaged&&!notes)notes=L()==='en'?'Packaged product: confirm serving size before saving.':'Produk kemasan: konfirmasi ukuran sajian sebelum simpan.';
+    return {
+      name:String(it.name||('AI item '+(i+1))).slice(0,80),
+      itemType:itemType,
+      isPackagedProduct:packaged,
+      isConsumedPortionVisible:it.isConsumedPortionVisible===false?false:!packaged,
+      estimatedQuantity:String(it.estimatedQuantity||it.quantity||it.servingLabel||it.serving||'1 serving').slice(0,90),
+      estimatedGrams:grams,
+      servingLabel:String(it.servingLabel||it.serving||it.estimatedQuantity||'1 serving').slice(0,90),
+      servingsPerContainer:(parseNum(it.servingsPerContainer)>0?parseNum(it.servingsPerContainer):null),
+      defaultServingCount:(parseNum(it.defaultServingCount)>0?parseNum(it.defaultServingCount):1),
+      requiresServingConfirmation:needs,
+      calories:Math.max(0,parseNum(it.calories||it.kcal)||0),
+      protein:Math.max(0,parseNum(it.protein)||0),
+      carbs:Math.max(0,parseNum(it.carbs||it.carbohydrates)||0),
+      fat:Math.max(0,parseNum(it.fat)||0),
+      confidence:String(it.confidence||(packaged?'low':'medium')).toLowerCase(),
+      notes:notes
+    };
   }).filter(function(x){return x.name;});
 }
 function renderAiResults(){
   if(!AI_SCAN.items.length){$('aiResults').innerHTML='<div class="empty">'+t('ai_empty')+'</div>';return;}
   var html=AI_SCAN.items.map(function(it,i){
-    return '<div class="ai-item" data-ai-item="'+i+'"><div class="ai-item-head"><div class="ai-item-title">'+esc(it.name)+'</div><span class="badge-est confidence">'+confidenceLabel(it.confidence)+'</span></div>'+ 
+    var typeLabel=it.isPackagedProduct?(L()==='en'?'Packaged':'Kemasan'):'';
+    var gramsValue=it.estimatedGrams==null?'':it.estimatedGrams;
+    var packNote='';
+    if(it.isPackagedProduct||it.requiresServingConfirmation){
+      var spc=it.servingsPerContainer?(' · '+(L()==='en'?'servings/container':'sajian/kemasan')+': '+fmt1(it.servingsPerContainer)):'';
+      packNote='<div class="ai-pack-note">'+esc(L()==='en'?'Package/container detected. The app uses 1 serving by default, not the whole package. Confirm serving size before saving.':'Produk/kemasan terdeteksi. App memakai default 1 sajian, bukan seluruh kemasan. Konfirmasi ukuran sajian sebelum simpan.')+esc(spc)+'</div>';
+    }
+    return '<div class="ai-item" data-ai-item="'+i+'" data-ai-packaged="'+(it.isPackagedProduct?'1':'0')+'" data-ai-type="'+esc(it.itemType||'unknown')+'"><div class="ai-item-head"><div class="ai-item-title">'+esc(it.name)+(typeLabel?'<span class="badge-est ai-type-badge">'+esc(typeLabel)+'</span>':'')+'</div><span class="badge-est confidence">'+confidenceLabel(it.confidence)+'</span></div>'+packNote+
       '<div class="ai-item-grid">'+
       '<div class="field wide"><label>'+t('ai_item_name')+'</label><input class="input" data-ai-field="name" value="'+esc(it.name)+'"></div>'+ 
       '<div class="field"><label>'+t('ai_item_qty')+'</label><input class="input" data-ai-field="qty" value="'+esc(it.estimatedQuantity)+'"></div>'+ 
-      '<div class="field"><label>'+t('ai_item_grams')+'</label><input class="input num" inputmode="numeric" data-ai-field="grams" value="'+esc(it.estimatedGrams)+'"></div>'+ 
+      '<div class="field"><label>'+(it.isPackagedProduct?(L()==='en'?'Serving g/ml':'Gram/ml sajian'):t('ai_item_grams'))+'</label><input class="input num" inputmode="numeric" data-ai-field="grams" placeholder="'+(it.isPackagedProduct?'optional':'100')+'" value="'+esc(gramsValue)+'"></div>'+ 
       '<div class="field"><label>'+t('ai_item_kcal')+'</label><input class="input num" inputmode="decimal" data-ai-field="kcal" value="'+esc(it.calories)+'"></div>'+ 
       '<div class="field"><label>'+t('ai_item_p')+'</label><input class="input num" inputmode="decimal" data-ai-field="protein" value="'+esc(it.protein)+'"></div>'+ 
       '<div class="field"><label>'+t('ai_item_c')+'</label><input class="input num" inputmode="decimal" data-ai-field="carbs" value="'+esc(it.carbs)+'"></div>'+ 
@@ -1679,14 +1713,19 @@ function readAiItemsFromForm(){
   var out=[];
   Array.prototype.forEach.call(document.querySelectorAll('[data-ai-item]'),function(box){
     function val(f){var el=box.querySelector('[data-ai-field="'+f+'"]');return el?el.value:'';}
-    var grams=Math.max(1,Math.round(parseNum(val('grams'))||100));
-    out.push({name:val('name').trim()||'AI item',estimatedQuantity:val('qty').trim()||'1 serving',estimatedGrams:grams,calories:Math.max(0,parseNum(val('kcal'))||0),protein:Math.max(0,parseNum(val('protein'))||0),carbs:Math.max(0,parseNum(val('carbs'))||0),fat:Math.max(0,parseNum(val('fat'))||0)});
+    var packaged=box.getAttribute('data-ai-packaged')==='1';
+    var gramsRaw=parseNum(val('grams'));
+    var grams=gramsRaw>0?Math.round(gramsRaw):(packaged?1:100);
+    out.push({name:val('name').trim()||'AI item',itemType:box.getAttribute('data-ai-type')||'unknown',isPackagedProduct:packaged,estimatedQuantity:val('qty').trim()||'1 serving',estimatedGrams:grams,calories:Math.max(0,parseNum(val('kcal'))||0),protein:Math.max(0,parseNum(val('protein'))||0),carbs:Math.max(0,parseNum(val('carbs'))||0),fat:Math.max(0,parseNum(val('fat'))||0)});
   });
   return out.filter(function(x){return x.name;});
 }
 function saveAiItemAsCustom(it){
-  var grams=Math.max(1,it.estimatedGrams||100),f=grams/100;
-  var food={id:'custom:'+uid('ai'),name:it.name,aliases:[],category:inferOnlineCategory(it.name),cuisine:'custom',basis:'g',baseQty:100,baseUnit:'g',per100:{kcal:(it.calories||0)/f,protein:(it.protein||0)/f,carbs:(it.carbs||0)/f,fat:(it.fat||0)/f},servings:[{unit:'porsi',grams:grams,label:it.estimatedQuantity+' ('+fmt1(grams)+' g)'}],defaultServing:'porsi',source:'AI Scan',brand:'',editable:true,estimated:true,aiImported:true,note:(AI_SCAN.provider?AI_SCAN.provider+' · ':'')+t('badge_estimate'),createdAt:Date.now(),updatedAt:Date.now()};
+  var grams=Math.max(1,it.estimatedGrams||1),f=grams/100;
+  var servingUnit=it.isPackagedProduct?'sajian':'porsi';
+  var servingLabel=it.estimatedQuantity+(grams>1?' ('+fmt1(grams)+' g)':'');
+  var note=(AI_SCAN.provider?AI_SCAN.provider+' · ':'')+t('badge_estimate')+(it.isPackagedProduct?' · packaged product, serving confirmed by user':'');
+  var food={id:'custom:'+uid('ai'),name:it.name,aliases:[],category:inferOnlineCategory(it.name),cuisine:'custom',basis:'g',baseQty:100,baseUnit:'g',per100:{kcal:(it.calories||0)/f,protein:(it.protein||0)/f,carbs:(it.carbs||0)/f,fat:(it.fat||0)/f},servings:[{unit:servingUnit,grams:grams,label:servingLabel}],defaultServing:servingUnit,source:'AI Scan',brand:'',editable:true,estimated:true,aiImported:true,note:note,createdAt:Date.now(),updatedAt:Date.now()};
   S.custom.unshift(food);return food.id;
 }
 function saveAiMealToLog(){
