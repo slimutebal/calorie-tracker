@@ -1,5 +1,11 @@
 # Calorie Tracker
 
+## What changed in v4.2.8c
+- Fixed the Settings sticky Active Target top mask.
+- Prevented content text from leaking into the Dynamic Island / status bar area while scrolling Settings.
+- Scoped the change to Settings only; Today, Coach, Add, and History were not changed.
+- Bumped the app version to `4.2.8c` and the service worker cache to `calorietrack-shell-v34c`.
+
 ## What changed in v4.2.8b
 - Fixed the History date strip from the stable v4.2.7 baseline.
 - Kept the large History title only at the top; while scrolling, only the date strip remains sticky.
