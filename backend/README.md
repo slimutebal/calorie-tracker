@@ -2,9 +2,9 @@
 
 Cloudflare Worker backend for Calorie Tracker online food lookup.
 
-## v1.4.0 providers
+## v1.4.1 providers
 
-- Curated Restaurant Pack, focused on common Indonesian/Yogyakarta-relevant chains.
+- Curated Restaurant Pack, focused on common Indonesian/Yogyakarta-relevant chains, now including Tier 2 brands and Jogja snack items.
 - Open Food Facts, called from the Worker with the Calorie Tracker User-Agent.
 - USDA FoodData Central, optional and enabled only when `USDA_API_KEY` is configured as a Cloudflare Worker secret.
 

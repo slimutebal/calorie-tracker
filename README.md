@@ -1,6 +1,6 @@
 # Calorie Tracker
 
-**Version:** 1.4.0  
+**Version:** 1.4.1  
 **Repository:** https://github.com/slimutebal/calorie-tracker
 
 Calorie Tracker is a static, mobile-first **Progressive Web App (PWA)** for daily calorie and macronutrient tracking. It includes a built-in food library covering common **Indonesian, Western, Middle Eastern, and Asian** foods, plus optional multi-source online lookup through the Calorie Tracker API backend proxy. It has no account system and no telemetry. All personal food logs stay **only on the device/browser that uses the app**.
@@ -9,15 +9,13 @@ Calorie Tracker is a static, mobile-first **Progressive Web App (PWA)** for dail
 
 ---
 
-## What changed in v1.4.0
+## What changed in v1.4.1
 
-- Added **Multi-source Nutrition Lookup** through the Cloudflare Worker backend.
-- Added a **Yogyakarta-adjusted Curated Restaurant Pack** for common chains such as McDonald’s, KFC, HokBen, Burger King, Richeese Factory, Pizza Hut, Starbucks, Mixue, J.CO, Solaria, Mie Gacoan, and Olive Fried Chicken.
-- Kept Open Food Facts as an online provider behind the backend proxy.
-- Added optional **USDA FoodData Central** provider support when `USDA_API_KEY` is configured as a Cloudflare Worker secret.
-- Backend now ranks and deduplicates results from curated data, Open Food Facts, and USDA when available.
+- Expanded the **Yogyakarta-adjusted Curated Restaurant Pack** with Tier 2 brands and Jogja-relevant snack items.
+- Added curated estimates for A&W, Domino’s Pizza, Kopi Kenangan, Janji Jiwa, Chatime, Fore Coffee, Excelso, Rocket Chicken, Geprek Bensu / ayam geprek, and Bakpia/Jogja snacks.
+- Kept the v1.4.0 multi-source lookup architecture: Curated Restaurant Pack, Open Food Facts, and optional USDA FoodData Central when `USDA_API_KEY` is configured.
 - Personal food logs, history, targets, and settings remain local on the device; only the search keyword is sent to the lookup API when Search Online is used.
-- Bumped the app version to `1.4.0` and the service worker cache to `calorietrack-shell-v12`.
+- Bumped the app version to `1.4.1` and the service worker cache to `calorietrack-shell-v13`.
 
 ---
 
@@ -71,7 +69,7 @@ manifest.webmanifest  # PWA metadata for Add to Home Screen
 service-worker.js     # Offline app-shell cache
 assets/icons/         # icon-192.png, icon-512.png, apple-touch-icon.png
 README.md             # Project notes and deployment guide
-backend/worker.js     # Cloudflare Worker multi-source lookup proxy for v1.4.0
+backend/worker.js     # Cloudflare Worker multi-source lookup proxy for v1.4.1
 ```
 
 ---
@@ -149,13 +147,13 @@ https://slimutebal.github.io/calorie-tracker/
 This app uses a service worker cache. When you change app files, update the cache version in `service-worker.js`:
 
 ```js
-const CACHE_VERSION = 'calorietrack-shell-v12';
+const CACHE_VERSION = 'calorietrack-shell-v13';
 ```
 
 For future releases, increase it again, for example:
 
 ```js
-const CACHE_VERSION = 'calorietrack-shell-v13';
+const CACHE_VERSION = 'calorietrack-shell-v14';
 ```
 
 After uploading an update:
@@ -271,6 +269,14 @@ Keep backups before clearing Safari data, deleting the PWA, changing devices, or
 
 ## Release notes
 
+### v1.4.1
+
+- Expanded the Yogyakarta-adjusted Curated Restaurant Pack with Tier 2 brands and Jogja-relevant snack items.
+- Added curated estimates for A&W, Domino’s Pizza, Kopi Kenangan, Janji Jiwa, Chatime, Fore Coffee, Excelso, Rocket Chicken, Geprek Bensu / ayam geprek, and Bakpia/Jogja snacks.
+- Kept the multi-source backend lookup architecture from v1.4.0.
+- Updated app version to `1.4.1`.
+- Service worker cache bumped to `calorietrack-shell-v13`.
+
 ### v1.4.0
 
 - Added Multi-source Nutrition Lookup through the Cloudflare Worker backend.
@@ -280,7 +286,6 @@ Keep backups before clearing Safari data, deleting the PWA, changing devices, or
 - Backend now ranks and deduplicates curated, Open Food Facts, and USDA results when available.
 - Updated app version to `1.4.0`.
 - Service worker cache bumped to `calorietrack-shell-v12`.
-- Deployment refresh for v1.4.0.
 
 ### v1.3.0
 

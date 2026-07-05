@@ -1,4 +1,4 @@
-const APP_VERSION = '1.4.0';
+const APP_VERSION = '1.4.1';
 const ALLOWED_ORIGINS = new Set([
   'https://slimutebal.github.io',
   'http://localhost:8000',
@@ -6,7 +6,7 @@ const ALLOWED_ORIGINS = new Set([
   'http://localhost:8080',
   'http://127.0.0.1:8080'
 ]);
-const USER_AGENT = 'CalorieTracker/1.4.0 (https://github.com/slimutebal/calorie-tracker)';
+const USER_AGENT = 'CalorieTracker/1.4.1 (https://github.com/slimutebal/calorie-tracker)';
 const OFF_SEARCH_URL = 'https://world.openfoodfacts.org/cgi/search.pl';
 const USDA_SEARCH_URL = 'https://api.nal.usda.gov/fdc/v1/foods/search';
 const CACHE_TTL_SECONDS = 60 * 60 * 24 * 7;
@@ -70,7 +70,58 @@ const CURATED_RESTAURANTS = [
   item('cur:olive-wing','Olive Fried Chicken Wing','Olive Fried Chicken','lauk',250,18,12,16,95,'olive fried chicken wing sayap ayam','Curated Restaurant Pack'),
   item('cur:olive-thigh','Olive Fried Chicken Thigh','Olive Fried Chicken','lauk',330,24,14,22,130,'olive fried chicken thigh paha ayam','Curated Restaurant Pack'),
   item('cur:olive-rice','Olive Fried Chicken Rice','Olive Fried Chicken','pokok',175,4,39,0.5,150,'olive fried chicken rice nasi','Curated Restaurant Pack'),
-  item('cur:olive-paket','Olive Fried Chicken Paket Ayam Nasi','Olive Fried Chicken','lauk',520,28,55,22,300,'olive fried chicken paket ayam nasi','Curated Restaurant Pack')
+  item('cur:olive-paket','Olive Fried Chicken Paket Ayam Nasi','Olive Fried Chicken','lauk',520,28,55,22,300,'olive fried chicken paket ayam nasi','Curated Restaurant Pack'),
+
+  // Tier 2 — additional Yogyakarta-relevant / common Indonesian chains and snacks.
+  item('cur:aw-chicken','A&W Fried Chicken 1 pc','A&W','lauk',320,24,13,22,130,'aw a&w fried chicken ayam goreng','Curated Restaurant Pack'),
+  item('cur:aw-beef-burger','A&W Beef Burger','A&W','lauk',430,19,44,20,190,'aw a&w beef burger hamburger','Curated Restaurant Pack'),
+  item('cur:aw-curly-fries','A&W Curly Fries','A&W','camilan',320,4,42,15,120,'aw a&w curly fries kentang spiral kentang goreng','Curated Restaurant Pack'),
+  item('cur:aw-rootbeer-float','A&W Root Beer Float','A&W','minuman',330,5,60,8,400,'aw a&w root beer float rootbeer soda ice cream','Curated Restaurant Pack'),
+
+  item('cur:dominos-pepperoni-slice','Domino\'s Pepperoni Pizza Slice','Domino\'s Pizza','pokok',300,13,34,13,110,'dominos domino pizza pepperoni slice','Curated Restaurant Pack'),
+  item('cur:dominos-cheese-slice','Domino\'s Cheese Pizza Slice','Domino\'s Pizza','pokok',270,12,33,10,105,'dominos domino pizza cheese slice keju','Curated Restaurant Pack'),
+  item('cur:dominos-bbq-chicken-slice','Domino\'s BBQ Chicken Pizza Slice','Domino\'s Pizza','pokok',290,14,35,11,110,'dominos domino pizza bbq chicken slice ayam','Curated Restaurant Pack'),
+  item('cur:dominos-garlic-bread','Domino\'s Garlic Bread','Domino\'s Pizza','camilan',200,5,30,7,80,'dominos domino garlic bread roti bawang','Curated Restaurant Pack'),
+
+  item('cur:kopken-mantan','Kopi Kenangan Mantan','Kopi Kenangan','minuman',250,6,38,7,350,'kopi kenangan mantan es kopi susu gula aren','Curated Restaurant Pack'),
+  item('cur:kopken-americano','Kopi Kenangan Americano','Kopi Kenangan','minuman',15,0,2,0,350,'kopi kenangan americano black coffee kopi hitam','Curated Restaurant Pack'),
+  item('cur:kopken-avocado-coffee','Kopi Kenangan Avocado Coffee','Kopi Kenangan','minuman',420,8,62,13,400,'kopi kenangan avocado coffee alpukat kopi','Curated Restaurant Pack'),
+  item('cur:kopken-thai-tea','Kopi Kenangan Thai Tea','Kopi Kenangan','minuman',320,5,55,8,400,'kopi kenangan thai tea teh susu','Curated Restaurant Pack'),
+
+  item('cur:janji-es-kopi-susu','Janji Jiwa Es Kopi Susu','Janji Jiwa','minuman',240,6,35,7,350,'janji jiwa es kopi susu kopi susu gula aren','Curated Restaurant Pack'),
+  item('cur:janji-americano','Janji Jiwa Americano','Janji Jiwa','minuman',15,0,2,0,350,'janji jiwa americano black coffee kopi hitam','Curated Restaurant Pack'),
+  item('cur:janji-toast-ham-cheese','Jiwa Toast Ham & Cheese','Janji Jiwa','camilan',420,18,45,18,180,'janji jiwa jiwa toast ham cheese roti panggang keju','Curated Restaurant Pack'),
+  item('cur:janji-matcha-latte','Janji Jiwa Matcha Latte','Janji Jiwa','minuman',300,8,45,8,350,'janji jiwa matcha latte green tea','Curated Restaurant Pack'),
+
+  item('cur:chatime-pearl-milk-tea','Chatime Pearl Milk Tea Regular','Chatime','minuman',430,6,75,12,500,'chatime pearl milk tea boba bubble tea','Curated Restaurant Pack'),
+  item('cur:chatime-thai-tea','Chatime Thai Tea Regular','Chatime','minuman',360,5,65,9,500,'chatime thai tea teh susu','Curated Restaurant Pack'),
+  item('cur:chatime-taro-milk-tea','Chatime Taro Milk Tea Regular','Chatime','minuman',420,6,73,11,500,'chatime taro milk tea talas boba','Curated Restaurant Pack'),
+  item('cur:chatime-grass-jelly','Chatime Grass Jelly Milk Tea Regular','Chatime','minuman',330,6,55,10,500,'chatime grass jelly milk tea cincau','Curated Restaurant Pack'),
+
+  item('cur:fore-aren-latte','Fore Coffee Aren Latte','Fore Coffee','minuman',260,7,40,8,350,'fore coffee aren latte es kopi susu gula aren','Curated Restaurant Pack'),
+  item('cur:fore-iced-latte','Fore Coffee Iced Latte','Fore Coffee','minuman',180,8,20,7,350,'fore coffee iced latte kopi susu','Curated Restaurant Pack'),
+  item('cur:fore-americano','Fore Coffee Americano','Fore Coffee','minuman',10,0,2,0,350,'fore coffee americano black coffee kopi hitam','Curated Restaurant Pack'),
+  item('cur:fore-matcha-latte','Fore Coffee Matcha Latte','Fore Coffee','minuman',300,8,45,8,350,'fore coffee matcha latte green tea','Curated Restaurant Pack'),
+
+  item('cur:excelso-cappuccino','Excelso Cappuccino','Excelso','minuman',150,8,14,7,250,'excelso cappuccino kopi susu','Curated Restaurant Pack'),
+  item('cur:excelso-avocado-coffee','Excelso Avocado Coffee','Excelso','minuman',420,8,60,14,400,'excelso avocado coffee alpukat kopi','Curated Restaurant Pack'),
+  item('cur:excelso-club-sandwich','Excelso Club Sandwich','Excelso','pokok',600,28,60,26,300,'excelso club sandwich roti ayam telur','Curated Restaurant Pack'),
+  item('cur:excelso-nasi-goreng','Excelso Nasi Goreng','Excelso','pokok',650,24,82,25,430,'excelso nasi goreng fried rice','Curated Restaurant Pack'),
+
+  item('cur:rocket-wing','Rocket Chicken Wing','Rocket Chicken','lauk',250,18,12,16,95,'rocket chicken wing sayap ayam','Curated Restaurant Pack'),
+  item('cur:rocket-thigh','Rocket Chicken Thigh','Rocket Chicken','lauk',330,24,14,22,130,'rocket chicken thigh paha ayam','Curated Restaurant Pack'),
+  item('cur:rocket-burger','Rocket Chicken Burger','Rocket Chicken','lauk',430,20,45,19,180,'rocket chicken burger ayam','Curated Restaurant Pack'),
+  item('cur:rocket-paket','Rocket Chicken Paket Ayam Nasi','Rocket Chicken','lauk',520,28,55,22,300,'rocket chicken paket ayam nasi','Curated Restaurant Pack'),
+
+  item('cur:geprek-bensu-ayam','Geprek Bensu Ayam Geprek','Geprek Bensu','lauk',650,35,65,30,380,'geprek bensu ayam geprek sambal','Curated Restaurant Pack'),
+  item('cur:geprek-sambal','Ayam Geprek Sambal','Ayam Geprek','lauk',600,32,60,28,350,'ayam geprek sambal nasi geprek','Curated Restaurant Pack'),
+  item('cur:geprek-mozzarella','Ayam Geprek Mozzarella','Ayam Geprek','lauk',800,40,70,42,450,'ayam geprek mozzarella keju sambal','Curated Restaurant Pack'),
+  item('cur:geprek-rice','Ayam Geprek Rice','Ayam Geprek','pokok',175,4,39,0.5,150,'ayam geprek rice nasi putih','Curated Restaurant Pack'),
+
+  item('cur:bakpia-pathok','Bakpia Pathok 1 pc','Bakpia Jogja','camilan',100,2,18,3,35,'bakpia pathok jogja kacang hijau','Curated Restaurant Pack'),
+  item('cur:bakpia-kukus','Bakpia Kukus 1 pc','Bakpia Jogja','camilan',170,3,28,5,60,'bakpia kukus jogja tugu','Curated Restaurant Pack'),
+  item('cur:yangko','Yangko Jogja 1 pc','Snack Jogja','camilan',90,1,20,1,30,'yangko jogja snack oleh oleh','Curated Restaurant Pack'),
+  item('cur:geplak','Geplak Jogja 1 pc','Snack Jogja','camilan',120,1,24,4,35,'geplak jogja kelapa gula snack','Curated Restaurant Pack')
 ];
 
 function item(id, name, brand, category, kcal, protein, carbs, fat, servingGrams, aliases, source) {
