@@ -280,6 +280,7 @@ Keep backups before clearing Safari data, deleting the PWA, changing devices, or
 - Backend now ranks and deduplicates curated, Open Food Facts, and USDA results when available.
 - Updated app version to `1.4.0`.
 - Service worker cache bumped to `calorietrack-shell-v12`.
+- Deployment refresh for v1.4.0.
 
 ### v1.3.0
 
