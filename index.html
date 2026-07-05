@@ -402,6 +402,20 @@ nav::before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-e
       <button class="chip" data-cuisine="asian" data-i18n="cuisine_asian">Asia</button>
       <button class="chip" data-cuisine="custom" data-i18n="cuisine_custom">Custom</button>
     </div>
+
+    <div class="card ai-scan-card" id="aiScanCard">
+      <div class="row spread">
+        <div>
+          <h3 style="margin:0" data-i18n="h_ai_scan">AI Scan</h3>
+          <div class="tiny" style="margin-top:6px" data-i18n="txt_ai_scan">Scan a meal photo or nutrition label. AI estimates must be reviewed before saving.</div>
+        </div>
+        <span class="ai-mode-pill">AI</span>
+      </div>
+      <div class="ai-actions">
+        <button class="btn btn-ghost" id="btnScanMeal" data-i18n="btn_scan_meal">📷 Scan Meal</button>
+        <button class="btn btn-ghost" id="btnScanLabel" data-i18n="btn_scan_label">🏷 Scan Label</button>
+      </div>
+    </div>
     <div id="addResults"></div>
   </section>
 
@@ -642,6 +656,38 @@ nav::before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-e
   </div>
 </div>
 
+
+<div class="sheet" id="aiSheet" role="dialog" aria-modal="true">
+  <div class="grab"></div>
+  <div class="body">
+    <div class="row spread">
+      <div>
+        <h2 id="aiTitle" data-i18n="ai_title_meal">AI Meal Scan</h2>
+        <div class="tiny" id="aiSub" data-i18n="ai_sub_meal">Take or choose a food photo. Confirm the estimate before saving.</div>
+      </div>
+      <span class="ai-mode-pill" id="aiProvider">Gemini + Workers AI</span>
+    </div>
+    <input type="file" id="aiFile" accept="image/*" capture="environment" hidden>
+    <img id="aiPreview" class="ai-preview" alt="AI scan preview">
+    <div class="ai-warning" data-i18n="ai_privacy_note">AI scan sends the selected image to the Calorie Tracker API and AI provider for analysis. Food logs, history, targets, settings, and backups remain local on this device. Images are not stored by the app backend.</div>
+    <div class="btnrow" style="margin-top:12px">
+      <button class="btn btn-ghost" id="aiPick" data-i18n="btn_choose_photo">Choose Photo</button>
+      <button class="btn btn-primary" id="aiAnalyze" data-i18n="btn_analyze" disabled>Analyze</button>
+    </div>
+    <div id="aiStatus" class="tiny" style="margin-top:10px"></div>
+    <div id="aiResults" class="ai-result-list"></div>
+    <div class="btnrow" id="aiMealActions" style="display:none">
+      <button class="btn btn-ghost" id="aiCancel" data-i18n="btn_cancel">Cancel</button>
+      <button class="btn btn-ghost" id="aiSaveTemplate" data-i18n="btn_save_ai_template">Save Template</button>
+      <button class="btn btn-primary" id="aiSaveLog" data-i18n="btn_save_today">Save Today</button>
+    </div>
+    <div class="btnrow" id="aiLabelActions" style="display:none">
+      <button class="btn btn-ghost" id="aiCancel2" data-i18n="btn_cancel">Cancel</button>
+      <button class="btn btn-primary" id="aiSaveCustom" data-i18n="btn_save_custom_food">Save Custom Food</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal" id="confirmModal" role="alertdialog" aria-modal="true">
   <h2 id="cmTitle" data-i18n="cm_title_default">Konfirmasi</h2>
   <p id="cmText"></p>
@@ -659,7 +705,7 @@ nav::before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-e
    ================================================================ */
 (function(){
 'use strict';
-var APP_VERSION='1.4.1';
+var APP_VERSION='2.2.0';
 var SCHEMA_VERSION=1;
 var NS='calorietrack_id_';
 var K={settings:NS+'settings',logs:NS+'logs_v1',custom:NS+'customfoods_v1',templates:NS+'templates_v1',quick:NS+'quickaccess_v1',onlineCache:NS+'online_lookup_cache_v1'};
@@ -830,6 +876,19 @@ var I18N={
     h_customfoods:"Makanan Custom", h_builtin:"Database Bawaan",
     cuisine_all:"Semua", cuisine_indonesian:"Indonesia", cuisine_western:"Barat",
     cuisine_middle_eastern:"Timur Tengah", cuisine_asian:"Asia", cuisine_custom:"Custom",
+    h_ai_scan:"AI Scan", txt_ai_scan:"Pindai foto makanan atau label nutrisi. Estimasi AI harus ditinjau sebelum disimpan.",
+    btn_scan_meal:"📷 Scan Makanan", btn_scan_label:"🏷 Scan Label",
+    ai_title_meal:"AI Meal Scan", ai_title_label:"AI Label Scan",
+    ai_sub_meal:"Ambil atau pilih foto makanan. Konfirmasi estimasi sebelum disimpan.",
+    ai_sub_label:"Ambil atau pilih foto label nutrisi. Edit hasil sebelum disimpan sebagai makanan custom.",
+    ai_privacy_note:"AI scan mengirim gambar terpilih ke Calorie Tracker API dan penyedia AI untuk analisis. Catatan makanan, riwayat, target, pengaturan, dan backup tetap lokal di perangkat ini. Gambar tidak disimpan oleh backend app.",
+    btn_choose_photo:"Pilih Foto", btn_analyze:"Analisis", btn_save_today:"Simpan Hari Ini",
+    btn_save_ai_template:"Simpan Template", btn_save_custom_food:"Simpan Custom Food",
+    ai_no_image:"Pilih foto terlebih dahulu.", ai_analyzing:"Menganalisis gambar…", ai_failed:"AI scan gagal. Coba foto lebih jelas atau input manual.",
+    ai_not_configured:"AI scan belum dikonfigurasi di backend.", ai_need_review:"Tinjau dan koreksi estimasi sebelum menyimpan.",
+    ai_item_name:"Nama", ai_item_qty:"Porsi", ai_item_grams:"Gram", ai_item_kcal:"kkal", ai_item_p:"P", ai_item_c:"K", ai_item_f:"L",
+    ai_empty:"AI tidak menemukan item yang bisa dipakai. Coba foto lain atau input manual.",
+    ai_template_name:"AI meal", toast_ai_logged:"AI meal disimpan ke hari ini", toast_ai_template:"AI meal disimpan sebagai template", toast_ai_custom:"Hasil label disimpan sebagai makanan custom",
     h_online_lookup:"Pencarian Makanan Online", opt_off:"Mati", opt_on:"Aktif",
     txt_online_lookup:"Jika aktif, tombol Cari Online hanya mengirim kata kunci pencarian ke Calorie Tracker API. API akan mencari ke Open Food Facts. Catatan, riwayat, dan pengaturan tetap lokal di perangkat ini.",
     txt_builtin_disclaimer:"Nilai gizi merupakan estimasi umum dan dapat berbeda dari makanan asli.",
@@ -843,7 +902,7 @@ var I18N={
     txt_backup_note:"Ekspor cadangan secara berkala. Menghapus data Safari atau menghapus aplikasi dari Home Screen dapat menghapus data lokal Anda.",
     h_about:"Tentang & Privasi",
     about_p1:'<strong style="color:var(--ink)">Calorie Tracker</strong> adalah aplikasi lokal tanpa server. Semua catatan makanan, riwayat, dan pengaturan tersimpan <strong style="color:var(--ink)">hanya di perangkat ini</strong> — tidak ada login, tidak ada unggahan data, tidak ada pelacakan.',
-    about_p2:"Nilai nutrisi adalah estimasi dan dapat berbeda tergantung merek, metode memasak, resep, dan ukuran porsi. Aplikasi ini hanya untuk pelacakan pribadi dan bukan nasihat medis. Pencarian online bersifat opsional dan hanya mengirim kata kunci pencarian ke Calorie Tracker API saat digunakan; API membandingkan data restoran kurasi, Open Food Facts, dan USDA jika dikonfigurasi.",
+    about_p2:"Nilai nutrisi adalah estimasi dan dapat berbeda tergantung merek, metode memasak, resep, dan ukuran porsi. Aplikasi ini hanya untuk pelacakan pribadi dan bukan nasihat medis. Pencarian online bersifat opsional dan hanya mengirim kata kunci pencarian ke Calorie Tracker API saat digunakan; API membandingkan data restoran kurasi, Open Food Facts, dan USDA jika dikonfigurasi. AI scan bersifat opsional dan mengirim gambar terpilih ke Calorie Tracker API/penyedia AI hanya saat digunakan; gambar tidak disimpan oleh backend app.",
     lbl_version:"Versi",
     aria_nav:"Navigasi utama", nav_today:"Hari Ini", nav_foods:"Makanan", nav_history:"Riwayat", nav_settings:"Setelan",
     aria_add_food:"Tambah makanan",
@@ -948,6 +1007,19 @@ var I18N={
     h_customfoods:"Custom Foods", h_builtin:"Built-in Database",
     cuisine_all:"All", cuisine_indonesian:"Indonesian", cuisine_western:"Western",
     cuisine_middle_eastern:"Middle Eastern", cuisine_asian:"Asian", cuisine_custom:"Custom",
+    h_ai_scan:"AI Scan", txt_ai_scan:"Scan a meal photo or nutrition label. AI estimates must be reviewed before saving.",
+    btn_scan_meal:"📷 Scan Meal", btn_scan_label:"🏷 Scan Label",
+    ai_title_meal:"AI Meal Scan", ai_title_label:"AI Label Scan",
+    ai_sub_meal:"Take or choose a food photo. Confirm the estimate before saving.",
+    ai_sub_label:"Take or choose a nutrition label photo. Edit the result before saving as a custom food.",
+    ai_privacy_note:"AI scan sends the selected image to the Calorie Tracker API and AI provider for analysis. Food logs, history, targets, settings, and backups remain local on this device. Images are not stored by the app backend.",
+    btn_choose_photo:"Choose Photo", btn_analyze:"Analyze", btn_save_today:"Save Today",
+    btn_save_ai_template:"Save Template", btn_save_custom_food:"Save Custom Food",
+    ai_no_image:"Choose a photo first.", ai_analyzing:"Analyzing image…", ai_failed:"AI scan failed. Try a clearer photo or add manually.",
+    ai_not_configured:"AI scan is not configured on the backend yet.", ai_need_review:"Review and correct estimates before saving.",
+    ai_item_name:"Name", ai_item_qty:"Portion", ai_item_grams:"Gram", ai_item_kcal:"kcal", ai_item_p:"P", ai_item_c:"C", ai_item_f:"F",
+    ai_empty:"AI did not find usable items. Try another photo or add manually.",
+    ai_template_name:"AI meal", toast_ai_logged:"AI meal saved to today", toast_ai_template:"AI meal saved as template", toast_ai_custom:"Label result saved as custom food",
     h_online_lookup:"Online Food Lookup", opt_off:"Off", opt_on:"On",
     txt_online_lookup:"When enabled, Search Online sends only your search keyword to the Calorie Tracker API. The API compares curated restaurant data, Open Food Facts, and USDA when configured. Logs, history, and settings remain local on this device.",
     txt_builtin_disclaimer:"Nutrition values are general estimates and may differ from the actual food.",
@@ -961,7 +1033,7 @@ var I18N={
     txt_backup_note:"Export a backup regularly. Clearing Safari data or removing the app from the Home Screen may delete your local data.",
     h_about:"About & Privacy",
     about_p1:'<strong style="color:var(--ink)">Calorie Tracker</strong> is a local app with no server. All food entries, history, and settings are stored <strong style="color:var(--ink)">only on this device</strong> — no login, no data upload, no tracking.',
-    about_p2:"Nutrition values are estimates and may vary by brand, cooking method, recipe, and portion size. This app is for personal tracking only and is not medical advice. Online lookup is optional and only sends the search keyword to the Calorie Tracker API when used; the API compares curated restaurant data, Open Food Facts, and USDA when configured.",
+    about_p2:"Nutrition values are estimates and may vary by brand, cooking method, recipe, and portion size. This app is for personal tracking only and is not medical advice. Online lookup is optional and only sends the search keyword to the Calorie Tracker API when used; the API compares curated restaurant data, Open Food Facts, and USDA when configured. AI scan is optional and sends the selected image to the Calorie Tracker API/AI provider only when used; images are not stored by the app backend.",
     lbl_version:"Version",
     aria_nav:"Main navigation", nav_today:"Today", nav_foods:"Foods", nav_history:"History", nav_settings:"Settings",
     aria_add_food:"Add food",
@@ -1083,7 +1155,7 @@ function applyI18n(){
 
 /* ---------------- Storage ---------------- */
 var DEFAULTS={
-  settings:{schemaVersion:SCHEMA_VERSION,targets:{kcal:2000,protein:100,carbs:250,fat:65,waterMl:2000},theme:"auto",language:"en",onlineLookup:false,onboarded:false},
+  settings:{schemaVersion:SCHEMA_VERSION,targets:{kcal:2000,protein:100,carbs:250,fat:65,waterMl:2000},theme:"auto",language:"en",onlineLookup:false,aiScanConsent:false,onboarded:false},
   logs:{},custom:[],templates:[],quick:{favorites:[],recents:[]},onlineCache:{}
 };
 var S={};var corrupted=[];
@@ -1115,6 +1187,7 @@ function loadAll(){
   if(!S.settings.targets)S.settings.targets=clone(DEFAULTS.settings.targets);
   if(S.settings.language!=='en'&&S.settings.language!=='id')S.settings.language='en';
   if(typeof S.settings.onlineLookup!=='boolean')S.settings.onlineLookup=false;
+  if(typeof S.settings.aiScanConsent!=='boolean')S.settings.aiScanConsent=false;
   migrate();
 }
 function migrate(){
@@ -1202,7 +1275,7 @@ var openLayer=null;
 function openSheet(el){closeLayers();$('backdrop').classList.add('show');el.classList.add('show');openLayer=el;}
 function closeLayers(){
   $('backdrop').classList.remove('show');
-  ['foodSheet','customSheet','templateSheet','confirmModal'].forEach(function(id){$(id).classList.remove('show');});
+  ['foodSheet','customSheet','templateSheet','aiSheet','confirmModal'].forEach(function(id){$(id).classList.remove('show');});
   openLayer=null;
 }
 $('backdrop').addEventListener('click',closeLayers);
@@ -1605,6 +1678,7 @@ var ONLINE_CACHE_MAX_AGE=1000*60*60*24*30;
 var ONLINE_CACHE_LIMIT=32;
 var ONLINE_TIMEOUT_MS=9000;
 var LOOKUP_API_URL='https://calorie-tracker-api.illofiajie-ia.workers.dev/lookup';
+var ANALYZE_API_URL='https://calorie-tracker-api.illofiajie-ia.workers.dev/analyze-image';
 var ONLINE_PROVIDERS=[];
 function onlineEnabled(){return !!S.settings.onlineLookup;}
 function isCustomFood(f){return f.id.indexOf('custom:')===0;}
@@ -2145,6 +2219,7 @@ $('importFile').addEventListener('change',function(){
         if(!S.settings.targets)S.settings.targets=clone(DEFAULTS.settings.targets);
         if(S.settings.language!=='en'&&S.settings.language!=='id')S.settings.language='en';
         if(typeof S.settings.onlineLookup!=='boolean')S.settings.onlineLookup=false;
+  if(typeof S.settings.aiScanConsent!=='boolean')S.settings.aiScanConsent=false;
         S.settings.schemaVersion=SCHEMA_VERSION;
         S.logs=logs;
         S.custom=Array.isArray(obj.customFoods)?obj.customFoods:[];

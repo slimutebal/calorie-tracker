@@ -1,4 +1,4 @@
-const APP_VERSION = '1.4.1';
+const APP_VERSION = '2.2.0';
 const ALLOWED_ORIGINS = new Set([
   'https://slimutebal.github.io',
   'http://localhost:8000',
@@ -6,11 +6,15 @@ const ALLOWED_ORIGINS = new Set([
   'http://localhost:8080',
   'http://127.0.0.1:8080'
 ]);
-const USER_AGENT = 'CalorieTracker/1.4.1 (https://github.com/slimutebal/calorie-tracker)';
+const USER_AGENT = 'CalorieTracker/2.2.0 (https://github.com/slimutebal/calorie-tracker)';
 const OFF_SEARCH_URL = 'https://world.openfoodfacts.org/cgi/search.pl';
 const USDA_SEARCH_URL = 'https://api.nal.usda.gov/fdc/v1/foods/search';
 const CACHE_TTL_SECONDS = 60 * 60 * 24 * 7;
 const TIMEOUT_MS = 8500;
+const AI_TIMEOUT_MS = 25000;
+const MAX_IMAGE_BASE64_CHARS = 4_800_000;
+const GEMINI_MODEL = 'gemini-2.0-flash';
+const WORKERS_AI_VISION_MODEL = '@cf/meta/llama-3.2-11b-vision-instruct';
 
 const CURATED_RESTAURANTS = [
   // McDonald's / McD — Yogyakarta-relevant global chain. Values are practical estimates unless sourceUrl is provided.
@@ -146,7 +150,7 @@ function corsHeaders(origin) {
   const allowOrigin = ALLOWED_ORIGINS.has(origin) ? origin : 'https://slimutebal.github.io';
   return {
     'Access-Control-Allow-Origin': allowOrigin,
-    'Access-Control-Allow-Methods': 'GET, OPTIONS',
+    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type',
     'Vary': 'Origin',
     'Content-Type': 'application/json; charset=utf-8'
@@ -396,6 +400,99 @@ async function lookup(query, env) {
   if (!results.length && lastError) throw lastError;
   return { matchedQuery: queries[0] || query, upstream, results, usdaEnabled: !!(env && env.USDA_API_KEY) };
 }
+
+function aiPrompt(mode, lang = 'en') {
+  const language = lang === 'id' ? 'Indonesian' : 'English';
+  const common = `You are a cautious nutrition assistant for a calorie tracker. Return JSON only. Use ${language} food names when useful, but keep common restaurant/product names unchanged. Do not claim medical accuracy. If portion size is uncertain, use confidence low or medium. Numbers are estimates only.`;
+  if (mode === 'label') {
+    return `${common}\nTask: Read the nutrition label in the image. Extract one custom food entry. Return exactly this JSON shape: {"mode":"label","items":[{"name":"product or food name","estimatedQuantity":"serving label","estimatedGrams":100,"calories":0,"protein":0,"carbs":0,"fat":0,"confidence":"low|medium|high","notes":"short note"}],"warnings":["..."]}. Use calories/macros per serving when visible. If serving size is not visible, use estimatedGrams 100 and say so in warnings. Use numbers only for calories/protein/carbs/fat.`;
+  }
+  return `${common}\nTask: Analyze the meal photo. Identify visible food/drink items and estimate portion size and nutrition per visible item. Return exactly this JSON shape: {"mode":"meal","items":[{"name":"food item","estimatedQuantity":"1 piece / 150 g / 1 bowl etc","estimatedGrams":100,"calories":0,"protein":0,"carbs":0,"fat":0,"confidence":"low|medium|high","notes":"short note"}],"warnings":["..."]}. Include hidden-oil/sauce uncertainty in warnings. Use numbers only for calories/protein/carbs/fat.`;
+}
+function stripJsonText(text) {
+  let t = String(text || '').trim();
+  t = t.replace(/^```(?:json)?/i, '').replace(/```$/i, '').trim();
+  const a = t.indexOf('{'), b = t.lastIndexOf('}');
+  if (a >= 0 && b > a) t = t.slice(a, b + 1);
+  return t;
+}
+function normalizeAIResponse(obj, provider, mode) {
+  const rawItems = Array.isArray(obj && obj.items) ? obj.items : [];
+  const items = rawItems.slice(0, 8).map((it, idx) => {
+    const grams = Number(it.estimatedGrams ?? it.grams ?? it.weightGrams ?? 100);
+    return {
+      name: String(it.name || it.foodName || it.item || `AI item ${idx + 1}`).slice(0, 80),
+      estimatedQuantity: String(it.estimatedQuantity || it.quantity || it.serving || '1 serving').slice(0, 80),
+      estimatedGrams: Number.isFinite(grams) && grams > 0 ? Math.round(grams) : 100,
+      calories: safeNumber(it.calories ?? it.kcal),
+      protein: safeNumber(it.protein),
+      carbs: safeNumber(it.carbs ?? it.carbohydrates),
+      fat: safeNumber(it.fat),
+      confidence: ['low','medium','high'].includes(String(it.confidence || '').toLowerCase()) ? String(it.confidence).toLowerCase() : 'medium',
+      notes: String(it.notes || '').slice(0, 160)
+    };
+  }).filter((x) => x.name && (x.calories || x.estimatedGrams));
+  const warnings = Array.isArray(obj && obj.warnings) ? obj.warnings.map((x) => String(x).slice(0, 180)).slice(0, 5) : [];
+  warnings.push('AI estimates can be wrong. Confirm portions and nutrition before saving.');
+  return { ok: true, version: APP_VERSION, provider, mode, items, warnings: [...new Set(warnings)] };
+}
+function safeNumber(v) {
+  const n = Number(v);
+  return Number.isFinite(n) && n >= 0 ? Math.round(n * 10) / 10 : 0;
+}
+async function callGeminiAnalyze(env, payload) {
+  if (!env || !env.GEMINI_API_KEY) throw new Error('gemini_not_configured');
+  const model = env.GEMINI_MODEL || GEMINI_MODEL;
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(env.GEMINI_API_KEY)}`;
+  const body = {
+    contents: [{ role: 'user', parts: [
+      { text: aiPrompt(payload.mode, payload.lang) },
+      { inline_data: { mime_type: payload.mimeType, data: payload.imageBase64 } }
+    ]}],
+    generationConfig: { temperature: 0.2, maxOutputTokens: 1600, responseMimeType: 'application/json' }
+  };
+  const data = await fetchJson(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }, AI_TIMEOUT_MS);
+  const text = data && data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts && data.candidates[0].content.parts.map((p) => p.text || '').join('\n');
+  if (!text) throw new Error('gemini_empty');
+  const parsed = JSON.parse(stripJsonText(text));
+  return normalizeAIResponse(parsed, `Gemini (${model})`, payload.mode);
+}
+async function callWorkersAIAnalyze(env, payload) {
+  if (!env || !env.AI) throw new Error('workers_ai_not_configured');
+  const bytes = Uint8Array.from(atob(payload.imageBase64), c => c.charCodeAt(0));
+  const result = await env.AI.run(WORKERS_AI_VISION_MODEL, {
+    prompt: aiPrompt(payload.mode, payload.lang),
+    image: Array.from(bytes),
+    max_tokens: 1400,
+    temperature: 0.2
+  });
+  const text = result && (result.response || result.text || result.result || (typeof result === 'string' ? result : ''));
+  if (!text) throw new Error('workers_ai_empty');
+  const parsed = JSON.parse(stripJsonText(text));
+  return normalizeAIResponse(parsed, `Workers AI (${WORKERS_AI_VISION_MODEL})`, payload.mode);
+}
+async function parseJsonRequest(request) {
+  try { return await request.json(); } catch (_) { return null; }
+}
+async function handleAnalyzeImage(request, env, ctx, origin) {
+  if (request.method !== 'POST') return json({ ok: false, error: 'method_not_allowed' }, 405, origin);
+  const body = await parseJsonRequest(request);
+  if (!body) return json({ ok: false, error: 'bad_json' }, 400, origin);
+  const mode = body.mode === 'label' ? 'label' : 'meal';
+  const imageBase64 = String(body.imageBase64 || '').replace(/^data:image\/[^;]+;base64,/, '');
+  const mimeType = /^image\/(jpeg|jpg|png|webp)$/i.test(String(body.mimeType || '')) ? String(body.mimeType).replace('jpg','jpeg') : 'image/jpeg';
+  if (!imageBase64 || imageBase64.length < 1000) return json({ ok: false, error: 'missing_image' }, 400, origin);
+  if (imageBase64.length > MAX_IMAGE_BASE64_CHARS) return json({ ok: false, error: 'image_too_large', message: 'Compress the image and try again.' }, 413, origin);
+  const payload = { mode, imageBase64, mimeType, lang: body.lang === 'id' ? 'id' : 'en' };
+  const errors = [];
+  try { return json(await callGeminiAnalyze(env, payload), 200, origin); }
+  catch (e) { errors.push(`gemini:${e.message || e}`); }
+  try { return json(await callWorkersAIAnalyze(env, payload), 200, origin); }
+  catch (e) { errors.push(`workers_ai:${e.message || e}`); }
+  const notConfigured = errors.every((e) => e.includes('not_configured'));
+  return json({ ok: false, version: APP_VERSION, error: notConfigured ? 'AI_SCAN_NOT_CONFIGURED' : 'AI_SCAN_FAILED', provider: 'none', errors }, notConfigured ? 501 : 502, origin);
+}
+
 async function handleLookup(request, env, ctx, origin) {
   const url = new URL(request.url);
   const q = (url.searchParams.get('q') || '').trim();
@@ -442,12 +539,13 @@ export default {
     const url = new URL(request.url);
     try {
       if (url.pathname === '/' || url.pathname === '') {
-        return json({ ok: true, service: 'Calorie Tracker API', version: APP_VERSION, endpoints: ['/lookup?q=cheeseburger'], providers: ['Curated Restaurant Pack', 'Open Food Facts', env && env.USDA_API_KEY ? 'USDA FoodData Central' : 'USDA FoodData Central (optional secret not configured)'] }, 200, origin);
+        return json({ ok: true, service: 'Calorie Tracker API', version: APP_VERSION, endpoints: ['/lookup?q=cheeseburger', 'POST /analyze-image'], providers: ['Curated Restaurant Pack', 'Open Food Facts', env && env.USDA_API_KEY ? 'USDA FoodData Central' : 'USDA FoodData Central (optional secret not configured)', env && env.GEMINI_API_KEY ? 'Gemini Vision' : 'Gemini Vision (optional secret not configured)', env && env.AI ? 'Cloudflare Workers AI Vision' : 'Cloudflare Workers AI Vision (optional binding not configured)'] }, 200, origin);
       }
       if (url.pathname === '/lookup') return await handleLookup(request, env, ctx, origin);
+      if (url.pathname === '/analyze-image') return await handleAnalyzeImage(request, env, ctx, origin);
       return json({ ok: false, error: 'not_found' }, 404, origin);
     } catch (err) {
-      return json({ ok: false, error: 'lookup_failed', message: String(err && err.message || err), results: [] }, 502, origin);
+      return json({ ok: false, error: 'api_failed', message: String(err && err.message || err), results: [] }, 502, origin);
     }
   }
 };
