@@ -1,5 +1,61 @@
 # Calorie Tracker
 
+## What changed in v4.2.4
+
+- Replaced the compact sticky header pill/capsule with a full-width iOS-style gradient blur material.
+- Applied the smoother sticky header material across Today, Coach, Add, History, and Settings.
+- Today and Coach keep the compact centered title, but without a floating pill background.
+- Add keeps Search and cuisine filters sticky with a smoother top fade.
+- History keeps the date strip sticky with the same gradient material.
+- Settings keeps compact Active Target visible using the smoother gradient material.
+- Bumped the app version to `4.2.4` and the service worker cache to `calorietrack-shell-v30`.
+
+## What changed in v4.2.3
+
+- Added iOS-style sticky context headers.
+- Today and Coach now keep a compact centered title after scrolling.
+- Add now keeps Search and cuisine filters sticky while browsing foods.
+- History now keeps the date strip sticky for easier date switching.
+- Settings now keeps a compact Active Target visible while comparing target calculator results.
+- Bumped the app version to `4.2.3` and the service worker cache to `calorietrack-shell-v29`.
+
+
+## What changed in v4.2.2
+
+- Removed user-facing version badges from page sections and product cards.
+- Removed the global `± estimate` badge from page headers.
+- Kept the app version available in Settings → About & Privacy for troubleshooting.
+- Kept estimate/disclaimer text only where it is contextually useful, such as AI scan, food estimates, coach notes, and privacy notes.
+- Bumped the app version to `4.2.2` and the service worker cache to `calorietrack-shell-v28`.
+
+## What changed in v4.2.1
+
+- Cleaned up Settings target flow: active target is now separated from manual override.
+- Added clearer Target Calculator labels and action hierarchy.
+- Fixed dark-mode dropdown option contrast for native selects.
+- Disabled target rate when the selected goal mode does not use a rate.
+- Bumped the app version to `4.2.1` and the service worker cache to `calorietrack-shell-v27`.
+
+## What changed in v4.2.0
+
+- Added **Goal-Based Target Engine** in Settings. Daily calorie targets can now be calculated from body profile, activity level, goal mode, and weekly target rate.
+- Added profile inputs: sex, age, height, current weight, goal weight, activity level, goal mode, and target rate.
+- Added local BMR/TDEE estimate using the Mifflin-St Jeor style calculation path, then applies goal adjustment for fat loss, maintenance, health consistency, lean gain, or recomposition.
+- Added **Why this target?** explanation showing BMR, TDEE/maintenance, goal adjustment, suggested calories, and suggested protein target.
+- Added safety warnings when profile data is incomplete, the goal/rate looks inconsistent, or the suggested target is aggressive.
+- Added **Apply calories + protein** so suggested calorie and protein targets can be applied together.
+- All profile/goal data remains local and is included in JSON backup; no cloud sync was added.
+- Bumped the app version to `4.2.0` and the service worker cache to `calorietrack-shell-v26`.
+
+## What changed in v4.1.0
+
+- Reworked bottom navigation to **Today | Coach | Add | History | Settings**.
+- Replaced the old **Food** main tab with a dedicated **Coach** tab so local nutrition guidance is easier to access.
+- Moved the former Food tools into **Add → Food Library**. Templates, custom foods, saved AI foods, barcode products, and the built-in database remain available.
+- Kept **Add** as the single intake hub for manual search, AI Meal Scan, Scan Label, Barcode/Product Code, templates, and custom foods.
+- Moved Smart Recommendation, Plan Tomorrow, Daily Coach, and Weekly Coach Review into the Coach page.
+- Bumped the app version to `4.1.0` and the service worker cache to `calorietrack-shell-v25`.
+
 ## What changed in v4.0.0
 
 - Re-scoped the roadmap: **v4 is now Local AI Nutrition Coach**; optional cloud backup/sync moves to v5.
@@ -39,10 +95,10 @@
 - Bumped the app version to `2.3.4` and the service worker cache to `calorietrack-shell-v21`.
 
 
-**Version:** 4.0.0  
+**Version:** 4.2.4  
 **Repository:** https://github.com/slimutebal/calorie-tracker
 
-Calorie Tracker is a static, mobile-first **Progressive Web App (PWA)** for daily calorie and macronutrient tracking. It includes a built-in food library covering common **Indonesian, Western, Middle Eastern, and Asian** foods, optional multi-source online lookup through the Calorie Tracker API backend proxy, optional barcode lookup, and optional AI scan for meal photos and nutrition labels. It has no account system and no telemetry. All personal food logs stay **only on the device/browser that uses the app**. In this roadmap, v4 is the local coach release; optional cloud backup/sync is reserved for v5.
+Calorie Tracker is a static, mobile-first **Progressive Web App (PWA)** for daily calorie and macronutrient tracking. It includes a built-in food library covering common **Indonesian, Western, Middle Eastern, and Asian** foods, optional multi-source online lookup through the Calorie Tracker API backend proxy, optional barcode lookup, and optional AI scan for meal photos and nutrition labels. It has no account system and no telemetry. All personal food logs stay **only on the device/browser that uses the app**. In this roadmap, v4 is the local coach and goal-based targeting release; optional cloud backup/sync is reserved for v5.
 
 > **Nutrition disclaimer:** all nutrition values are estimates. Actual values may vary by brand, recipe, cooking method, oil amount, and portion size. This app is for personal tracking only and is not medical or dietary advice.
 
@@ -67,8 +123,8 @@ Calorie Tracker is a static, mobile-first **Progressive Web App (PWA)** for dail
 
 ## Features
 
-- **Today dashboard** — calorie ring, consumed/remaining calories, macro progress, water tracker, meal sections, top calorie contributors, local Personal Nutrition Intelligence, Smart Recommendations, Meal Planning, and Local AI Nutrition Coach.
-- **Quick Add** — food search, favorites, recent foods, quantity presets, and household units such as serving, bowl, glass, cup, tablespoon, teaspoon, piece, pack, skewer, and scoop.
+- **Today dashboard** — calorie ring, consumed/remaining calories, macro progress, water tracker, meal sections, top calorie contributors, and quick local Personal Nutrition Intelligence.
+- **Add intake hub** — food search, AI Meal Scan, Scan Label, Barcode/Product Code, favorites, recent foods, templates, custom foods, Food Library, and household units such as serving, bowl, glass, cup, tablespoon, teaspoon, piece, pack, skewer, and scoop.
 - **Built-in food database** — about 112 foods across Indonesian, Western, Middle Eastern, and Asian cuisines.
 - **Cuisine filter** — All / Indonesian / Western / Middle Eastern / Asian / Custom.
 - **Custom foods** — create, edit, delete, search, favorite, and reuse your own foods.
@@ -77,6 +133,7 @@ Calorie Tracker is a static, mobile-first **Progressive Web App (PWA)** for dail
 - **AI Nutrition Label Scan** — optional label photo parsing into a custom food draft.
 - **Meal templates** — combine multiple items and log them again with one tap.
 - **History and trend view** — daily summaries, 7-day trend, weekly average, best/worst day, target adherence, and Weekly Intelligence insights.
+- **Coach page** — Daily Coach, Smart Recommendation, Plan Tomorrow, Weekly Coach Review, local coach notes, and goal-based next-meal guidance.
 - **Targets** — calories, protein, carbs, fat, water, weight goal, suggested daily calorie target, local coach mode, and coach notes.
 - **Language** — English by default; Indonesian available in Settings.
 - **Theme** — Light / Dark / Automatic.

@@ -30,7 +30,7 @@
   --kcal1:#FF9F0A; --kcal2:#FF375F;
   --prot:#0A84FF; --carb:#FF9F0A; --fat:#BF5AF2; --water:#3BB2E6;
   --ok:#34C759; --danger:#FF3B30;
-  --danger-text:#B8221A; --info-text:#0A5AB8; --ok-text:#188238;
+  --danger-text:#B8221A; --info-text:#0A5AB8; --ok-text:#188238; --warn-text:#9A5A00;
   --shadow:0 1px 2px rgba(31,38,135,.06),0 8px 32px rgba(31,38,135,.10);
   --shadow-elevated:0 16px 48px rgba(31,38,135,.18),0 2px 10px rgba(31,38,135,.08);
   --radius:20px; --radius-s:14px;
@@ -45,6 +45,8 @@
   --dock-border:rgba(255,255,255,.72);
   --dock-active:rgba(255,255,255,.46); --dock-ink:#1A1D1F; --dock-muted:rgba(26,29,31,.62);
   --dock-accent:#4E9F00; --dock-shadow:0 18px 42px rgba(31,38,135,.18),0 6px 18px rgba(0,0,0,.12),inset 0 1px 0 rgba(255,255,255,.70),inset 0 -1px 0 rgba(255,255,255,.22);
+  --top-sticky-gradient:linear-gradient(to bottom,rgba(245,243,239,.94) 0%,rgba(245,243,239,.82) 45%,rgba(245,243,239,.38) 74%,rgba(245,243,239,0) 100%);
+  --top-sticky-border:rgba(26,29,31,.06);
 }
 [data-theme="dark"]{
   --bg:#000000;
@@ -60,7 +62,7 @@
   --ink:#F2F2F7; --ink2:#C7C7CE; --ink3:#93939B;
   --line:rgba(242,242,247,.10);
   --water:#64D2FF;
-  --danger-text:#FF8078; --info-text:#4DA3FF; --ok-text:#34C759;
+  --danger-text:#FF8078; --info-text:#4DA3FF; --ok-text:#34C759; --warn-text:#FFD166;
   --shadow:0 1px 2px rgba(0,0,0,.35),0 8px 32px rgba(0,0,0,.45);
   --shadow-elevated:0 18px 52px rgba(0,0,0,.55),0 2px 10px rgba(0,0,0,.35);
   --dock-bg:
@@ -70,6 +72,8 @@
   --dock-border:rgba(255,255,255,.18);
   --dock-active:rgba(255,255,255,.13); --dock-ink:#F8F9FA; --dock-muted:rgba(248,249,250,.72);
   --dock-accent:#A8FF2A; --dock-shadow:0 18px 42px rgba(0,0,0,.44),0 4px 14px rgba(0,0,0,.26),inset 0 1px 0 rgba(255,255,255,.18),inset 0 -1px 0 rgba(255,255,255,.06);
+  --top-sticky-gradient:linear-gradient(to bottom,rgba(0,0,0,.96) 0%,rgba(0,0,0,.82) 42%,rgba(0,0,0,.34) 74%,rgba(0,0,0,0) 100%);
+  --top-sticky-border:rgba(255,255,255,.06);
 }
 /* Backdrop-filter is progressive enhancement only. The colors above are chosen
    to stay readable even where blur isn't supported (older Safari/Firefox). */
@@ -224,6 +228,13 @@ header.appbar{padding:14px 18px;margin:4px 0 14px;display:flex;align-items:flex-
 .field label{display:block;font-size:12px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--ink3);margin-bottom:6px}
 .input{width:100%;background:var(--input-glass);border:1px solid var(--glass-border);border-radius:12px;padding:12px 14px;font-size:16px;outline:none;min-height:46px;color:var(--ink)}
 .input:focus{border-color:var(--prot)}
+select.input{color:var(--ink);background-color:var(--input-glass);color-scheme:light dark}
+select.input option,select.input optgroup{background:#fff;color:#111827}
+select.input option:disabled{color:#9CA3AF}
+select.input option:checked{background:#0A84FF;color:#fff}
+[data-theme="dark"] select.input{color:#F2F2F7;background-color:rgba(255,255,255,.12);border-color:rgba(255,255,255,.22)}
+[data-theme="dark"] select.input option,[data-theme="dark"] select.input optgroup{background:#F8F9FA;color:#111827}
+[data-theme="dark"] select.input option:disabled{color:#9CA3AF}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
 .preset{padding:9px 4px;border-radius:10px;background:var(--card2);border:1px solid var(--glass-border);font-size:13px;font-weight:600;min-height:40px}
@@ -280,9 +291,12 @@ header.appbar{padding:14px 18px;margin:4px 0 14px;display:flex;align-items:flex-
 .btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;min-height:50px;border-radius:14px;
   font-size:16px;font-weight:700;transition:transform .1s}
 .btn:active{transform:scale(.98)}
-.btn-primary{background:var(--ink);color:var(--bg)}
+.btn-primary{background:var(--ink);color:var(--bg);border:1px solid transparent;box-shadow:var(--shadow)}
 [data-theme="dark"] .btn-primary{background:#fff;color:#000}
+.btn-secondary{background:var(--input-glass);border:1px solid var(--glass-border);color:var(--ink);box-shadow:var(--shadow)}
+.btn-subtle{background:transparent;border:1px solid var(--glass-border);color:var(--ink2)}
 .btn-ghost{background:var(--card2);border:1px solid var(--glass-border);color:var(--ink)}
+[data-theme="dark"] .btn-ghost,[data-theme="dark"] .btn-secondary{background:rgba(255,255,255,.11);border-color:rgba(255,255,255,.20);color:#F2F2F7}
 .btn-danger{background:rgba(255,59,48,.14);border:1px solid rgba(255,59,48,.32);color:var(--danger-text)}
 .btnrow{display:flex;gap:10px;margin-top:14px}
 .btnrow .btn{flex:1}
@@ -380,7 +394,7 @@ nav::before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-e
 .v330-note{font-size:12px;line-height:1.35;color:var(--ink3);margin-top:8px}
 
 
-/* ============ V4.0 Local AI Nutrition Coach ============ */
+/* ============ V4.1 Navigation and Coach UX ============ */
 .v400-card h4{margin:0 0 8px;font-size:15px;font-weight:900;letter-spacing:-.01em}
 .v400-coach-hero{display:grid;gap:10px;margin-top:10px}
 .v400-verdict{border:1px solid var(--glass-border);background:linear-gradient(135deg,var(--card2),var(--card));border-radius:16px;padding:13px 14px;box-shadow:var(--shadow)}
@@ -404,6 +418,84 @@ nav::before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-e
 .v400-plan-preview .rowline:last-child{border-bottom:0}
 .v400-pill{display:inline-flex;align-items:center;gap:6px;border-radius:999px;border:1px solid var(--glass-border);background:var(--card2);padding:5px 8px;font-size:11px;font-weight:900;color:var(--ink3);text-transform:uppercase;letter-spacing:.05em}
 
+/* ============ V4.1 Navigation + Food Library UX ============ */
+.coach-intro{display:flex;gap:10px;align-items:flex-start;border:1px solid var(--glass-border);background:var(--card2);border-radius:16px;padding:12px 13px;margin-bottom:12px}
+.coach-intro .ico{width:32px;height:32px;border-radius:999px;display:grid;place-items:center;background:var(--input-glass);flex:none}
+.coach-intro .txt{font-size:13px;line-height:1.35;color:var(--ink2)}
+.coach-intro .txt strong{display:block;color:var(--ink);font-size:15px;margin-bottom:2px}
+.food-library-card .foodlib-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:10px 0 12px}
+@media(max-width:420px){.food-library-card .foodlib-actions{grid-template-columns:1fr}}
+.food-library-card .foodlib-body[hidden]{display:none!important}
+.food-library-card .foodlib-section{border-top:1px solid var(--glass-border);padding-top:12px;margin-top:12px}
+.food-library-card .foodlib-section:first-child{border-top:0;padding-top:0;margin-top:0}
+.food-library-card .foodlib-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px}
+.food-library-card .foodlib-head h3{margin:0;font-size:15px}
+
+
+/* ============ V4.2 Goal-Based Target Engine ============ */
+.v420-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:10px 0}
+@media(max-width:560px){.v420-summary{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.v420-box{border:1px solid var(--glass-border);background:var(--card2);border-radius:14px;padding:10px 11px;box-shadow:var(--shadow)}
+.v420-box .l{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink3);font-weight:900;margin-bottom:4px}
+.v420-box .v{font-size:17px;line-height:1.08;font-weight:900;color:var(--ink);letter-spacing:-.02em}
+.v420-box .s{font-size:12px;line-height:1.3;color:var(--ink2);margin-top:3px}
+.v420-explain{border:1px solid var(--glass-border);background:var(--input-glass);border-radius:14px;padding:10px 11px;margin-top:10px;font-size:13px;line-height:1.4;color:var(--ink2)}
+.v420-explain strong{color:var(--ink)}
+.v420-warnings{display:grid;gap:8px;margin-top:10px}
+.v420-warning{border:1px solid rgba(255,159,10,.30);background:rgba(255,159,10,.13);color:var(--warn-text);border-radius:13px;padding:9px 10px;font-size:13px;line-height:1.35}
+.v420-warning.danger{border-color:rgba(255,59,48,.30);background:rgba(255,59,48,.13);color:var(--danger-text)}
+
+/* ============ V4.2.1 Target Settings UX Cleanup ============ */
+/* ============ V4.2.2 Production UI Cleanup ============ */
+.v421-target-card .row.spread{align-items:flex-start}
+.v421-active-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:12px 0 8px}
+@media(max-width:560px){.v421-active-summary{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.v421-target-box{border:1px solid var(--glass-border);background:var(--card2);border-radius:14px;padding:10px 11px;min-width:0}
+.v421-target-box .l{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink3);font-weight:900;margin-bottom:4px}
+.v421-target-box .v{font-size:17px;line-height:1.08;font-weight:900;color:var(--ink);letter-spacing:-.02em}
+.v421-target-box .s{font-size:12px;line-height:1.3;color:var(--ink2);margin-top:3px}
+.v421-target-source{font-size:12px;line-height:1.35;color:var(--ink3);margin-top:4px}
+.v421-manual-details{margin-top:10px;border:1px solid var(--glass-border);border-radius:15px;background:var(--card2);padding:0 12px 10px}
+.v421-manual-details summary{cursor:pointer;min-height:46px;display:flex;align-items:center;font-weight:900;color:var(--ink);list-style:none}
+.v421-manual-details summary::-webkit-details-marker{display:none}
+.v421-manual-details summary::after{content:'▾';margin-left:auto;color:var(--ink3);transition:transform .18s ease}
+.v421-manual-details[open] summary::after{transform:rotate(180deg)}
+.v421-engine-title{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+.v421-engine-title h3{margin:0}
+.v421-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
+.v421-actions .primary-action{grid-column:1/-1}
+@media(max-width:420px){.v421-actions{grid-template-columns:1fr}}
+.v421-rate-disabled{opacity:.58}
+.v421-rate-note{font-size:11px;line-height:1.35;color:var(--ink3);margin-top:6px}
+.v421-suggestion-copy{font-size:13px;line-height:1.4;color:var(--ink2);margin-top:8px}
+
+/* ============ V4.2.4 Gradient Sticky Header Material ============ */
+.compact-header{position:fixed;left:0;right:0;top:0;z-index:24;height:calc(var(--sat) + 88px);padding:calc(var(--sat) + 13px) 20px 18px;text-align:center;opacity:0;pointer-events:none;transform:translateY(-10px);transition:opacity .22s ease,transform .22s ease;will-change:opacity,transform;background:transparent;border:0;box-shadow:none}
+.compact-header.show{opacity:1;transform:translateY(0);background:var(--top-sticky-gradient);-webkit-backdrop-filter:blur(22px) saturate(1.45);backdrop-filter:blur(22px) saturate(1.45)}
+.compact-header.show::after{content:"";position:absolute;left:0;right:0;top:0;height:1px;background:var(--top-sticky-border)}
+.compact-title{font-weight:900;font-size:16px;letter-spacing:-.02em;line-height:1.08;color:var(--ink);text-shadow:0 1px 8px rgba(0,0,0,.12)}
+.compact-sub{font-weight:700;font-size:12px;line-height:1.2;color:var(--ink2);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 1px 8px rgba(0,0,0,.10)}
+.sticky-glass{position:sticky;top:0;z-index:21;background:transparent!important;border:0!important;box-shadow:none!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important;isolation:isolate;overflow:visible}
+.sticky-glass::before{content:"";position:absolute;left:50%;top:calc(-1 * var(--sat) - 8px);width:100vw;height:calc(var(--sat) + 112px);transform:translateX(-50%);z-index:-1;pointer-events:none;background:var(--top-sticky-gradient);-webkit-backdrop-filter:blur(22px) saturate(1.45);backdrop-filter:blur(22px) saturate(1.45)}
+.add-sticky-tools{border-radius:0;padding:8px 0 10px;margin:0 0 14px}
+.add-sticky-tools .search{margin-bottom:10px;box-shadow:var(--shadow);background:var(--input-glass)}
+.add-sticky-tools .chips{margin-bottom:0;padding-bottom:1px}
+.history-sticky-date{border-radius:0;padding:8px 0 10px;margin:0 0 14px}
+.settings-sticky-target{position:sticky;top:0;z-index:20;transition:padding .18s ease,border-radius .18s ease,background .18s ease,border-color .18s ease,box-shadow .18s ease;overflow:visible}
+body.settings-compact #view-settings .settings-sticky-target{padding:10px 0 12px;border-radius:0;background:transparent!important;border-color:transparent!important;box-shadow:none!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important;isolation:isolate}
+body.settings-compact #view-settings .settings-sticky-target::before{content:"";position:absolute;left:50%;top:calc(-1 * var(--sat) - 8px);width:100vw;height:calc(var(--sat) + 112px);transform:translateX(-50%);z-index:-1;pointer-events:none;background:var(--top-sticky-gradient);-webkit-backdrop-filter:blur(22px) saturate(1.45);backdrop-filter:blur(22px) saturate(1.45)}
+body.settings-compact #view-settings .settings-sticky-target .row.spread{margin-bottom:2px}
+body.settings-compact #view-settings .settings-sticky-target .intel-badge,
+body.settings-compact #view-settings .settings-sticky-target .v421-target-source,
+body.settings-compact #view-settings .settings-sticky-target .v421-manual-details{display:none}
+body.settings-compact #view-settings .v421-active-summary{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin:8px 0 0}
+body.settings-compact #view-settings .v421-target-box{padding:8px 10px;border-radius:13px;background:var(--input-glass);border:1px solid var(--glass-border)}
+body.settings-compact #view-settings .v421-target-box:nth-child(n+3){display:none}
+body.settings-compact #view-settings .v421-target-box .l{font-size:9px;margin-bottom:2px}
+body.settings-compact #view-settings .v421-target-box .v{font-size:15px}
+body.settings-compact #view-settings .v421-target-box .s{display:none}
+@media(max-width:430px){.compact-header{height:calc(var(--sat) + 84px);padding:calc(var(--sat) + 12px) 16px 16px}.sticky-glass{top:0}.add-sticky-tools{margin-left:0;margin-right:0}.history-sticky-date{margin-left:0;margin-right:0}}
+
 </style>
 </head>
 <body>
@@ -414,8 +506,12 @@ nav::before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-e
       <h1 id="pageTitle">Hari Ini</h1>
       <div class="sub" id="pageSub"></div>
     </div>
-    <div class="badge-est" id="badgeEst" data-i18n="badge_est" data-i18n-title="badge_est_title" title="Semua nilai gizi adalah estimasi">± estimasi</div>
   </header>
+
+  <div class="compact-header" id="compactHeader" aria-hidden="true">
+    <div class="compact-title" id="compactTitle">Hari Ini</div>
+    <div class="compact-sub" id="compactSub"></div>
+  </div>
 
   <!-- ============ TODAY ============ -->
   <section class="view active" id="view-today">
@@ -467,7 +563,6 @@ nav::before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-e
         <div class="card intel-card">
           <div class="row spread">
             <h3 style="margin:0" data-i18n="h_intelligence">Nutrition Intelligence</h3>
-            <span class="intel-badge">V3</span>
           </div>
           <div id="dailyInsights"></div>
         </div>
@@ -492,19 +587,42 @@ nav::before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-e
     </div>
   </section>
 
+  <!-- ============ COACH ============ -->
+  <section class="view" id="view-coach">
+    <div class="coach-intro">
+      <div class="ico">🧭</div>
+      <div class="txt">
+        <strong data-i18n="h_coach_page">Local AI Nutrition Coach</strong>
+        <span data-i18n="txt_coach_page">Daily guidance, next-meal strategy, protein move, tomorrow plan, and weekly review. Runs locally from your saved logs and targets.</span>
+      </div>
+    </div>
+    <div class="cols2">
+      <div class="col-a">
+        <div class="card intel-card v400-card" id="v400DailyCoach"></div>
+        <div class="card intel-card v330-card" id="v330SmartRec"></div>
+      </div>
+      <div class="col-b">
+        <div class="card v330-card" id="v330PlanCard"></div>
+        <div class="card intel-card v400-card" id="v400WeeklyCoach"></div>
+      </div>
+    </div>
+  </section>
+
   <!-- ============ ADD ============ -->
   <section class="view" id="view-add">
-    <div class="search">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.2-3.2"/></svg>
-      <input type="search" id="searchInput" data-i18n-ph="search_ph" placeholder="Cari makanan… (nasi, ayam, kopi)" autocomplete="off">
-    </div>
-    <div class="chips" id="cuisineFilter" style="margin-bottom:14px">
-      <button class="chip on" data-cuisine="all" data-i18n="cuisine_all">Semua</button>
-      <button class="chip" data-cuisine="indonesian" data-i18n="cuisine_indonesian">Indonesia</button>
-      <button class="chip" data-cuisine="western" data-i18n="cuisine_western">Barat</button>
-      <button class="chip" data-cuisine="middle_eastern" data-i18n="cuisine_middle_eastern">Timur Tengah</button>
-      <button class="chip" data-cuisine="asian" data-i18n="cuisine_asian">Asia</button>
-      <button class="chip" data-cuisine="custom" data-i18n="cuisine_custom">Custom</button>
+    <div class="add-sticky-tools sticky-glass">
+      <div class="search">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.2-3.2"/></svg>
+        <input type="search" id="searchInput" data-i18n-ph="search_ph" placeholder="Cari makanan… (nasi, ayam, kopi)" autocomplete="off">
+      </div>
+      <div class="chips" id="cuisineFilter">
+        <button class="chip on" data-cuisine="all" data-i18n="cuisine_all">Semua</button>
+        <button class="chip" data-cuisine="indonesian" data-i18n="cuisine_indonesian">Indonesia</button>
+        <button class="chip" data-cuisine="western" data-i18n="cuisine_western">Barat</button>
+        <button class="chip" data-cuisine="middle_eastern" data-i18n="cuisine_middle_eastern">Timur Tengah</button>
+        <button class="chip" data-cuisine="asian" data-i18n="cuisine_asian">Asia</button>
+        <button class="chip" data-cuisine="custom" data-i18n="cuisine_custom">Custom</button>
+      </div>
     </div>
 
     <div class="card ai-scan-card" id="aiScanCard">
@@ -521,35 +639,41 @@ nav::before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-e
         <button class="btn btn-ghost" id="btnBarcodeLookup" data-i18n="btn_barcode_lookup">🔢 Barcode / Product Code</button>
       </div>
     </div>
-    <div id="addResults"></div>
-  </section>
 
-  <!-- ============ FOODS ============ -->
-  <section class="view" id="view-foods">
-    <div class="card">
+    <div class="card food-library-card" id="foodLibraryPanel">
       <div class="row spread">
-        <h3 style="margin:0" data-i18n="h_templates">Template Makan</h3>
-        <button class="chip" id="btnNewTemplate" data-i18n="btn_new">＋ Baru</button>
+        <div>
+          <h3 style="margin:0" data-i18n="h_food_library">Food Library</h3>
+          <div class="tiny" style="margin-top:6px" data-i18n="txt_food_library">Manage templates, custom foods, saved AI foods, barcode products, and the built-in database from Add.</div>
+        </div>
+        <button class="chip" id="btnToggleFoodLibrary" data-i18n="btn_open_library">Open</button>
       </div>
-      <div id="templateList" style="margin-top:8px"></div>
-    </div>
-    <div class="card">
-      <div class="row spread">
-        <h3 style="margin:0" data-i18n="h_customfoods">Makanan Custom</h3>
-        <button class="chip" id="btnNewCustom" data-i18n="btn_new">＋ Baru</button>
+      <div class="foodlib-body" id="foodLibraryBody" hidden>
+        <div class="foodlib-actions">
+          <button class="btn btn-ghost" id="btnNewTemplate" data-i18n="btn_new_template">＋ New Template</button>
+          <button class="btn btn-ghost" id="btnNewCustom" data-i18n="btn_new_custom_food">＋ New Custom Food</button>
+        </div>
+        <div class="foodlib-section">
+          <div class="foodlib-head"><h3 data-i18n="h_templates">Meal Templates</h3></div>
+          <div id="templateList"></div>
+        </div>
+        <div class="foodlib-section">
+          <div class="foodlib-head"><h3 data-i18n="h_customfoods">Custom Foods</h3></div>
+          <div id="customList"></div>
+        </div>
+        <div class="foodlib-section">
+          <h3 data-i18n="h_builtin">Built-in Database</h3>
+          <div class="tiny" style="margin:-4px 0 8px" data-i18n="txt_builtin_disclaimer">Nutrition values are general estimates and may differ from the actual food.</div>
+          <div id="builtinList"></div>
+        </div>
       </div>
-      <div id="customList" style="margin-top:8px"></div>
     </div>
-    <div class="card">
-      <h3 data-i18n="h_builtin">Database Bawaan</h3>
-      <div class="tiny" style="margin:-4px 0 8px" data-i18n="txt_builtin_disclaimer">Nilai gizi merupakan estimasi umum dan dapat berbeda dari makanan asli.</div>
-      <div id="builtinList"></div>
-    </div>
+    <div id="addResults"></div>
   </section>
 
   <!-- ============ HISTORY ============ -->
   <section class="view" id="view-history">
-    <div class="datestrip" id="dateStrip"></div>
+    <div class="datestrip history-sticky-date sticky-glass" id="dateStrip"></div>
     <div class="cols2">
       <div class="col-a">
         <div class="card" id="histSummary"></div>
@@ -566,7 +690,6 @@ nav::before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-e
         <div class="card intel-card">
           <div class="row spread">
             <h3 style="margin:0" data-i18n="h_weekly_intelligence">Weekly Intelligence</h3>
-            <span class="intel-badge">V3</span>
           </div>
           <div id="weeklyInsights"></div>
         </div>
@@ -580,15 +703,24 @@ nav::before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-e
 
   <!-- ============ SETTINGS ============ -->
   <section class="view" id="view-settings">
-    <div class="card">
-      <h3 data-i18n="h_daily_target">Target Harian</h3>
-      <div class="field"><label for="tKcal" data-i18n="lbl_target_kcal">Kalori (kkal)</label><input class="input num" id="tKcal" type="number" inputmode="numeric" min="500" max="10000"></div>
-      <div class="grid2">
-        <div class="field"><label for="tProt" data-i18n="lbl_target_protein">Protein (g)</label><input class="input num" id="tProt" type="number" inputmode="numeric" min="0"></div>
-        <div class="field"><label for="tCarb" data-i18n="lbl_target_carbs">Karbo (g)</label><input class="input num" id="tCarb" type="number" inputmode="numeric" min="0"></div>
-        <div class="field"><label for="tFat" data-i18n="lbl_target_fat">Lemak (g)</label><input class="input num" id="tFat" type="number" inputmode="numeric" min="0"></div>
-        <div class="field"><label for="tWater" data-i18n="lbl_target_water">Air (ml)</label><input class="input num" id="tWater" type="number" inputmode="numeric" min="0" step="250"></div>
+    <div class="card v421-target-card settings-sticky-target">
+      <div class="row spread">
+        <h3 data-i18n="h_daily_target">Target Aktif</h3>
+        <span class="intel-badge">Active</span>
       </div>
+      <div id="activeTargetSummary" class="v421-active-summary"></div>
+      <div id="activeTargetSource" class="v421-target-source"></div>
+      <details class="v421-manual-details" id="manualTargetDetails">
+        <summary data-i18n="btn_adjust_manually">Adjust manually</summary>
+        <div class="field"><label for="tKcal" data-i18n="lbl_target_kcal">Kalori (kkal)</label><input class="input num" id="tKcal" type="number" inputmode="numeric" min="500" max="10000"></div>
+        <div class="grid2">
+          <div class="field"><label for="tProt" data-i18n="lbl_target_protein">Protein (g)</label><input class="input num" id="tProt" type="number" inputmode="numeric" min="0"></div>
+          <div class="field"><label for="tCarb" data-i18n="lbl_target_carbs">Karbo (g)</label><input class="input num" id="tCarb" type="number" inputmode="numeric" min="0"></div>
+          <div class="field"><label for="tFat" data-i18n="lbl_target_fat">Lemak (g)</label><input class="input num" id="tFat" type="number" inputmode="numeric" min="0"></div>
+          <div class="field"><label for="tWater" data-i18n="lbl_target_water">Air (ml)</label><input class="input num" id="tWater" type="number" inputmode="numeric" min="0" step="250"></div>
+        </div>
+        <div class="tiny" data-i18n="txt_manual_target_note">Manual override changes the active target used by Today, Coach, and History.</div>
+      </details>
     </div>
 
     <div class="card">
@@ -649,9 +781,9 @@ nav::before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-e
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="8.5"/><path d="M12 3.5A8.5 8.5 0 0 1 20.5 12" stroke-width="3.2" stroke-linecap="round"/></svg>
       <span data-i18n="nav_today">Hari Ini</span>
     </button>
-    <button class="tab" data-view="foods">
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 11h16a8 8 0 0 1-16 0Z"/><path d="M9 7c0-1.5 1-1.5 1-3M14 7c0-1.5 1-1.5 1-3"/></svg>
-      <span data-i18n="nav_foods">Makanan</span>
+    <button class="tab" data-view="coach">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17c-2.1-1.2-3.5-3.1-3.5-5.2C3.5 7.8 7.3 5 12 5s8.5 2.8 8.5 6.8-3.8 6.7-8.5 6.7c-.7 0-1.4-.1-2-.2L6 20l1-3Z"/><path d="M9 11h6M9 14h4"/></svg>
+      <span data-i18n="nav_coach">Coach</span>
     </button>
     <button class="tab tab-add" data-view="add" data-i18n-aria="aria_add_food" aria-label="Tambah makanan">
       <div class="plus"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></div>
@@ -819,7 +951,7 @@ nav::before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-e
    ================================================================ */
 (function(){
 'use strict';
-var APP_VERSION='4.0.0';
+var APP_VERSION='4.2.4';
 var SCHEMA_VERSION=1;
 var NS='calorietrack_id_';
 var K={settings:NS+'settings',logs:NS+'logs_v1',custom:NS+'customfoods_v1',templates:NS+'templates_v1',quick:NS+'quickaccess_v1',onlineCache:NS+'online_lookup_cache_v1',aiMemory:NS+'ai_memory_v1',barcodeCache:NS+'barcode_cache_v1',weight:NS+'weight_v1',mealPlans:NS+'meal_plans_v1',coach:NS+'coach_v1'};
@@ -987,7 +1119,7 @@ var I18N={
     h_quick:"Cepat Tambah", h_today_foods:"Makanan Hari Ini", h_top:"Kalori Terbesar Hari Ini",
     search_ph:"Cari makanan… (nasi, ayam, kopi)",
     h_templates:"Template Makan", btn_new:"＋ Baru", btn_log:"＋ Catat",
-    h_customfoods:"Makanan Custom", h_builtin:"Database Bawaan",
+    h_customfoods:"Makanan Custom", h_builtin:"Database Bawaan", h_food_library:"Food Library", txt_food_library:"Kelola template, makanan custom, makanan AI tersimpan, produk barcode, dan database bawaan dari Add.", btn_open_library:"Buka", btn_close_library:"Tutup", btn_new_template:"＋ Template Baru", btn_new_custom_food:"＋ Custom Food Baru", h_coach_page:"Local AI Nutrition Coach", txt_coach_page:"Arahan harian, strategi makan berikutnya, langkah protein, plan besok, dan review mingguan. Berjalan lokal dari log dan target tersimpan.",
     cuisine_all:"Semua", cuisine_indonesian:"Indonesia", cuisine_western:"Barat",
     cuisine_middle_eastern:"Timur Tengah", cuisine_asian:"Asia", cuisine_custom:"Custom",
     h_ai_scan:"AI Scan", txt_ai_scan:"Pindai foto makanan atau label nutrisi. Estimasi AI harus ditinjau sebelum disimpan.",
@@ -1010,7 +1142,7 @@ var I18N={
     txt_online_lookup:"Jika aktif, tombol Cari Online hanya mengirim kata kunci pencarian ke Calorie Tracker API. API akan mencari ke Open Food Facts. Catatan, riwayat, dan pengaturan tetap lokal di perangkat ini.",
     txt_builtin_disclaimer:"Nilai gizi merupakan estimasi umum dan dapat berbeda dari makanan asli.",
     h_trend:"Tren 7 Hari", lbl_kcal_word:"Kalori", h_weekly:"Ringkasan Mingguan", h_intelligence:"Nutrition Intelligence", h_weekly_intelligence:"Weekly Intelligence",
-    h_daily_target:"Target Harian",
+    h_daily_target:"Target Aktif", btn_adjust_manually:"Adjust manual / override", txt_manual_target_note:"Manual override mengubah target aktif yang dipakai oleh Hari Ini, Coach, dan Riwayat.",
     lbl_target_kcal:"Kalori (kkal)", lbl_target_protein:"Protein (g)",
     lbl_target_carbs:"Karbo (g)", lbl_target_fat:"Lemak (g)", lbl_target_water:"Air (ml)",
     h_appearance:"Tampilan", theme_auto:"Otomatis", theme_light:"Terang", theme_dark:"Gelap",
@@ -1019,9 +1151,9 @@ var I18N={
     txt_backup_note:"Ekspor cadangan secara berkala. Menghapus data Safari atau menghapus aplikasi dari Home Screen dapat menghapus data lokal Anda.",
     h_about:"Tentang & Privasi",
     about_p1:'<strong style="color:var(--ink)">Calorie Tracker</strong> adalah aplikasi lokal tanpa server. Semua catatan makanan, riwayat, dan pengaturan tersimpan <strong style="color:var(--ink)">hanya di perangkat ini</strong> — tidak ada login, tidak ada unggahan data, tidak ada pelacakan.',
-    about_p2:"Nilai nutrisi adalah estimasi dan dapat berbeda tergantung merek, metode memasak, resep, dan ukuran porsi. Aplikasi ini hanya untuk pelacakan pribadi dan bukan nasihat medis. Pencarian online bersifat opsional dan hanya mengirim kata kunci pencarian ke Calorie Tracker API saat digunakan; API membandingkan data restoran kurasi, Open Food Facts, dan USDA jika dikonfigurasi. AI scan bersifat opsional dan mengirim gambar terpilih ke Calorie Tracker API/penyedia AI hanya saat digunakan; gambar tidak disimpan oleh backend app. Nutrition Intelligence, weight tracking, meal planning, dan Local AI Nutrition Coach berjalan lokal dari catatan, target, entri berat, dan plan yang tersimpan.",
+    about_p2:"Nilai nutrisi adalah estimasi dan dapat berbeda tergantung merek, metode memasak, resep, dan ukuran porsi. Aplikasi ini hanya untuk pelacakan pribadi dan bukan nasihat medis. Pencarian online bersifat opsional dan hanya mengirim kata kunci pencarian ke Calorie Tracker API saat digunakan; API membandingkan data restoran kurasi, Open Food Facts, dan USDA jika dikonfigurasi. AI scan bersifat opsional dan mengirim gambar terpilih ke Calorie Tracker API/penyedia AI hanya saat digunakan; gambar tidak disimpan oleh backend app. Nutrition Intelligence, goal-based target engine, weight tracking, meal planning, dan Local AI Nutrition Coach berjalan lokal dari catatan, profil tubuh, target, entri berat, dan plan yang tersimpan.",
     lbl_version:"Versi",
-    aria_nav:"Navigasi utama", nav_today:"Hari Ini", nav_foods:"Makanan", nav_history:"Riwayat", nav_settings:"Setelan",
+    aria_nav:"Navigasi utama", nav_today:"Hari Ini", nav_coach:"Coach", nav_history:"Riwayat", nav_settings:"Setelan",
     aria_add_food:"Tambah makanan",
     aria_fav:"Favorit", lbl_qty:"Jumlah", lbl_mealtype:"Jenis Makan",
     meal_short_sarapan:"Sarapan", meal_short_siang:"Siang", meal_short_malam:"Malam", meal_short_camilan:"Camilan",
@@ -1037,8 +1169,8 @@ var I18N={
     lbl_template_name:"Nama Template", ph_ts_name:"contoh: Kopi gula 8g",
     lbl_template_items:"Isi Template", btn_add_item:"＋ Tambah item",
     cm_title_default:"Konfirmasi", btn_yes_continue:"Ya, lanjut",
-    view_today:"Hari Ini", view_add:"Tambah", view_foods:"Makanan", view_history:"Riwayat", view_settings:"Setelan",
-    sub_history:"Riwayat & tren",
+    view_today:"Hari Ini", view_coach:"Coach", view_add:"Tambah", view_history:"Riwayat", view_settings:"Setelan",
+    sub_history:"Riwayat & tren", sub_coach:"Arahan harian & strategi lokal",
     ring_left:"tersisa", ring_over:"kelebihan",
     empty_meal:"Belum ada catatan.",
     pct_of_intake:"% dari asupan hari ini",
@@ -1121,7 +1253,7 @@ var I18N={
     h_quick:"Quick Add", h_today_foods:"Today's Foods", h_top:"Biggest Contributors Today",
     search_ph:"Search food… (rice, chicken, coffee)",
     h_templates:"Meal Templates", btn_new:"＋ New", btn_log:"＋ Log",
-    h_customfoods:"Custom Foods", h_builtin:"Built-in Database",
+    h_customfoods:"Custom Foods", h_builtin:"Built-in Database", h_food_library:"Food Library", txt_food_library:"Manage templates, custom foods, saved AI foods, barcode products, and the built-in database from Add.", btn_open_library:"Open", btn_close_library:"Close", btn_new_template:"＋ New Template", btn_new_custom_food:"＋ New Custom Food", h_coach_page:"Local AI Nutrition Coach", txt_coach_page:"Daily guidance, next-meal strategy, protein move, tomorrow plan, and weekly review. Runs locally from your saved logs and targets.",
     cuisine_all:"All", cuisine_indonesian:"Indonesian", cuisine_western:"Western",
     cuisine_middle_eastern:"Middle Eastern", cuisine_asian:"Asian", cuisine_custom:"Custom",
     h_ai_scan:"AI Scan", txt_ai_scan:"Scan a meal photo or nutrition label. AI estimates must be reviewed before saving.",
@@ -1144,7 +1276,7 @@ var I18N={
     txt_online_lookup:"When enabled, Search Online sends only your search keyword to the Calorie Tracker API. The API compares curated restaurant data, Open Food Facts, and USDA when configured. Logs, history, and settings remain local on this device.",
     txt_builtin_disclaimer:"Nutrition values are general estimates and may differ from the actual food.",
     h_trend:"7-Day Trend", lbl_kcal_word:"Calories", h_weekly:"Weekly Summary", h_intelligence:"Nutrition Intelligence", h_weekly_intelligence:"Weekly Intelligence",
-    h_daily_target:"Daily Target",
+    h_daily_target:"Active Target", btn_adjust_manually:"Adjust manually / override", txt_manual_target_note:"Manual override changes the active target used by Today, Coach, and History.",
     lbl_target_kcal:"Calories (kcal)", lbl_target_protein:"Protein (g)",
     lbl_target_carbs:"Carbs (g)", lbl_target_fat:"Fat (g)", lbl_target_water:"Water (ml)",
     h_appearance:"Appearance", theme_auto:"Automatic", theme_light:"Light", theme_dark:"Dark",
@@ -1153,9 +1285,9 @@ var I18N={
     txt_backup_note:"Export a backup regularly. Clearing Safari data or removing the app from the Home Screen may delete your local data.",
     h_about:"About & Privacy",
     about_p1:'<strong style="color:var(--ink)">Calorie Tracker</strong> is a local app with no server. All food entries, history, and settings are stored <strong style="color:var(--ink)">only on this device</strong> — no login, no data upload, no tracking.',
-    about_p2:"Nutrition values are estimates and may vary by brand, cooking method, recipe, and portion size. This app is for personal tracking only and is not medical advice. Online lookup is optional and only sends the search keyword to the Calorie Tracker API when used; the API compares curated restaurant data, Open Food Facts, and USDA when configured. AI scan is optional and sends the selected image to the Calorie Tracker API/AI provider only when used; images are not stored by the app backend. Nutrition Intelligence, weight tracking, meal planning, and the Local AI Nutrition Coach run locally from your saved logs, targets, weight entries, and plans.",
+    about_p2:"Nutrition values are estimates and may vary by brand, cooking method, recipe, and portion size. This app is for personal tracking only and is not medical advice. Online lookup is optional and only sends the search keyword to the Calorie Tracker API when used; the API compares curated restaurant data, Open Food Facts, and USDA when configured. AI scan is optional and sends the selected image to the Calorie Tracker API/AI provider only when used; images are not stored by the app backend. Nutrition Intelligence, the goal-based target engine, weight tracking, meal planning, and the Local AI Nutrition Coach run locally from your saved logs, body profile, targets, weight entries, and plans.",
     lbl_version:"Version",
-    aria_nav:"Main navigation", nav_today:"Today", nav_foods:"Foods", nav_history:"History", nav_settings:"Settings",
+    aria_nav:"Main navigation", nav_today:"Today", nav_coach:"Coach", nav_history:"History", nav_settings:"Settings",
     aria_add_food:"Add food",
     aria_fav:"Favorite", lbl_qty:"Amount", lbl_mealtype:"Meal Type",
     meal_short_sarapan:"Breakfast", meal_short_siang:"Lunch", meal_short_malam:"Dinner", meal_short_camilan:"Snack",
@@ -1171,8 +1303,8 @@ var I18N={
     lbl_template_name:"Template Name", ph_ts_name:"e.g. Coffee with 8g sugar",
     lbl_template_items:"Template Items", btn_add_item:"＋ Add item",
     cm_title_default:"Confirm", btn_yes_continue:"Yes, continue",
-    view_today:"Today", view_add:"Add", view_foods:"Foods", view_history:"History", view_settings:"Settings",
-    sub_history:"History & trends",
+    view_today:"Today", view_coach:"Coach", view_add:"Add", view_history:"History", view_settings:"Settings",
+    sub_history:"History & trends", sub_coach:"Daily guidance & local strategy",
     ring_left:"remaining", ring_over:"over",
     empty_meal:"No entries yet.",
     pct_of_intake:"% of today's intake",
@@ -1277,7 +1409,7 @@ function applyI18n(){
 var DEFAULTS={
   settings:{schemaVersion:SCHEMA_VERSION,targets:{kcal:2000,protein:100,carbs:250,fat:65,waterMl:2000},theme:"auto",language:"en",onlineLookup:false,aiScanConsent:false,onboarded:false},
   logs:{},custom:[],templates:[],quick:{favorites:[],recents:[]},onlineCache:{},aiMemory:{corrections:{}},barcodeCache:{},
-  weight:{profile:{currentKg:null,goalKg:null,weeklyRateKg:-0.5,maintenanceKcal:null},entries:[]},
+  weight:{profile:{currentKg:null,goalKg:null,weeklyRateKg:-0.5,maintenanceKcal:null,sex:'unspecified',age:null,heightCm:null,activityLevel:'light',goalMode:'lose_fat'},entries:[]},
   mealPlans:{},
   coach:{preferences:{mode:'balanced'},notes:[]}
 };
@@ -2086,17 +2218,41 @@ function startBarcodeLookup(){
 $('btnBarcodeLookup').addEventListener('click',startBarcodeLookup);
 
 /* ---------------- Views / nav ---------------- */
-var VIEW_KEYS={today:'view_today',add:'view_add',foods:'view_foods',history:'view_history',settings:'view_settings'};
+var VIEW_KEYS={today:'view_today',coach:'view_coach',add:'view_add',history:'view_history',settings:'view_settings'};
 var currentView='today';
+var stickyTick=false;
+function stickySubtitleFor(v){
+  if(v==='today'||v==='coach')return fmtLong(todayStr());
+  return '';
+}
+function updateCompactHeader(){
+  var h=$('compactHeader');if(!h)return;
+  var show=(currentView==='today'||currentView==='coach')&&window.scrollY>54;
+  h.classList.toggle('show',show);
+  h.setAttribute('aria-hidden',show?'false':'true');
+  $('compactTitle').textContent=t(VIEW_KEYS[currentView]||'view_today');
+  $('compactSub').textContent=stickySubtitleFor(currentView);
+  document.body.classList.toggle('settings-compact',currentView==='settings'&&window.scrollY>56);
+}
+function requestStickyUpdate(){
+  if(stickyTick)return;stickyTick=true;
+  requestAnimationFrame(function(){stickyTick=false;updateCompactHeader();});
+}
+window.addEventListener('scroll',requestStickyUpdate,{passive:true});
+window.addEventListener('resize',requestStickyUpdate,{passive:true});
 function showView(v){
   currentView=v;
   document.querySelectorAll('.view').forEach(function(s){s.classList.toggle('active',s.id==='view-'+v);});
   document.querySelectorAll('nav .tab').forEach(function(b){b.classList.toggle('on',b.dataset.view===v);});
   $('pageTitle').textContent=t(VIEW_KEYS[v]);
-  $('pageSub').textContent=v==='today'?fmtLong(todayStr()):(v==='history'?t('sub_history'):'');
+  $('pageSub').textContent=v==='today'?fmtLong(todayStr()):(v==='history'?t('sub_history'):(v==='coach'?t('sub_coach'):''));
+  $('compactTitle').textContent=t(VIEW_KEYS[v]);
+  $('compactSub').textContent=stickySubtitleFor(v);
   if(v==='add'){renderAddResults($('searchInput').value);}
+  if(v==='coach'){renderV330All();renderV400All();}
   if(v==='history'){renderHistory({scrollLatest:true});}
   window.scrollTo(0,0);
+  requestStickyUpdate();
 }
 document.querySelector('nav').addEventListener('click',function(e){
   var b=e.target.closest('.tab');if(!b)return;showView(b.dataset.view);
@@ -2580,10 +2736,13 @@ function renderFoods(){
       '<span class="tiny">'+t('lbl_edit_arrow')+'</span></button>';
   }).join(''):'<div class="empty">'+t('empty_custom')+'</div>';
   $('builtinList').innerHTML=FOOD_DB.foods.map(foodRow).join('');
+  var body=$('foodLibraryBody'),toggle=$('btnToggleFoodLibrary');
+  if(body&&toggle)toggle.textContent=body.hidden?t('btn_open_library'):t('btn_close_library');
 }
 $('btnNewTemplate').addEventListener('click',function(){openTemplateSheet(null);});
 $('btnNewCustom').addEventListener('click',function(){openCustomSheet(null);});
-$('view-foods').addEventListener('click',function(e){
+$('foodLibraryPanel').addEventListener('click',function(e){
+  var tg=e.target.closest('#btnToggleFoodLibrary');if(tg){var body=$('foodLibraryBody');body.hidden=!body.hidden;tg.textContent=body.hidden?t('btn_open_library'):t('btn_close_library');return;}
   var t1=e.target.closest('[data-edittpl]');if(t1){openTemplateSheet(t1.dataset.edittpl);return;}
   var t2=e.target.closest('[data-logtpl2]');if(t2){logTemplate(t2.dataset.logtpl2);return;}
   var t3=e.target.closest('[data-editcustom]');if(t3){openCustomSheet(t3.dataset.editcustom);return;}
@@ -2694,9 +2853,25 @@ $('dateStrip').addEventListener('click',function(e){
 });
 
 /* ---------------- Render: Settings ---------------- */
+function targetSourceLabel(){
+  var src=S.settings.targetSource||'manual';
+  if(src==='goalSuggested')return tx('Source: Goal-Based Target Engine · calories + protein applied','Sumber: Kalkulator Target · kalori + protein diterapkan');
+  if(src==='goalCalories')return tx('Source: Goal-Based Target Engine · calories only applied','Sumber: Kalkulator Target · hanya kalori diterapkan');
+  return tx('Source: Manual / current active target','Sumber: Manual / target aktif saat ini');
+}
+function renderActiveTargetSummary(){
+  var host=$('activeTargetSummary'),src=$('activeTargetSource');if(!host)return;
+  var tg=S.settings.targets||DEFAULTS.settings.targets;
+  host.innerHTML='<div class="v421-target-box"><div class="l">'+tx('Calories','Kalori')+'</div><div class="v num">'+fmtInt(tg.kcal)+' '+t('unit_kkal')+'</div><div class="s">'+tx('daily active target','target aktif harian')+'</div></div>'+ 
+    '<div class="v421-target-box"><div class="l">Protein</div><div class="v num">'+fmtInt(tg.protein)+' g</div><div class="s">'+tx('daily target','target harian')+'</div></div>'+ 
+    '<div class="v421-target-box"><div class="l">'+tx('Carbs','Karbo')+'</div><div class="v num">'+fmtInt(tg.carbs)+' g</div><div class="s">'+tx('manual / default','manual / default')+'</div></div>'+ 
+    '<div class="v421-target-box"><div class="l">'+tx('Water','Air')+'</div><div class="v num">'+fmtInt(tg.waterMl)+' ml</div><div class="s">'+tx('daily target','target harian')+'</div></div>';
+  if(src)src.innerHTML=targetSourceLabel()+(S.settings.targetUpdatedAt?' · '+tx('Updated','Diperbarui')+': '+fmtLong(S.settings.targetUpdatedAt.slice(0,10)):'');
+}
 function renderSettings(){
   var tg=S.settings.targets;
   $('tKcal').value=tg.kcal;$('tProt').value=tg.protein;$('tCarb').value=tg.carbs;$('tFat').value=tg.fat;$('tWater').value=tg.waterMl;
+  renderActiveTargetSummary();
   $('verLbl').textContent=APP_VERSION;
   applyTheme();
   var langSeg=$('langSeg');
@@ -2709,6 +2884,7 @@ function renderSettings(){
     var v=parseNum(this.value);
     if(!isFinite(v)||v<cfg[2]||v>cfg[3]){toast(t('toast_invalid_value'));renderSettings();return;}
     S.settings.targets[cfg[1]]=Math.round(v);
+    S.settings.targetSource='manual';S.settings.targetUpdatedAt=new Date().toISOString();
     saveKey(K.settings,S.settings);renderAll();toast(t('toast_target_saved'));
   });
 });
@@ -2799,7 +2975,7 @@ var bootDate=todayStr();
 document.addEventListener('visibilitychange',function(){
   if(document.visibilityState==='visible'&&todayStr()!==bootDate){bootDate=todayStr();renderAll();}
 });
-function renderAll(){ensureV330UI();ensureV400UI();renderToday();renderFoods();renderHistory();renderSettings();renderV330All();renderV400All();if(currentView==='add')renderAddResults($('searchInput').value);}
+function renderAll(){ensureV330UI();ensureV400UI();renderToday();renderFoods();renderHistory();renderSettings();renderV330All();renderV400All();if(currentView==='add')renderAddResults($('searchInput').value);requestStickyUpdate();}
 loadAll();applyI18n();applyTheme();renderAll();showView('today');
 
 
@@ -2808,30 +2984,68 @@ function tomorrowStr(){var d=new Date();d.setDate(d.getDate()+1);return d.getFul
 function ensureV330State(){
   if(!S.weight||typeof S.weight!=='object'||Array.isArray(S.weight))S.weight=clone(DEFAULTS.weight);
   if(!S.weight.profile||typeof S.weight.profile!=='object')S.weight.profile=clone(DEFAULTS.weight.profile);
+  var dp=DEFAULTS.weight.profile;Object.keys(dp).forEach(function(k){if(S.weight.profile[k]===undefined)S.weight.profile[k]=dp[k];});
   if(!Array.isArray(S.weight.entries))S.weight.entries=[];
   if(!S.mealPlans||typeof S.mealPlans!=='object'||Array.isArray(S.mealPlans))S.mealPlans={};
   if(S.weight.profile.maintenanceKcal==null||!isFinite(+S.weight.profile.maintenanceKcal))S.weight.profile.maintenanceKcal=S.settings.targets.kcal||2000;
 }
 function lastWeightEntry(){ensureV330State();var a=S.weight.entries.slice().sort(function(a,b){return String(a.date).localeCompare(String(b.date));});return a.length?a[a.length-1]:null;}
 function weightForToday(){var p=S.weight.profile,l=lastWeightEntry();return isFinite(+p.currentKg)?+p.currentKg:(l&&isFinite(+l.kg)?+l.kg:null);}
-function suggestedTargetKcal(){ensureV330State();var p=S.weight.profile;var maintenance=isFinite(+p.maintenanceKcal)?+p.maintenanceKcal:(S.settings.targets.kcal||2000);var adj=(isFinite(+p.weeklyRateKg)?+p.weeklyRateKg:0)*7700/7;return Math.max(1000,Math.round(maintenance+adj));}
+function activityFactor(level){return ({sedentary:1.2,light:1.375,moderate:1.55,very:1.725,athlete:1.9})[level]||1.375;}
+function activityLabel(level){return ({sedentary:tx('Sedentary','Sedentary'),light:tx('Lightly active','Aktif ringan'),moderate:tx('Moderately active','Aktif sedang'),very:tx('Very active','Sangat aktif'),athlete:tx('Athlete / physical work','Atlet / kerja fisik')})[level]||tx('Lightly active','Aktif ringan');}
+function goalModeLabel(mode){return ({lose_fat:tx('Lose fat','Turun lemak'),maintain:tx('Maintain healthy weight','Jaga berat sehat'),improve_health:tx('Improve health','Sehat & konsisten'),lean_gain:tx('Lean gain','Naik massa lean'),recomposition:tx('Recomposition','Rekomposisi'),manual:tx('Manual target','Target manual')})[mode]||tx('Lose fat','Turun lemak');}
+function sexLabel(sex){return ({male:tx('Male','Pria'),female:tx('Female','Wanita'),unspecified:tx('Not specified','Belum diisi')})[sex]||tx('Not specified','Belum diisi');}
+function proteinFactorForGoal(mode){return ({lose_fat:1.6,maintain:1.2,improve_health:1.3,lean_gain:1.8,recomposition:1.8,manual:1.4})[mode]||1.4;}
+function calculateGoalTarget(){
+  ensureV330State();var p=S.weight.profile,tg=S.settings.targets||DEFAULTS.settings.targets;
+  var weight=weightForToday(),height=isFinite(+p.heightCm)?+p.heightCm:null,age=isFinite(+p.age)?+p.age:null,sex=p.sex||'unspecified',mode=p.goalMode||'lose_fat';
+  var maintenance=isFinite(+p.maintenanceKcal)?+p.maintenanceKcal:(tg.kcal||2000),warnings=[],hasProfile=!!(weight&&height&&age);
+  var bmr=null,tdee=null,method=tx('manual maintenance fallback','fallback maintenance manual');
+  if(hasProfile){
+    var sexConst=sex==='male'?5:(sex==='female'?-161:-78);
+    bmr=(10*weight)+(6.25*height)-(5*age)+sexConst;
+    tdee=bmr*activityFactor(p.activityLevel);
+    maintenance=Math.round(tdee);method='Mifflin-St Jeor → TDEE';
+    if(sex==='unspecified')warnings.push({type:'warn',text:tx('Sex is not specified, so BMR uses a neutral estimate. Set sex for a sharper target.','Jenis kelamin belum diisi, jadi BMR memakai estimasi netral. Isi jenis kelamin agar target lebih tajam.')});
+  }else{
+    warnings.push({type:'warn',text:tx('Complete weight, height, and age to calculate BMR/TDEE. Until then, the app uses your manual maintenance estimate.','Lengkapi berat, tinggi, dan usia untuk menghitung BMR/TDEE. Untuk sementara app memakai estimasi maintenance manual.')});
+  }
+  var rate=isFinite(+p.weeklyRateKg)?+p.weeklyRateKg:0;
+  if(mode==='manual'){
+    maintenance=tg.kcal||maintenance;rate=0;method=tx('manual daily target','target harian manual');
+  }
+  if(mode==='maintain'||mode==='improve_health'||mode==='recomposition'){
+    if(mode==='maintain'||mode==='improve_health')rate=0;
+    if(mode==='recomposition'&&Math.abs(rate)>0.25)rate=rate<0?-0.25:0.25;
+  }
+  if(mode==='lean_gain'&&rate<=0)rate=0.25;
+  if(mode==='lose_fat'&&rate>=0)rate=-0.5;
+  var adjustment=Math.round(rate*7700/7);
+  var suggested=Math.round(maintenance+adjustment);
+  var unclamped=suggested;suggested=Math.max(1000,suggested);
+  var proteinTarget=(mode==='manual')?(tg.protein||100):(weight?Math.round(weight*proteinFactorForGoal(mode)):tg.protein||100);
+  if(hasProfile&&bmr&&suggested<bmr*0.85)warnings.push({type:'danger',text:tx('Suggested calories are far below estimated BMR. Consider a slower target rate or ask a professional if unsure.','Saran kalori jauh di bawah estimasi BMR. Pertimbangkan rate yang lebih pelan atau konsultasi profesional jika ragu.')});
+  if(Math.abs(adjustment)>750)warnings.push({type:'warn',text:tx('This weekly rate is aggressive. Use only if sustainable.','Rate mingguan ini agresif. Pakai hanya jika terasa sustainable.')});
+  if(weight&&isFinite(+p.goalKg)){
+    var gap=(+p.goalKg)-weight;
+    if(mode==='lose_fat'&&gap>0)warnings.push({type:'warn',text:tx('Goal weight is above current weight while goal mode is Lose fat. Check your goal weight.','Target berat lebih tinggi dari berat sekarang sementara mode adalah Turun lemak. Cek ulang target berat.')});
+    if(mode==='lean_gain'&&gap<0)warnings.push({type:'warn',text:tx('Goal weight is below current weight while goal mode is Lean gain. Check your goal weight.','Target berat lebih rendah dari berat sekarang sementara mode adalah Lean gain. Cek ulang target berat.')});
+  }
+  return {hasProfile:hasProfile,weight:weight,height:height,age:age,sex:sex,mode:mode,bmr:bmr,tdee:tdee,maintenance:maintenance,rate:rate,adjustment:adjustment,suggested:suggested,unclamped:unclamped,proteinTarget:proteinTarget,warnings:warnings,method:method,activityFactor:activityFactor(p.activityLevel)};
+}
+function suggestedTargetKcal(){return calculateGoalTarget().suggested;}
 function rateLabel(rate){rate=+rate||0;if(rate<0)return tx('Lose ','Turun ')+fmt1(Math.abs(rate))+' kg/'+tx('week','minggu');if(rate>0)return tx('Gain ','Naik ')+fmt1(rate)+' kg/'+tx('week','minggu');return tx('Maintain weight','Jaga berat');}
 function defaultPlanRows(){return MEAL_ORDER.map(function(m){return {meal:m,text:'',kcal:0,protein:0};});}
 function getPlan(date){ensureV330State();var p=S.mealPlans[date];return Array.isArray(p)?p:defaultPlanRows();}
 function setPlan(date,rows){ensureV330State();S.mealPlans[date]=rows;saveKey(K.mealPlans,S.mealPlans);}
 function ensureV330UI(){
-  if($('v330SmartRec'))return;
-  var todayCol=document.querySelector('#view-today .col-b');
-  if(todayCol){
-    var card=document.createElement('div');card.className='card intel-card v330-card';card.id='v330SmartRec';
-    todayCol.insertBefore(card,todayCol.firstElementChild?todayCol.firstElementChild.nextSibling:null);
-    var plan=document.createElement('div');plan.className='card v330-card';plan.id='v330PlanCard';
-    todayCol.insertBefore(plan,document.getElementById('topCard'));
-  }
+  var coachA=document.querySelector('#view-coach .col-a'),coachB=document.querySelector('#view-coach .col-b');
+  if(!$('v330SmartRec')&&coachA){var card=document.createElement('div');card.className='card intel-card v330-card';card.id='v330SmartRec';coachA.appendChild(card);}
+  if(!$('v330PlanCard')&&coachB){var plan=document.createElement('div');plan.className='card v330-card';plan.id='v330PlanCard';coachB.insertBefore(plan,coachB.firstChild);}
   var histCol=document.querySelector('#view-history .col-a');
-  if(histCol){var wc=document.createElement('div');wc.className='card v330-card';wc.id='v330WeightTrendCard';histCol.appendChild(wc);}
+  if(!$('v330WeightTrendCard')&&histCol){var wc=document.createElement('div');wc.className='card v330-card';wc.id='v330WeightTrendCard';histCol.appendChild(wc);}
   var setView=$('view-settings');
-  if(setView){var sc=document.createElement('div');sc.className='card v330-card';sc.id='v330WeightSettings';var first=setView.querySelector('.card:nth-child(2)');setView.insertBefore(sc,first||setView.firstChild);}
+  if(!$('v330WeightSettings')&&setView){var sc=document.createElement('div');sc.className='card v330-card';sc.id='v330WeightSettings';var first=setView.querySelector('.card:nth-child(2)');setView.insertBefore(sc,first||setView.firstChild);}
 }
 function renderV330Smart(){
   var host=$('v330SmartRec');if(!host)return;ensureV330State();
@@ -2847,7 +3061,7 @@ function renderV330Smart(){
     var gap=(+p.goalKg)-weight;var rate=+p.weeklyRateKg||0;var weeks=(rate!==0&&gap/rate>0)?Math.ceil(Math.abs(gap/rate)):null;
     recs.push(['⚖️',tx('Weight goal: <strong>'+fmt1(weight)+' → '+fmt1(+p.goalKg)+' kg</strong>'+(weeks?' · about '+weeks+' weeks at this rate.':'.'), 'Target berat: <strong>'+fmt1(weight)+' → '+fmt1(+p.goalKg)+' kg</strong>'+(weeks?' · sekitar '+weeks+' minggu dengan rate ini.':'.'))]);
   }
-  host.innerHTML='<div class="row spread"><h3 style="margin:0">'+tx('Smart Recommendation','Smart Recommendation')+'</h3><span class="intel-badge">V3.2</span></div>'+ 
+  host.innerHTML='<div class="row spread"><h3 style="margin:0">'+tx('Smart Recommendation','Smart Recommendation')+'</h3></div>'+ 
     '<div class="v330-grid">'+
     '<div class="v330-mini"><div class="l">'+tx('Remaining','Sisa')+'</div><div class="v num">'+(left>=0?fmtInt(left):'+'+fmtInt(Math.abs(left)))+' '+t('unit_kkal')+'</div><div class="s">'+tx('for today','hari ini')+'</div></div>'+ 
     '<div class="v330-mini"><div class="l">'+tx('Protein gap','Gap protein')+'</div><div class="v num">'+fmtInt(proteinGap)+' g</div><div class="s">'+tx('remaining to target','sisa ke target')+'</div></div>'+ 
@@ -2857,7 +3071,7 @@ function renderV330Smart(){
 }
 function renderV330Plan(){
   var host=$('v330PlanCard');if(!host)return;ensureV330State();var date=tomorrowStr(),rows=getPlan(date);
-  var html='<div class="row spread"><h3 style="margin:0">'+tx('Plan Tomorrow','Plan Tomorrow')+'</h3><span class="intel-badge">V3.3</span></div>'+
+  var html='<div class="row spread"><h3 style="margin:0">'+tx('Plan Tomorrow','Plan Tomorrow')+'</h3></div>'+
     '<div class="v330-note">'+tx('Plan meals first; later tap Log planned meal to turn the plan into today\'s food log.','Rencanakan makan dulu; nanti tekan Log planned meal untuk memasukkan rencana ke log hari ini.')+'</div>';
   rows.forEach(function(r){html+='<div class="v330-plan-row" data-v330-plan-meal="'+esc(r.meal)+'"><div class="meal">'+mealShort(r.meal)+'</div><input class="input" data-v330-plan-field="text" value="'+esc(r.text||'')+'" placeholder="'+tx('coffee + egg','kopi + telur')+'"><input class="input num" data-v330-plan-field="kcal" type="number" inputmode="numeric" min="0" value="'+(r.kcal||'')+'" placeholder="kcal"><input class="input num" data-v330-plan-field="protein" type="number" inputmode="decimal" min="0" value="'+(r.protein||'')+'" placeholder="P g"></div>';});
   html+='<div class="v330-foot"><button class="btn btn-ghost" id="v330SavePlan">'+tx('Save plan','Simpan plan')+'</button><button class="btn" id="v330LogPlan">'+tx('Log planned meal','Log planned meal')+'</button></div>'+
@@ -2882,24 +3096,47 @@ function logV330Plan(){
   saveKey(K.custom,S.custom);saveKey(K.logs,S.logs);renderAll();showView('today');toast(tx('Planned meal logged','Planned meal masuk log')+' · '+fmtInt(total)+' '+t('unit_kkal'));
 }
 function renderV330Settings(){
-  var host=$('v330WeightSettings');if(!host)return;ensureV330State();var p=S.weight.profile,latest=lastWeightEntry(),sug=suggestedTargetKcal();
+  var host=$('v330WeightSettings');if(!host)return;ensureV330State();var p=S.weight.profile,calc=calculateGoalTarget(),latest=lastWeightEntry();
   var current=isFinite(+p.currentKg)?+p.currentKg:(latest?+latest.kg:'');
   var rates=[-0.25,-0.5,-0.75,0,0.25,0.5];
-  host.innerHTML='<div class="row spread"><h3 style="margin:0">'+tx('Weight & Goal Tracking','Weight & Goal Tracking')+'</h3><span class="intel-badge">V3.1</span></div>'+ 
+  var activities=[['sedentary',tx('Sedentary — desk work, little exercise','Sedentary — kerja meja, minim olahraga')],['light',tx('Light — walking / light exercise','Ringan — jalan / olahraga ringan')],['moderate',tx('Moderate — regular exercise','Sedang — olahraga rutin')],['very',tx('Very active — hard exercise / field work','Sangat aktif — olahraga berat / kerja lapangan')],['athlete',tx('Athlete / very heavy physical work','Atlet / kerja fisik sangat berat')]];
+  var modes=[['lose_fat',tx('Lose fat','Turun lemak')],['maintain',tx('Maintain healthy weight','Jaga berat sehat')],['improve_health',tx('Improve health','Sehat & konsisten')],['lean_gain',tx('Lean gain / muscle gain','Naik massa lean / otot')],['recomposition',tx('Recomposition','Rekomposisi')],['manual',tx('Manual target','Target manual')]];
+  var rateDisabled=(p.goalMode==='maintain'||p.goalMode==='improve_health'||p.goalMode==='manual');var selectedRate=rateDisabled?0:(isFinite(+p.weeklyRateKg)?+p.weeklyRateKg:0);
+  function opt(list,val){return list.map(function(x){return '<option value="'+x[0]+'" '+(String(val)===String(x[0])?'selected':'')+'>'+x[1]+'</option>';}).join('');}
+  var warnHtml=calc.warnings.length?'<div class="v420-warnings">'+calc.warnings.map(function(w){return '<div class="v420-warning '+(w.type==='danger'?'danger':'')+'">'+w.text+'</div>';}).join('')+'</div>':'';
+  host.innerHTML='<div class="v421-engine-title"><h3>'+tx('Target Calculator','Kalkulator Target')+'</h3></div>'+ 
+    '<div class="v330-note">'+tx('Fill profile and goal. The app calculates a suggested target automatically; apply it when ready.','Isi profil dan goal. App menghitung saran target otomatis; pakai saran itu jika sudah cocok.')+'</div>'+ 
     '<div class="grid2" style="margin-top:10px">'+
+    '<div class="field"><label>'+tx('Sex','Jenis kelamin')+'</label><select class="input" id="v420Sex"><option value="unspecified" '+((p.sex||'unspecified')==='unspecified'?'selected':'')+'>'+tx('Not specified','Belum diisi')+'</option><option value="male" '+(p.sex==='male'?'selected':'')+'>'+tx('Male','Pria')+'</option><option value="female" '+(p.sex==='female'?'selected':'')+'>'+tx('Female','Wanita')+'</option></select></div>'+ 
+    '<div class="field"><label>'+tx('Age','Usia')+'</label><input class="input num" id="v420Age" type="number" inputmode="numeric" min="10" max="100" value="'+(isFinite(+p.age)?String(Math.round(+p.age)):'')+'"></div>'+ 
+    '<div class="field"><label>'+tx('Height (cm)','Tinggi badan (cm)')+'</label><input class="input num" id="v420HeightCm" type="number" inputmode="decimal" step="0.1" min="100" max="230" value="'+(isFinite(+p.heightCm)?String(Math.round(+p.heightCm*10)/10):'')+'"></div>'+ 
     '<div class="field"><label>'+tx('Current weight (kg)','Berat sekarang (kg)')+'</label><input class="input num" id="v330CurrentKg" type="number" inputmode="decimal" step="0.1" min="20" max="300" value="'+(current!==''?String(Math.round(current*10)/10):'')+'"></div>'+ 
     '<div class="field"><label>'+tx('Goal weight (kg)','Target berat (kg)')+'</label><input class="input num" id="v330GoalKg" type="number" inputmode="decimal" step="0.1" min="20" max="300" value="'+(isFinite(+p.goalKg)?String(Math.round((+p.goalKg)*10)/10):'')+'"></div>'+ 
-    '<div class="field"><label>'+tx('Goal rate','Rate target')+'</label><select class="input" id="v330RateKg">'+rates.map(function(r){return '<option value="'+r+'" '+((+p.weeklyRateKg===r)?'selected':'')+'>'+rateLabel(r)+'</option>';}).join('')+'</select></div>'+ 
-    '<div class="field"><label>'+tx('Estimated maintenance kcal','Estimasi maintenance kcal')+'</label><input class="input num" id="v330MaintKcal" type="number" inputmode="numeric" min="1000" max="6000" value="'+fmtInt(p.maintenanceKcal||S.settings.targets.kcal||2000).replace(/[^0-9]/g,'')+'"></div>'+ 
+    '<div class="field"><label>'+tx('Activity level','Level aktivitas')+'</label><select class="input" id="v420Activity">'+opt(activities,p.activityLevel||'light')+'</select></div>'+ 
+    '<div class="field"><label>'+tx('Goal mode','Mode goal')+'</label><select class="input" id="v420GoalMode">'+opt(modes,p.goalMode||'lose_fat')+'</select></div>'+ 
+    '<div class="field '+(rateDisabled?'v421-rate-disabled':'')+'"><label>'+tx('Target rate','Rate target')+'</label><select class="input" id="v330RateKg" '+(rateDisabled?'disabled':'')+'>'+rates.map(function(r){return '<option value="'+r+'" '+((selectedRate===r)?'selected':'')+'>'+rateLabel(r)+'</option>';}).join('')+'</select><div class="v421-rate-note">'+(rateDisabled?tx('Rate is not used for this goal mode.','Rate tidak dipakai untuk mode goal ini.'):tx('Use a sustainable weekly rate.','Pakai rate mingguan yang sustainable.'))+'</div></div>'+ 
+    '<div class="field"><label>'+tx('Manual maintenance fallback','Maintenance manual')+'</label><input class="input num" id="v330MaintKcal" type="number" inputmode="numeric" min="1000" max="6000" value="'+fmtInt(p.maintenanceKcal||S.settings.targets.kcal||2000).replace(/[^0-9]/g,'')+'"></div>'+ 
     '</div>'+ 
-    '<div class="v330-grid"><div class="v330-mini"><div class="l">'+tx('Suggested daily target','Saran target harian')+'</div><div class="v num">'+fmtInt(sug)+' '+t('unit_kkal')+'</div><div class="s">'+tx('based on maintenance and goal rate','berdasarkan maintenance dan rate target')+'</div></div>'+ 
-    '<div class="v330-mini"><div class="l">'+tx('Daily adjustment','Adjustment harian')+'</div><div class="v num">'+fmtInt(sug-(+p.maintenanceKcal||S.settings.targets.kcal||2000))+' '+t('unit_kkal')+'</div><div class="s">'+tx('deficit/surplus estimate','estimasi defisit/surplus')+'</div></div></div>'+ 
-    '<div class="v330-foot"><button class="btn btn-ghost" id="v330SaveWeightGoal">'+tx('Save goal','Simpan goal')+'</button><button class="btn btn-ghost" id="v330LogWeight">'+tx('Log today weight','Log berat hari ini')+'</button><button class="btn" id="v330ApplyTarget">'+tx('Apply suggested target','Pakai target saran')+'</button></div>'+
-    '<div class="v330-note">'+tx('Weight data is local only and included in JSON backup. Suggested calories are estimates, not medical advice.','Data berat tetap lokal dan ikut backup JSON. Saran kalori adalah estimasi, bukan nasihat medis.')+'</div>';
+    '<div class="v420-summary">'+
+      '<div class="v420-box"><div class="l">BMR</div><div class="v num">'+(calc.bmr?fmtInt(calc.bmr):'—')+'</div><div class="s">'+tx('resting estimate','estimasi istirahat')+'</div></div>'+ 
+      '<div class="v420-box"><div class="l">TDEE</div><div class="v num">'+(calc.tdee?fmtInt(calc.tdee):fmtInt(calc.maintenance))+'</div><div class="s">'+activityLabel(p.activityLevel)+'</div></div>'+ 
+      '<div class="v420-box"><div class="l">'+tx('Adjustment','Adjustment')+'</div><div class="v num">'+(calc.adjustment>=0?'+':'')+fmtInt(calc.adjustment)+'</div><div class="s">'+goalModeLabel(calc.mode)+' · '+rateLabel(calc.rate)+'</div></div>'+ 
+      '<div class="v420-box"><div class="l">'+tx('Suggested target','Target saran')+'</div><div class="v num">'+fmtInt(calc.suggested)+' '+t('unit_kkal')+'</div><div class="s">P '+fmtInt(calc.proteinTarget)+' g</div></div>'+ 
+    '</div>'+ 
+    '<div class="v420-explain">'+tx('Why this target:','Dasar target:')+' <strong>'+esc(calc.method)+'</strong> → '+tx('maintenance','maintenance')+' <strong class="num">'+fmtInt(calc.maintenance)+' '+t('unit_kkal')+'</strong> '+tx('plus goal adjustment','ditambah adjustment goal')+' <strong class="num">'+(calc.adjustment>=0?'+':'')+fmtInt(calc.adjustment)+' '+t('unit_kkal')+'</strong> = <strong class="num">'+fmtInt(calc.suggested)+' '+t('unit_kkal')+'</strong>. '+tx('Protein target uses body weight and goal mode.','Target protein memakai berat badan dan mode goal.')+'</div>'+warnHtml+
+    '<div class="v421-actions"><button class="btn btn-primary primary-action" id="v420ApplyAll">'+tx('Apply suggested target','Pakai saran target')+'</button><button class="btn btn-secondary" id="v330LogWeight">'+tx("Log today's weight",'Catat berat hari ini')+'</button><button class="btn btn-ghost" id="v330SaveWeightGoal">'+tx('Save profile only','Simpan profil saja')+'</button><button class="btn btn-subtle" id="v330ApplyTarget">'+tx('Apply calories only','Pakai kalori saja')+'</button></div>'+
+    '<div class="v330-note">'+tx('All profile and weight data stays local and is included in JSON backup. This is an estimate, not medical advice.','Semua profil dan data berat tetap lokal dan ikut backup JSON. Ini estimasi, bukan nasihat medis.')+'</div>';
 }
-function saveV330WeightGoal(logIt){
+function saveV330WeightGoal(logIt,silent){
   ensureV330State();var p=S.weight.profile;
   var cur=parseNum(($('v330CurrentKg')||{}).value),goal=parseNum(($('v330GoalKg')||{}).value),rate=parseNum(($('v330RateKg')||{}).value),maint=parseNum(($('v330MaintKcal')||{}).value);
+  var age=parseNum(($('v420Age')||{}).value),height=parseNum(($('v420HeightCm')||{}).value);
+  var sexEl=$('v420Sex'),actEl=$('v420Activity'),modeEl=$('v420GoalMode');
+  if(sexEl)p.sex=sexEl.value||'unspecified';
+  if(actEl)p.activityLevel=actEl.value||'light';
+  if(modeEl)p.goalMode=modeEl.value||'lose_fat';
+  if(isFinite(age)&&age>=10&&age<=100)p.age=Math.round(age);
+  if(isFinite(height)&&height>=100&&height<=230)p.heightCm=Math.round(height*10)/10;
   if(isFinite(cur)&&cur>20&&cur<300)p.currentKg=Math.round(cur*10)/10;
   if(isFinite(goal)&&goal>20&&goal<300)p.goalKg=Math.round(goal*10)/10;
   if(isFinite(rate))p.weeklyRateKg=rate;
@@ -2909,9 +3146,10 @@ function saveV330WeightGoal(logIt){
     S.weight.entries.push({date:ds,kg:+p.currentKg,loggedAt:new Date().toISOString()});
     S.weight.entries.sort(function(a,b){return String(a.date).localeCompare(String(b.date));});
   }
-  saveKey(K.weight,S.weight);renderV330All();toast(logIt?tx('Weight logged','Berat tersimpan'):tx('Weight goal saved','Goal berat tersimpan'));
+  saveKey(K.weight,S.weight);renderV330All();if(!silent)toast(logIt?tx('Weight logged','Berat tersimpan'):tx('Goal profile saved','Profil goal tersimpan'));
 }
-function applyV330SuggestedTarget(){S.settings.targets.kcal=suggestedTargetKcal();saveKey(K.settings,S.settings);renderAll();toast(t('toast_target_saved'));}
+function applyV330SuggestedTarget(){saveV330WeightGoal(false,true);S.settings.targets.kcal=suggestedTargetKcal();S.settings.targetSource='goalCalories';S.settings.targetUpdatedAt=new Date().toISOString();saveKey(K.settings,S.settings);renderAll();toast(t('toast_target_saved'));}
+function applyV420SuggestedTargets(){saveV330WeightGoal(false,true);var c=calculateGoalTarget();S.settings.targets.kcal=c.suggested;S.settings.targets.protein=c.proteinTarget;S.settings.targetSource='goalSuggested';S.settings.targetUpdatedAt=new Date().toISOString();saveKey(K.settings,S.settings);renderAll();toast(tx('Suggested target applied','Saran target diterapkan'));}
 function buildWeightCalorieChart(){
   ensureV330State();var days=lastNDates(14),weights=S.weight.entries.slice().sort(function(a,b){return String(a.date).localeCompare(String(b.date));});
   var wBy={};weights.forEach(function(e){if(e.date)wBy[e.date]=+e.kg;});
@@ -2924,7 +3162,7 @@ function buildWeightCalorieChart(){
 function renderV330WeightHistory(){
   var host=$('v330WeightTrendCard');if(!host)return;ensureV330State();var p=S.weight.profile,latest=lastWeightEntry(),first=S.weight.entries.length?S.weight.entries.slice().sort(function(a,b){return String(a.date).localeCompare(String(b.date));})[0]:null,week=aggregateDays(lastNDates(7));
   var change=(latest&&first)?(+latest.kg-+first.kg):null;
-  host.innerHTML='<div class="row spread"><h3 style="margin:0">'+tx('Weight + Calorie Trend','Weight + Calorie Trend')+'</h3><span class="intel-badge">V3.1</span></div>'+ 
+  host.innerHTML='<div class="row spread"><h3 style="margin:0">'+tx('Weight + Calorie Trend','Weight + Calorie Trend')+'</h3></div>'+ 
     '<div class="v330-grid"><div class="v330-mini"><div class="l">'+tx('Latest weight','Berat terakhir')+'</div><div class="v num">'+(latest?fmt1(+latest.kg)+' kg':'—')+'</div><div class="s">'+(latest?fmtLong(latest.date):tx('not logged','belum dicatat'))+'</div></div>'+ 
     '<div class="v330-mini"><div class="l">'+tx('Goal','Target')+'</div><div class="v num">'+(isFinite(+p.goalKg)?fmt1(+p.goalKg)+' kg':'—')+'</div><div class="s">'+rateLabel(p.weeklyRateKg)+'</div></div>'+ 
     '<div class="v330-mini"><div class="l">'+tx('Weight change','Perubahan berat')+'</div><div class="v num">'+(change!=null?(change>=0?'+':'')+fmt1(change)+' kg':'—')+'</div><div class="s">'+tx('since first local log','sejak log lokal pertama')+'</div></div>'+ 
@@ -2937,10 +3175,16 @@ if(!window.__v330Bound){window.__v330Bound=true;document.addEventListener('click
   if(e.target.closest('#v330SaveWeightGoal')){saveV330WeightGoal(false);return;}
   if(e.target.closest('#v330LogWeight')){saveV330WeightGoal(true);return;}
   if(e.target.closest('#v330ApplyTarget')){applyV330SuggestedTarget();return;}
+  if(e.target.closest('#v420ApplyAll')){applyV420SuggestedTargets();return;}
+});
+document.addEventListener('change',function(e){
+  if(e.target&&/^(v420Sex|v420Activity|v420GoalMode|v330RateKg|v420Age|v420HeightCm|v330CurrentKg|v330GoalKg|v330MaintKcal)$/.test(e.target.id||'')){
+    saveV330WeightGoal(false,true);renderV330Settings();
+  }
 });}
 
 
-/* ---------------- V4.0.0 Local AI Nutrition Coach ---------------- */
+/* ---------------- V4.1.0 Coach Navigation and Local AI Nutrition Coach ---------------- */
 function ensureV400State(){
   if(!S.coach||typeof S.coach!=='object'||Array.isArray(S.coach))S.coach=clone(DEFAULTS.coach);
   if(!S.coach.preferences||typeof S.coach.preferences!=='object')S.coach.preferences=clone(DEFAULTS.coach.preferences);
@@ -2948,20 +3192,11 @@ function ensureV400State(){
   if(!S.coach.preferences.mode)S.coach.preferences.mode='balanced';
 }
 function ensureV400UI(){
-  if($('v400DailyCoach'))return;
-  var todayCol=document.querySelector('#view-today .col-b');
-  if(todayCol){
-    var card=document.createElement('div');card.className='card intel-card v400-card';card.id='v400DailyCoach';
-    todayCol.insertBefore(card,todayCol.firstChild);
-  }
-  var histCol=document.querySelector('#view-history .col-b');
-  if(histCol){
-    var weekly=document.createElement('div');weekly.className='card intel-card v400-card';weekly.id='v400WeeklyCoach';
-    var before=$('weeklyInsights')?$('weeklyInsights').closest('.card'):null;
-    histCol.insertBefore(weekly,before||histCol.firstChild);
-  }
+  var coachA=document.querySelector('#view-coach .col-a'),coachB=document.querySelector('#view-coach .col-b');
+  if(!$('v400DailyCoach')&&coachA){var card=document.createElement('div');card.className='card intel-card v400-card';card.id='v400DailyCoach';coachA.insertBefore(card,coachA.firstChild);}
+  if(!$('v400WeeklyCoach')&&coachB){var weekly=document.createElement('div');weekly.className='card intel-card v400-card';weekly.id='v400WeeklyCoach';coachB.appendChild(weekly);}
   var setView=$('view-settings');
-  if(setView){
+  if(!$('v400CoachSettings')&&setView){
     var sc=document.createElement('div');sc.className='card v400-card';sc.id='v400CoachSettings';
     var dataCard=setView.querySelector('#btnExport')?$('btnExport').closest('.card'):null;
     setView.insertBefore(sc,dataCard||setView.firstChild);
@@ -3008,7 +3243,7 @@ function v400NextMealSuggestion(s){
 }
 function renderV400DailyCoach(){
   var host=$('v400DailyCoach');if(!host)return;var s=v400CoachSnapshot(),acts=v400DailyActions(s);
-  host.innerHTML='<div class="row spread"><h3 style="margin:0">'+tx('Local AI Nutrition Coach','Local AI Nutrition Coach')+'</h3><span class="intel-badge">V4</span></div>'+ 
+  host.innerHTML='<div class="row spread"><h3 style="margin:0">'+tx('Local AI Nutrition Coach','Local AI Nutrition Coach')+'</h3></div>'+ 
     '<div class="v400-coach-hero"><div class="v400-verdict"><div class="k">'+tx('Coach verdict','Verdict coach')+'</div><div class="v">'+v400Verdict(s)+'</div></div></div>'+ 
     '<div class="v400-coach-kpis"><div class="v400-kpi"><div class="l">'+tx('Next meal budget','Budget makan berikutnya')+'</div><div class="v num">'+(s.left>0?fmtInt(s.left):'0')+' '+t('unit_kkal')+'</div><div class="s">'+tx('remaining today','sisa hari ini')+'</div></div>'+ 
     '<div class="v400-kpi"><div class="l">'+tx('Protein move','Langkah protein')+'</div><div class="v num">'+fmtInt(s.proteinGap)+' g</div><div class="s">'+tx('gap to target','gap ke target')+'</div></div>'+ 
@@ -3044,7 +3279,7 @@ function renderV400WeeklyCoach(){
     recs.push(['📌',tx('Next week strategy: keep the same calorie target, raise protein consistency, and pre-plan dinner.','Strategi minggu depan: target kalori tetap, konsistensi protein naik, dan dinner direncanakan lebih dulu.')]);
   }
   var adherence=w.loggedDays?Math.round((7-s.overDays-s.underDays)/7*100):0;
-  host.innerHTML='<div class="row spread"><h3 style="margin:0">'+tx('Weekly Coach Review','Weekly Coach Review')+'</h3><span class="intel-badge">V4</span></div>'+ 
+  host.innerHTML='<div class="row spread"><h3 style="margin:0">'+tx('Weekly Coach Review','Weekly Coach Review')+'</h3></div>'+ 
     '<div class="v400-coach-kpis"><div class="v400-kpi"><div class="l">'+tx('Average kcal','Rata-rata kcal')+'</div><div class="v num">'+(w.loggedDays?fmtInt(avg):'—')+'</div><div class="s">'+tx('7-day daily average','rata-rata harian 7 hari')+'</div></div>'+ 
     '<div class="v400-kpi"><div class="l">'+tx('Average protein','Rata-rata protein')+'</div><div class="v num">'+(w.loggedDays?fmtInt(proteinAvg)+' g':'—')+'</div><div class="s">'+tx('daily average','rata-rata harian')+'</div></div>'+ 
     '<div class="v400-kpi"><div class="l">'+tx('Target control','Kontrol target')+'</div><div class="v num">'+(w.loggedDays?adherence+'%':'—')+'</div><div class="s">'+tx('rough adherence','adherence kasar')+'</div></div></div>'+ 
@@ -3053,7 +3288,7 @@ function renderV400WeeklyCoach(){
 }
 function renderV400Settings(){
   var host=$('v400CoachSettings');if(!host)return;ensureV400State();var mode=S.coach.preferences.mode||'balanced';var notes=S.coach.notes||[];
-  host.innerHTML='<div class="row spread"><h3 style="margin:0">'+tx('Local Coach Settings','Setelan Local Coach')+'</h3><span class="intel-badge">V4</span></div>'+ 
+  host.innerHTML='<div class="row spread"><h3 style="margin:0">'+tx('Local Coach Settings','Setelan Local Coach')+'</h3></div>'+ 
     '<div class="field" style="margin-top:10px"><label>'+tx('Coach mode','Mode coach')+'</label><select class="input" id="v400CoachMode"><option value="gentle" '+(mode==='gentle'?'selected':'')+'>'+tx('Gentle — softer reminders','Ringan — pengingat lebih lembut')+'</option><option value="balanced" '+(mode==='balanced'?'selected':'')+'>'+tx('Balanced — default','Seimbang — default')+'</option><option value="strict" '+(mode==='strict'?'selected':'')+'>'+tx('Strict cut — more conservative with calories','Cut ketat — lebih konservatif dengan kalori')+'</option></select></div>'+ 
     '<div class="v400-foot"><button class="btn btn-ghost" id="v400SaveCoachSettings">'+tx('Save coach settings','Simpan setelan coach')+'</button></div>'+ 
     '<div class="v400-note">'+tx('Saved coach notes','Catatan coach tersimpan')+': <span class="num">'+notes.length+'</span>. '+tx('Included in JSON backup.','Ikut dalam backup JSON.')+'</div>';
