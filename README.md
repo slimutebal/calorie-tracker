@@ -1,22 +1,22 @@
 # Calorie Tracker
 
-**Version:** 1.2.1  
+**Version:** 1.3.0  
 **Repository:** https://github.com/slimutebal/calorie-tracker
 
-Calorie Tracker is a static, mobile-first **Progressive Web App (PWA)** for daily calorie and macronutrient tracking. It includes a built-in food library covering common **Indonesian, Western, Middle Eastern, and Asian** foods, plus optional online lookup through Open Food Facts. It has no server, no account system, and no telemetry. All personal food logs stay **only on the device/browser that uses the app**.
+Calorie Tracker is a static, mobile-first **Progressive Web App (PWA)** for daily calorie and macronutrient tracking. It includes a built-in food library covering common **Indonesian, Western, Middle Eastern, and Asian** foods, plus optional online lookup through the Calorie Tracker API backend proxy. It has no account system and no telemetry. All personal food logs stay **only on the device/browser that uses the app**.
 
 > **Nutrition disclaimer:** all nutrition values are estimates. Actual values may vary by brand, recipe, cooking method, oil amount, and portion size. This app is for personal tracking only and is not medical or dietary advice.
 
 ---
 
-## What changed in v1.2.1
+## What changed in v1.3.0
 
-- Improved Online Food Lookup stability with timeout handling, safer retry/fallback behavior, and query normalization.
-- Added local online-result cache so successful lookups can be reused when the API/network is temporarily unavailable.
-- Added alias cleanup for common searches such as `mcd`, `mcdonald`, `chees burger`, and `cheese burger`.
-- Added clearer offline, timeout, temporary failure, and no-result messages.
-- Kept Open Food Facts as the only active online provider, but structured the lookup layer for future provider expansion.
-- Bumped the app version to `1.2.1` and the service worker cache to `calorietrack-shell-v10`.
+- Added a Cloudflare Worker backend proxy for Online Food Lookup.
+- Frontend lookup now calls `https://calorie-tracker-api.illofiajie-ia.workers.dev/lookup` instead of calling Open Food Facts directly from Safari.
+- Added `backend/worker.js` for the Calorie Tracker nutrition lookup API.
+- Backend normalizes queries, sends a proper app User-Agent to Open Food Facts, applies timeout/fallback behavior, and returns a normalized response.
+- Personal food logs, history, targets, and settings remain local on the device; only the search keyword is sent to the lookup API when Search Online is used.
+- Bumped the app version to `1.3.0` and the service worker cache to `calorietrack-shell-v11`.
 
 ---
 
@@ -27,7 +27,7 @@ Calorie Tracker is a static, mobile-first **Progressive Web App (PWA)** for dail
 - **Built-in food database** — about 112 foods across Indonesian, Western, Middle Eastern, and Asian cuisines.
 - **Cuisine filter** — All / Indonesian / Western / Middle Eastern / Asian / Custom.
 - **Custom foods** — create, edit, delete, search, favorite, and reuse your own foods.
-- **Online Food Lookup** — optionally search Open Food Facts from the Add screen, then use, edit, or save selected results locally.
+- **Online Food Lookup** — optionally search through the Calorie Tracker API backend proxy, then use, edit, or save selected results locally.
 - **Meal templates** — combine multiple items and log them again with one tap.
 - **History and trend view** — daily summaries, 7-day trend, weekly average, best/worst day, and target adherence.
 - **Targets** — calories, protein, carbs, fat, and water.
@@ -41,12 +41,12 @@ Calorie Tracker is a static, mobile-first **Progressive Web App (PWA)** for dail
 ## Privacy and local data
 
 - No login.
-- No backend.
+- Backend lookup proxy is used only for optional online food search.
 - No analytics.
 - No telemetry.
 - No food log upload.
 - No cloud sync.
-- Optional Online Food Lookup sends only the typed search keyword to Open Food Facts when used.
+- Optional Online Food Lookup sends only the typed search keyword to the Calorie Tracker API when used; food logs, history, targets, and settings remain local.
 - No third-party tracking.
 
 User data is stored locally in the browser using `localStorage` under the `calorietrack_id_*` prefix.
@@ -70,6 +70,7 @@ manifest.webmanifest  # PWA metadata for Add to Home Screen
 service-worker.js     # Offline app-shell cache
 assets/icons/         # icon-192.png, icon-512.png, apple-touch-icon.png
 README.md             # Project notes and deployment guide
+backend/worker.js     # Cloudflare Worker lookup proxy for v1.3.0
 ```
 
 ---
@@ -244,8 +245,8 @@ Keep backups before clearing Safari data, deleting the PWA, changing devices, or
 - Data is local only and does not sync across devices.
 - iOS/Safari may remove site data under some conditions, especially if storage is cleared manually or the device is low on space.
 - No push notifications.
-- Online lookup depends on Open Food Facts availability, coverage, rate limits, and data completeness.
-- The app now caches successful online lookups locally, but first-time searches still require a working network/API response.
+- Online lookup depends on the Cloudflare Worker lookup API, Open Food Facts availability, coverage, rate limits, and data completeness.
+- The app caches successful online lookups locally, but first-time searches still require a working network/API response.
 - Restaurant/local foods may be missing or inaccurate in online results.
 - No barcode scanner.
 - No camera food recognition.
@@ -256,6 +257,15 @@ Keep backups before clearing Safari data, deleting the PWA, changing devices, or
 ---
 
 ## Release notes
+
+### v1.3.0
+
+- Added Cloudflare Worker backend lookup proxy.
+- Frontend Online Food Lookup now uses `https://calorie-tracker-api.illofiajie-ia.workers.dev/lookup`.
+- Added `backend/worker.js` for manual Worker deployment through the Cloudflare dashboard.
+- Backend sends a proper app User-Agent to Open Food Facts and returns normalized nutrition result cards.
+- Updated app version to `1.3.0`.
+- Service worker cache bumped to `calorietrack-shell-v11`.
 
 ### v1.2.1
 
