@@ -488,7 +488,7 @@ nav::before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-e
         <button data-online-opt="off" data-i18n="opt_off">Off</button>
         <button data-online-opt="on" data-i18n="opt_on">On</button>
       </div>
-      <div class="tiny" style="margin-top:10px" data-i18n="txt_online_lookup">When enabled, Search Online sends only your search keyword to Open Food Facts. Logs and settings remain local.</div>
+      <div class="tiny" style="margin-top:10px" data-i18n="txt_online_lookup">When enabled, Search Online sends only your search keyword to the Calorie Tracker API. Logs and settings remain local.</div>
     </div>
 
     <div class="card">
@@ -659,7 +659,7 @@ nav::before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-e
    ================================================================ */
 (function(){
 'use strict';
-var APP_VERSION='1.3.0';
+var APP_VERSION='1.4.0';
 var SCHEMA_VERSION=1;
 var NS='calorietrack_id_';
 var K={settings:NS+'settings',logs:NS+'logs_v1',custom:NS+'customfoods_v1',templates:NS+'templates_v1',quick:NS+'quickaccess_v1',onlineCache:NS+'online_lookup_cache_v1'};
@@ -843,7 +843,7 @@ var I18N={
     txt_backup_note:"Ekspor cadangan secara berkala. Menghapus data Safari atau menghapus aplikasi dari Home Screen dapat menghapus data lokal Anda.",
     h_about:"Tentang & Privasi",
     about_p1:'<strong style="color:var(--ink)">Calorie Tracker</strong> adalah aplikasi lokal tanpa server. Semua catatan makanan, riwayat, dan pengaturan tersimpan <strong style="color:var(--ink)">hanya di perangkat ini</strong> — tidak ada login, tidak ada unggahan data, tidak ada pelacakan.',
-    about_p2:"Nilai nutrisi adalah estimasi dan dapat berbeda tergantung merek, metode memasak, resep, dan ukuran porsi. Aplikasi ini hanya untuk pelacakan pribadi dan bukan nasihat medis. Pencarian online bersifat opsional dan hanya mengirim kata kunci pencarian ke Calorie Tracker API saat digunakan; API mencari sumber nutrisi seperti Open Food Facts.",
+    about_p2:"Nilai nutrisi adalah estimasi dan dapat berbeda tergantung merek, metode memasak, resep, dan ukuran porsi. Aplikasi ini hanya untuk pelacakan pribadi dan bukan nasihat medis. Pencarian online bersifat opsional dan hanya mengirim kata kunci pencarian ke Calorie Tracker API saat digunakan; API membandingkan data restoran kurasi, Open Food Facts, dan USDA jika dikonfigurasi.",
     lbl_version:"Versi",
     aria_nav:"Navigasi utama", nav_today:"Hari Ini", nav_foods:"Makanan", nav_history:"Riwayat", nav_settings:"Setelan",
     aria_add_food:"Tambah makanan",
@@ -875,10 +875,10 @@ var I18N={
     corrupt_btn:"Unduh data mentah",
     empty_search:'Tidak ditemukan "{q}".', btn_make_custom:"＋ Buat sebagai makanan custom",
     h_online_results:"Hasil Online", btn_search_online:"Cari Online", btn_searching_online:"Mencari…",
-    online_hint:"Cari melalui Calorie Tracker API untuk produk bermerek/kemasan. Pilih hasil lalu edit jika perlu.",
+    online_hint:"Cari melalui Calorie Tracker API untuk data restoran kurasi, produk bermerek, dan sumber nutrisi tambahan. Pilih hasil lalu edit jika perlu.",
     online_disabled:"Pencarian online belum aktif. Ketuk Cari Online untuk mengaktifkan dan mencari.",
     online_privacy_title:"Aktifkan pencarian online?",
-    online_privacy_body:"Kata kunci pencarian akan dikirim ke Calorie Tracker API, lalu API mencari sumber nutrisi seperti Open Food Facts. Catatan makanan, riwayat, target, dan pengaturan tetap lokal di perangkat ini.",
+    online_privacy_body:"Kata kunci pencarian akan dikirim ke Calorie Tracker API, lalu API membandingkan data restoran kurasi, Open Food Facts, dan USDA jika dikonfigurasi. Catatan makanan, riwayat, target, dan pengaturan tetap lokal di perangkat ini.",
     online_enable_search:"Aktifkan & cari",
     online_no_query:"Ketik nama makanan terlebih dahulu.", online_no_results:"Tidak ada hasil online yang cukup lengkap. Tambahkan manual atau coba kata kunci lain.",
     online_failed:"Pencarian online gagal. Periksa koneksi atau tambahkan manual.",
@@ -949,7 +949,7 @@ var I18N={
     cuisine_all:"All", cuisine_indonesian:"Indonesian", cuisine_western:"Western",
     cuisine_middle_eastern:"Middle Eastern", cuisine_asian:"Asian", cuisine_custom:"Custom",
     h_online_lookup:"Online Food Lookup", opt_off:"Off", opt_on:"On",
-    txt_online_lookup:"When enabled, Search Online sends only your search keyword to the Calorie Tracker API. The API searches nutrition sources such as Open Food Facts. Logs, history, and settings remain local on this device.",
+    txt_online_lookup:"When enabled, Search Online sends only your search keyword to the Calorie Tracker API. The API compares curated restaurant data, Open Food Facts, and USDA when configured. Logs, history, and settings remain local on this device.",
     txt_builtin_disclaimer:"Nutrition values are general estimates and may differ from the actual food.",
     h_trend:"7-Day Trend", lbl_kcal_word:"Calories", h_weekly:"Weekly Summary",
     h_daily_target:"Daily Target",
@@ -961,7 +961,7 @@ var I18N={
     txt_backup_note:"Export a backup regularly. Clearing Safari data or removing the app from the Home Screen may delete your local data.",
     h_about:"About & Privacy",
     about_p1:'<strong style="color:var(--ink)">Calorie Tracker</strong> is a local app with no server. All food entries, history, and settings are stored <strong style="color:var(--ink)">only on this device</strong> — no login, no data upload, no tracking.',
-    about_p2:"Nutrition values are estimates and may vary by brand, cooking method, recipe, and portion size. This app is for personal tracking only and is not medical advice. Online lookup is optional and only sends the search keyword to the Calorie Tracker API when used; the API searches nutrition sources such as Open Food Facts.",
+    about_p2:"Nutrition values are estimates and may vary by brand, cooking method, recipe, and portion size. This app is for personal tracking only and is not medical advice. Online lookup is optional and only sends the search keyword to the Calorie Tracker API when used; the API compares curated restaurant data, Open Food Facts, and USDA when configured.",
     lbl_version:"Version",
     aria_nav:"Main navigation", nav_today:"Today", nav_foods:"Foods", nav_history:"History", nav_settings:"Settings",
     aria_add_food:"Add food",
@@ -993,10 +993,10 @@ var I18N={
     corrupt_btn:"Download raw data",
     empty_search:'No results for "{q}".', btn_make_custom:"＋ Create as custom food",
     h_online_results:"Online Results", btn_search_online:"Search Online", btn_searching_online:"Searching…",
-    online_hint:"Search through the Calorie Tracker API for branded/packaged products. Pick a result and edit it if needed.",
+    online_hint:"Search through the Calorie Tracker API for curated restaurant data, branded products, and additional nutrition sources. Pick a result and edit it if needed.",
     online_disabled:"Online lookup is off. Tap Search Online to enable it and search.",
     online_privacy_title:"Enable online lookup?",
-    online_privacy_body:"Your search keyword will be sent to the Calorie Tracker API, then the API searches nutrition sources such as Open Food Facts. Food logs, history, targets, and settings stay local on this device.",
+    online_privacy_body:"Your search keyword will be sent to the Calorie Tracker API, then the API compares curated restaurant data, Open Food Facts, and USDA when configured. Food logs, history, targets, and settings stay local on this device.",
     online_enable_search:"Enable & search",
     online_no_query:"Enter a food name first.", online_no_results:"No reliable online result found. Add it manually or try another keyword.",
     online_failed:"Online lookup failed. Check your connection or add it manually.",
@@ -1686,22 +1686,35 @@ function mapOpenFoodProduct(p,i){
 
 function mapLookupApiResult(r,i){
   if(!r||!r.name)return null;
-  var kcal100=Number((r.per100&&r.per100.kcal)!=null?r.per100.kcal:r.calories);
-  if(!isFinite(kcal100)||kcal100<=0)return null;
   var brand=(r.brand||'').trim();
   var src=(r.source||'Calorie Tracker API').trim();
-  var sid=r.sourceId||r.id||hashCode(r.name+brand+i);
+  var sid=r.sourceId||r.id||hashCode(r.name+brand+src+i);
+  var servG=Number(r.servingGrams)||parseServingGrams(r.servingSize||'');
+  var kcal100=Number(r.per100&&r.per100.kcal);
+  var kcalDisplay=Number(r.calories);
+  if((!isFinite(kcal100)||kcal100<=0)&&isFinite(kcalDisplay)&&kcalDisplay>0&&isFinite(servG)&&servG>0){kcal100=kcalDisplay/(servG/100);}
+  if((!isFinite(kcal100)||kcal100<=0)&&isFinite(kcalDisplay)&&kcalDisplay>0){kcal100=kcalDisplay;servG=servG||100;}
+  if(!isFinite(kcal100)||kcal100<=0)return null;
+  var protein100=Number(r.per100&&r.per100.protein),carbs100=Number(r.per100&&r.per100.carbs),fat100=Number(r.per100&&r.per100.fat);
+  if((!isFinite(protein100)||!isFinite(carbs100)||!isFinite(fat100))&&isFinite(servG)&&servG>0){
+    var f=servG/100;
+    if(!isFinite(protein100))protein100=(Number(r.protein)||0)/f;
+    if(!isFinite(carbs100))carbs100=(Number(r.carbs)||0)/f;
+    if(!isFinite(fat100))fat100=(Number(r.fat)||0)/f;
+  }
   var food={
     id:'online:api:'+(sid||hashCode(r.name+brand+i)),name:r.name,name_en:r.name,aliases:brand?[brand,r.name+' '+brand,brand+' '+r.name]:[],
     category:r.category||inferOnlineCategory(r.name),cuisine:'online',basis:'g',baseQty:100,baseUnit:'g',
-    per100:{kcal:kcal100,protein:Number(r.per100&&r.per100.protein)||Number(r.protein)||0,carbs:Number(r.per100&&r.per100.carbs)||Number(r.carbs)||0,fat:Number(r.per100&&r.per100.fat)||Number(r.fat)||0},
+    per100:{kcal:kcal100,protein:isFinite(protein100)?protein100:0,carbs:isFinite(carbs100)?carbs100:0,fat:isFinite(fat100)?fat100:0},
     servings:[],defaultServing:'gram',source:src,sourceUrl:r.sourceUrl||'',sourceId:String(sid||''),brand:brand,editable:true,estimated:true,onlineImported:true,
     note:(brand?brand+' · ':'')+src+' estimate',note_en:(brand?brand+' · ':'')+src+' estimate'
   };
-  var servG=Number(r.servingGrams)||parseServingGrams(r.servingSize||'');
-  if(isFinite(servG)&&servG>0){food.servings=[{unit:'porsi',grams:servG,label:'1 serving ('+fmt1(servG)+' g)'}];food.defaultServing='porsi';}
+  if(isFinite(servG)&&servG>0){food.servings=[{unit:'porsi',grams:servG,label:(r.servingSize||('1 serving ('+fmt1(servG)+' g)'))}];food.defaultServing='porsi';}
   food.confidence=r.confidence||'medium';
   food.servingText=r.servingSize||'';
+  food.displayCalories=(isFinite(kcalDisplay)&&kcalDisplay>0)?kcalDisplay:(servG?food.per100.kcal*(servG/100):food.per100.kcal);
+  food.displayBasis=r.basisLabel||r.basis||(servG?'per serving':'per 100 g');
+  food.provider=r.provider||'';
   return food;
 }
 function calorieTrackerApiSearch(query){
@@ -1803,11 +1816,15 @@ function onlineErrorMessage(err,hadCache){
 }
 function onlineResultRow(item,i){
   var f=item.food,serv=item.servingText?(' · '+esc(item.servingText)):'';
+  var src=String(f.source||t('online_source'));
+  var av=src.indexOf('Curated')>=0?'⭐':(src.indexOf('USDA')>=0?'🌾':'🌐');
+  var displayKcal=isFinite(f.displayCalories)?f.displayCalories:f.per100.kcal;
+  var basis=f.displayBasis||t('online_per100');
   return '<div class="list-btn online-result">'+
-    '<div class="avatar">🌐</div><div class="info" style="flex:1;min-width:0">'+
+    '<div class="avatar">'+av+'</div><div class="info" style="flex:1;min-width:0">'+
     '<div class="n" style="font-weight:700;font-size:15px">'+esc(foodDisplayName(f))+' <span class="badge-est">'+esc(f.brand||t('online_source'))+'</span> <span class="badge-est confidence">'+confidenceLabel(f.confidence)+'</span></div>'+ 
-    '<div class="s tiny num">'+fmtInt(f.per100.kcal)+' '+t('unit_kkal')+' '+t('online_per100')+serv+' · P '+fmt1(f.per100.protein)+' · C '+fmt1(f.per100.carbs)+' · F '+fmt1(f.per100.fat)+'</div>'+ 
-    '<div class="tiny">'+esc(f.source||t('online_source'))+' · '+t('badge_estimate')+'</div>'+ 
+    '<div class="s tiny num">'+fmtInt(displayKcal)+' '+t('unit_kkal')+' '+esc(basis)+serv+' · P '+fmt1(f.per100.protein*(isFinite(f.displayCalories)&&f.displayCalories!==f.per100.kcal&&f.per100.kcal?displayKcal/f.per100.kcal:1))+' · C '+fmt1(f.per100.carbs*(isFinite(f.displayCalories)&&f.displayCalories!==f.per100.kcal&&f.per100.kcal?displayKcal/f.per100.kcal:1))+' · F '+fmt1(f.per100.fat*(isFinite(f.displayCalories)&&f.displayCalories!==f.per100.kcal&&f.per100.kcal?displayKcal/f.per100.kcal:1))+'</div>'+ 
+    '<div class="tiny">'+esc(src)+(f.provider?' · '+esc(f.provider):'')+' · '+t('badge_estimate')+'</div>'+ 
     '<div class="actions"><button class="mini-btn primary" data-online-use="'+i+'">'+t('btn_use')+'</button><button class="mini-btn" data-online-edit="'+i+'">'+t('btn_edit')+'</button><button class="mini-btn" data-online-save="'+i+'">'+t('btn_save_custom')+'</button></div>'+ 
     '</div></div>';
 }

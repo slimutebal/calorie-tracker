@@ -1,22 +1,23 @@
 # Calorie Tracker
 
-**Version:** 1.3.0  
+**Version:** 1.4.0  
 **Repository:** https://github.com/slimutebal/calorie-tracker
 
-Calorie Tracker is a static, mobile-first **Progressive Web App (PWA)** for daily calorie and macronutrient tracking. It includes a built-in food library covering common **Indonesian, Western, Middle Eastern, and Asian** foods, plus optional online lookup through the Calorie Tracker API backend proxy. It has no account system and no telemetry. All personal food logs stay **only on the device/browser that uses the app**.
+Calorie Tracker is a static, mobile-first **Progressive Web App (PWA)** for daily calorie and macronutrient tracking. It includes a built-in food library covering common **Indonesian, Western, Middle Eastern, and Asian** foods, plus optional multi-source online lookup through the Calorie Tracker API backend proxy. It has no account system and no telemetry. All personal food logs stay **only on the device/browser that uses the app**.
 
 > **Nutrition disclaimer:** all nutrition values are estimates. Actual values may vary by brand, recipe, cooking method, oil amount, and portion size. This app is for personal tracking only and is not medical or dietary advice.
 
 ---
 
-## What changed in v1.3.0
+## What changed in v1.4.0
 
-- Added a Cloudflare Worker backend proxy for Online Food Lookup.
-- Frontend lookup now calls `https://calorie-tracker-api.illofiajie-ia.workers.dev/lookup` instead of calling Open Food Facts directly from Safari.
-- Added `backend/worker.js` for the Calorie Tracker nutrition lookup API.
-- Backend normalizes queries, sends a proper app User-Agent to Open Food Facts, applies timeout/fallback behavior, and returns a normalized response.
+- Added **Multi-source Nutrition Lookup** through the Cloudflare Worker backend.
+- Added a **Yogyakarta-adjusted Curated Restaurant Pack** for common chains such as McDonald’s, KFC, HokBen, Burger King, Richeese Factory, Pizza Hut, Starbucks, Mixue, J.CO, Solaria, Mie Gacoan, and Olive Fried Chicken.
+- Kept Open Food Facts as an online provider behind the backend proxy.
+- Added optional **USDA FoodData Central** provider support when `USDA_API_KEY` is configured as a Cloudflare Worker secret.
+- Backend now ranks and deduplicates results from curated data, Open Food Facts, and USDA when available.
 - Personal food logs, history, targets, and settings remain local on the device; only the search keyword is sent to the lookup API when Search Online is used.
-- Bumped the app version to `1.3.0` and the service worker cache to `calorietrack-shell-v11`.
+- Bumped the app version to `1.4.0` and the service worker cache to `calorietrack-shell-v12`.
 
 ---
 
@@ -27,7 +28,7 @@ Calorie Tracker is a static, mobile-first **Progressive Web App (PWA)** for dail
 - **Built-in food database** — about 112 foods across Indonesian, Western, Middle Eastern, and Asian cuisines.
 - **Cuisine filter** — All / Indonesian / Western / Middle Eastern / Asian / Custom.
 - **Custom foods** — create, edit, delete, search, favorite, and reuse your own foods.
-- **Online Food Lookup** — optionally search through the Calorie Tracker API backend proxy, then use, edit, or save selected results locally.
+- **Online Food Lookup** — optionally search through the Calorie Tracker API backend proxy with curated restaurant data, Open Food Facts, and optional USDA results, then use, edit, or save selected results locally.
 - **Meal templates** — combine multiple items and log them again with one tap.
 - **History and trend view** — daily summaries, 7-day trend, weekly average, best/worst day, and target adherence.
 - **Targets** — calories, protein, carbs, fat, and water.
@@ -70,7 +71,7 @@ manifest.webmanifest  # PWA metadata for Add to Home Screen
 service-worker.js     # Offline app-shell cache
 assets/icons/         # icon-192.png, icon-512.png, apple-touch-icon.png
 README.md             # Project notes and deployment guide
-backend/worker.js     # Cloudflare Worker lookup proxy for v1.3.0
+backend/worker.js     # Cloudflare Worker multi-source lookup proxy for v1.4.0
 ```
 
 ---
@@ -119,6 +120,7 @@ index.html
 manifest.webmanifest
 service-worker.js
 assets/
+backend/
 ```
 
 5. Commit the changes.
@@ -147,13 +149,13 @@ https://slimutebal.github.io/calorie-tracker/
 This app uses a service worker cache. When you change app files, update the cache version in `service-worker.js`:
 
 ```js
-const CACHE_VERSION = 'calorietrack-shell-v10';
+const CACHE_VERSION = 'calorietrack-shell-v12';
 ```
 
 For future releases, increase it again, for example:
 
 ```js
-const CACHE_VERSION = 'calorietrack-shell-v11';
+const CACHE_VERSION = 'calorietrack-shell-v13';
 ```
 
 After uploading an update:
@@ -218,6 +220,17 @@ All / Indonesian / Western / Middle Eastern / Asian / Custom
 
 All values are estimates. For better accuracy, create custom foods using actual nutrition labels or personally measured recipes.
 
+
+### Backend provider notes
+
+The Cloudflare Worker works without USDA. If you want USDA FoodData Central results, add a Worker secret named:
+
+```text
+USDA_API_KEY
+```
+
+Do not commit API keys to GitHub or place them in `index.html`.
+
 ---
 
 ## Backup and restore
@@ -245,9 +258,9 @@ Keep backups before clearing Safari data, deleting the PWA, changing devices, or
 - Data is local only and does not sync across devices.
 - iOS/Safari may remove site data under some conditions, especially if storage is cleared manually or the device is low on space.
 - No push notifications.
-- Online lookup depends on the Cloudflare Worker lookup API, Open Food Facts availability, coverage, rate limits, and data completeness.
+- Online lookup depends on the Cloudflare Worker lookup API, curated pack coverage, Open Food Facts availability, optional USDA configuration, rate limits, and data completeness.
 - The app caches successful online lookups locally, but first-time searches still require a working network/API response.
-- Restaurant/local foods may be missing or inaccurate in online results.
+- Restaurant/local foods use curated estimates where official nutrition data is not available; verify portion and brand values when accuracy matters.
 - No barcode scanner.
 - No camera food recognition.
 - No cloud account.
@@ -257,6 +270,16 @@ Keep backups before clearing Safari data, deleting the PWA, changing devices, or
 ---
 
 ## Release notes
+
+### v1.4.0
+
+- Added Multi-source Nutrition Lookup through the Cloudflare Worker backend.
+- Added Yogyakarta-adjusted Curated Restaurant Pack for common chains.
+- Added optional USDA FoodData Central provider support through the `USDA_API_KEY` Worker secret.
+- Kept Open Food Facts as an online provider behind the backend proxy.
+- Backend now ranks and deduplicates curated, Open Food Facts, and USDA results when available.
+- Updated app version to `1.4.0`.
+- Service worker cache bumped to `calorietrack-shell-v12`.
 
 ### v1.3.0
 

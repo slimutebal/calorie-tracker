@@ -1,13 +1,95 @@
-const APP_VERSION = '1.3.0';
+const APP_VERSION = '1.4.0';
 const ALLOWED_ORIGINS = new Set([
   'https://slimutebal.github.io',
   'http://localhost:8000',
-  'http://127.0.0.1:8000'
+  'http://127.0.0.1:8000',
+  'http://localhost:8080',
+  'http://127.0.0.1:8080'
 ]);
-const USER_AGENT = 'CalorieTracker/1.3.0 (https://github.com/slimutebal/calorie-tracker)';
+const USER_AGENT = 'CalorieTracker/1.4.0 (https://github.com/slimutebal/calorie-tracker)';
 const OFF_SEARCH_URL = 'https://world.openfoodfacts.org/cgi/search.pl';
+const USDA_SEARCH_URL = 'https://api.nal.usda.gov/fdc/v1/foods/search';
 const CACHE_TTL_SECONDS = 60 * 60 * 24 * 7;
 const TIMEOUT_MS = 8500;
+
+const CURATED_RESTAURANTS = [
+  // McDonald's / McD — Yogyakarta-relevant global chain. Values are practical estimates unless sourceUrl is provided.
+  item('cur:mcd-cheeseburger','McDonald\'s Cheeseburger','McDonald\'s','lauk',313.9,15,33,13,114,'mcd cheeseburger mcdonald mcdonalds cheese burger chees burger burger keju','Curated Restaurant Pack'),
+  item('cur:mcd-big-mac','McDonald\'s Big Mac','McDonald\'s','lauk',550,25,46,30,220,'mcd big mac mcdonalds bigmac burger','Curated Restaurant Pack'),
+  item('cur:mcd-mcchicken','McDonald\'s McChicken','McDonald\'s','lauk',400,15,39,21,160,'mcd mcchicken chicken burger ayam','Curated Restaurant Pack'),
+  item('cur:mcd-fries-med','McDonald\'s French Fries Medium','McDonald\'s','camilan',340,4,44,16,117,'mcd fries french fries kentang goreng medium mcdonalds','Curated Restaurant Pack'),
+  item('cur:mcd-nuggets-6','McDonald\'s Chicken McNuggets 6 pcs','McDonald\'s','lauk',270,14,16,17,95,'mcd nugget nuggets chicken mcnuggets 6 pcs ayam','Curated Restaurant Pack'),
+  item('cur:mcd-coke-med','McDonald\'s Coca-Cola Medium','McDonald\'s','minuman',210,0,53,0,500,'mcd coke coca cola coca-cola soft drink medium','Curated Restaurant Pack'),
+
+  item('cur:kfc-original','KFC Original Recipe Chicken 1 pc','KFC','lauk',320,26,9,21,120,'kfc original chicken ayam original','Curated Restaurant Pack'),
+  item('cur:kfc-crispy','KFC Crispy Chicken 1 pc','KFC','lauk',350,24,13,24,130,'kfc crispy chicken ayam crispy','Curated Restaurant Pack'),
+  item('cur:kfc-rice','KFC Rice','KFC','pokok',175,4,39,0.5,150,'kfc rice nasi','Curated Restaurant Pack'),
+  item('cur:kfc-fries','KFC French Fries Regular','KFC','camilan',280,4,36,13,100,'kfc fries french fries kentang goreng','Curated Restaurant Pack'),
+  item('cur:kfc-zinger','KFC Zinger Burger','KFC','lauk',550,26,52,28,230,'kfc zinger burger chicken burger','Curated Restaurant Pack'),
+  item('cur:kfc-colonel','KFC Colonel Burger','KFC','lauk',400,18,42,18,180,'kfc colonel burger','Curated Restaurant Pack'),
+
+  item('cur:hokben-chicken-teriyaki','HokBen Chicken Teriyaki','HokBen','lauk',270,22,12,15,140,'hokben hoka hoka bento chicken teriyaki ayam teriyaki','Curated Restaurant Pack'),
+  item('cur:hokben-beef-teriyaki','HokBen Beef Teriyaki','HokBen','lauk',300,21,15,17,140,'hokben hoka hoka bento beef teriyaki sapi teriyaki','Curated Restaurant Pack'),
+  item('cur:hokben-egg-chicken-roll','HokBen Egg Chicken Roll','HokBen','lauk',320,16,20,20,120,'hokben egg chicken roll ecr hoka hoka bento','Curated Restaurant Pack'),
+  item('cur:hokben-ekkado','HokBen Ekkado','HokBen','lauk',190,10,14,10,75,'hokben ekkado hoka hoka bento','Curated Restaurant Pack'),
+  item('cur:hokben-rice','HokBen Rice','HokBen','pokok',175,4,39,0.5,150,'hokben rice nasi hoka hoka bento','Curated Restaurant Pack'),
+
+  item('cur:bk-whopper','Burger King Whopper','Burger King','lauk',670,28,54,40,290,'burger king whopper burger','Curated Restaurant Pack'),
+  item('cur:bk-cheeseburger','Burger King Cheeseburger','Burger King','lauk',310,16,30,15,120,'burger king cheeseburger cheese burger burger keju','Curated Restaurant Pack'),
+  item('cur:bk-chicken-royale','Burger King Chicken Royale','Burger King','lauk',600,25,55,32,250,'burger king chicken royale ayam burger','Curated Restaurant Pack'),
+  item('cur:bk-fries-med','Burger King French Fries Medium','Burger King','camilan',380,5,49,18,130,'burger king fries french fries kentang goreng medium','Curated Restaurant Pack'),
+
+  item('cur:richeese-fire-chicken','Richeese Fire Chicken 1 pc','Richeese Factory','lauk',350,24,18,22,130,'richeese fire chicken ayam pedas','Curated Restaurant Pack'),
+  item('cur:richeese-fire-wings','Richeese Fire Wings 4 pcs','Richeese Factory','lauk',480,28,22,32,180,'richeese fire wings sayap ayam','Curated Restaurant Pack'),
+  item('cur:richeese-cheese-sauce','Richeese Cheese Sauce','Richeese Factory','camilan',100,3,5,8,30,'richeese cheese sauce saus keju','Curated Restaurant Pack'),
+
+  item('cur:pizzahut-slice','Pizza Hut Pizza Slice','Pizza Hut','pokok',280,12,32,12,100,'pizza hut pizza slice pepperoni cheese','Curated Restaurant Pack'),
+  item('cur:pizzahut-spaghetti','Pizza Hut Spaghetti Bolognese','Pizza Hut','pokok',550,23,78,17,350,'pizza hut spaghetti bolognese pasta','Curated Restaurant Pack'),
+  item('cur:pizzahut-fettuccine','Pizza Hut Creamy Chicken Fettuccine','Pizza Hut','pokok',700,28,80,30,380,'pizza hut creamy chicken fettuccine pasta','Curated Restaurant Pack'),
+
+  item('cur:starbucks-latte-tall','Starbucks Caffè Latte Tall','Starbucks','minuman',150,10,15,6,355,'starbucks latte caffe latte tall kopi susu','Curated Restaurant Pack'),
+  item('cur:starbucks-caramel-macchiato','Starbucks Caramel Macchiato Tall','Starbucks','minuman',250,8,35,8,355,'starbucks caramel macchiato kopi','Curated Restaurant Pack'),
+  item('cur:starbucks-frappuccino','Starbucks Frappuccino Tall','Starbucks','minuman',250,4,45,7,355,'starbucks frappuccino frappe','Curated Restaurant Pack'),
+
+  item('cur:mixue-cone','Mixue Ice Cream Cone','Mixue','camilan',200,4,30,7,90,'mixue ice cream cone es krim cone','Curated Restaurant Pack'),
+  item('cur:mixue-brown-sugar','Mixue Brown Sugar Pearl Milk Tea','Mixue','minuman',420,8,70,12,500,'mixue brown sugar pearl milk tea boba','Curated Restaurant Pack'),
+  item('cur:mixue-lemonade','Mixue Fresh Squeezed Lemonade','Mixue','minuman',120,0,30,0,500,'mixue lemonade lemon tea fresh squeezed','Curated Restaurant Pack'),
+
+  item('cur:jco-alcapone','J.CO Alcapone Donut','J.CO','camilan',260,5,32,13,70,'jco j.co alcapone donut donat','Curated Restaurant Pack'),
+  item('cur:jco-jcoccino','J.CO Jcoccino','J.CO','minuman',200,7,28,7,300,'jco j.co jcoccino coffee kopi','Curated Restaurant Pack'),
+
+  item('cur:solaria-nasi-goreng-seafood','Solaria Nasi Goreng Seafood','Solaria','pokok',650,25,85,24,450,'solaria nasi goreng seafood','Curated Restaurant Pack'),
+  item('cur:solaria-cordon-bleu','Solaria Chicken Cordon Bleu','Solaria','lauk',780,40,55,44,420,'solaria chicken cordon bleu ayam','Curated Restaurant Pack'),
+  item('cur:solaria-mie-ayam','Solaria Mie Ayam','Solaria','pokok',520,25,70,16,400,'solaria mie ayam noodle chicken','Curated Restaurant Pack'),
+
+  item('cur:gacoan-mie-suit','Mie Gacoan Mie Suit','Mie Gacoan','pokok',420,12,70,10,350,'mie gacoan mie suit noodle','Curated Restaurant Pack'),
+  item('cur:gacoan-mie-hompimpa','Mie Gacoan Mie Hompimpa','Mie Gacoan','pokok',480,14,75,14,360,'mie gacoan mie hompimpa pedas noodle','Curated Restaurant Pack'),
+  item('cur:gacoan-udang-keju','Mie Gacoan Udang Keju','Mie Gacoan','camilan',250,9,24,13,100,'mie gacoan udang keju shrimp cheese','Curated Restaurant Pack'),
+  item('cur:gacoan-pangsit','Mie Gacoan Pangsit Goreng','Mie Gacoan','camilan',230,8,28,10,100,'mie gacoan pangsit goreng fried wonton','Curated Restaurant Pack'),
+
+  item('cur:olive-wing','Olive Fried Chicken Wing','Olive Fried Chicken','lauk',250,18,12,16,95,'olive fried chicken wing sayap ayam','Curated Restaurant Pack'),
+  item('cur:olive-thigh','Olive Fried Chicken Thigh','Olive Fried Chicken','lauk',330,24,14,22,130,'olive fried chicken thigh paha ayam','Curated Restaurant Pack'),
+  item('cur:olive-rice','Olive Fried Chicken Rice','Olive Fried Chicken','pokok',175,4,39,0.5,150,'olive fried chicken rice nasi','Curated Restaurant Pack'),
+  item('cur:olive-paket','Olive Fried Chicken Paket Ayam Nasi','Olive Fried Chicken','lauk',520,28,55,22,300,'olive fried chicken paket ayam nasi','Curated Restaurant Pack')
+];
+
+function item(id, name, brand, category, kcal, protein, carbs, fat, servingGrams, aliases, source) {
+  const perFactor = servingGrams ? 100 / servingGrams : 1;
+  return {
+    id, name, brand, category, cuisine: 'online', source, sourceId: id, sourceUrl: '',
+    calories: kcal, calorieUnit: 'kcal', basis: 'per serving', basisLabel: 'per serving',
+    servingSize: servingGrams ? `1 serving (${servingGrams} g)` : '1 serving', servingGrams,
+    per100: {
+      kcal: kcal * perFactor,
+      protein: (protein || 0) * perFactor,
+      carbs: (carbs || 0) * perFactor,
+      fat: (fat || 0) * perFactor
+    },
+    estimated: true, editable: true, confidence: 'medium',
+    aliases: String(aliases || '').split(/\s*,\s*/).concat(String(aliases || '').split(/\s+/)).filter(Boolean),
+    sourceNote: 'Yogyakarta-adjusted curated restaurant estimate. Verify with the latest restaurant nutrition or portion information when accuracy matters.'
+  };
+}
 
 function corsHeaders(origin) {
   const allowOrigin = ALLOWED_ORIGINS.has(origin) ? origin : 'https://slimutebal.github.io';
@@ -31,6 +113,9 @@ function normalizeQuery(q) {
   x = x.replace(/\bmcd\b/g, 'mcdonalds').replace(/\bmcdonald\b/g, 'mcdonalds');
   x = x.replace(/\bchees\s+burger\b/g, 'cheeseburger').replace(/\bcheese\s+burger\b/g, 'cheeseburger');
   x = x.replace(/\bchese\s*burger\b/g, 'cheeseburger');
+  x = x.replace(/\bkfc ayam\b/g, 'kfc chicken');
+  x = x.replace(/\bfrench fries\b/g, 'fries');
+  x = x.replace(/\bnasi\b/g, 'rice');
   return x.trim();
 }
 function unique(arr) {
@@ -48,12 +133,14 @@ function buildQueries(q) {
   const norm = normalizeQuery(raw);
   const n = normalizeText(norm);
   const arr = [raw, norm];
-  if (/mcdonalds/.test(n) && /cheeseburger|cheese burger|burger/.test(n)) {
-    arr.push('mcdonalds cheeseburger', 'mcdonalds cheese burger', 'cheeseburger');
-  }
+  if (/mcdonalds/.test(n) && /cheeseburger|cheese burger|burger/.test(n)) arr.push('mcdonalds cheeseburger', 'mcdonalds cheese burger', 'cheeseburger');
   if (/cheeseburger/.test(n)) arr.push('cheese burger', 'cheeseburger');
+  if (/kfc/.test(n) && /chicken|ayam/.test(n)) arr.push('kfc original chicken', 'kfc crispy chicken');
+  if (/hokben|hoka/.test(n)) arr.push('hokben chicken teriyaki', 'hokben beef teriyaki');
+  if (/gacoan/.test(n)) arr.push('mie gacoan', 'mie hompimpa', 'mie suit');
+  if (/olive/.test(n)) arr.push('olive fried chicken');
   if (/burger/.test(n)) arr.push('burger');
-  return unique(arr).slice(0, 6);
+  return unique(arr).slice(0, 8);
 }
 function timeoutSignal(ms) {
   const controller = new AbortController();
@@ -79,10 +166,10 @@ function servingGrams(text) {
 }
 function inferCategory(name) {
   const n = normalizeText(name);
-  if (/drink|milk|coffee|tea|juice|cola|water|soda|minuman|kopi|teh/.test(n)) return 'minuman';
-  if (/bread|rice|noodle|pasta|burger|pizza|cereal|oat|roti|nasi|mie/.test(n)) return 'pokok';
-  if (/chicken|beef|fish|egg|tofu|tempe|meat|ayam|sapi|ikan|telur/.test(n)) return 'lauk';
-  if (/snack|chip|cookie|biscuit|chocolate|candy|kerupuk/.test(n)) return 'camilan';
+  if (/drink|milk|coffee|tea|juice|cola|water|soda|minuman|kopi|teh|latte|macchiato|frappuccino|lemonade/.test(n)) return 'minuman';
+  if (/bread|rice|noodle|pasta|burger|pizza|cereal|oat|roti|nasi|mie|spaghetti|fettuccine/.test(n)) return 'pokok';
+  if (/chicken|beef|fish|egg|tofu|tempe|meat|ayam|sapi|ikan|telur|wings/.test(n)) return 'lauk';
+  if (/snack|chip|cookie|biscuit|chocolate|candy|kerupuk|donut|ice cream|fries|pangsit/.test(n)) return 'camilan';
   return 'camilan';
 }
 function productUrl(p) {
@@ -93,7 +180,19 @@ function confidence(p, food, servG) {
   if (food.name && food.per100.kcal) return 'medium';
   return 'low';
 }
-function mapProduct(p, i) {
+function withTimeoutFetch(url, options = {}, timeoutMs = TIMEOUT_MS) {
+  const timer = timeoutSignal(timeoutMs);
+  return fetch(url, { ...options, signal: timer.signal }).finally(() => timer.cancel());
+}
+async function fetchJson(url, timeoutMs = TIMEOUT_MS, headers = {}) {
+  const res = await withTimeoutFetch(url, {
+    method: 'GET',
+    headers: { 'Accept': 'application/json', 'User-Agent': USER_AGENT, ...headers }
+  }, timeoutMs);
+  if (!res.ok) throw new Error(`upstream_${res.status}`);
+  return await res.json();
+}
+function mapOpenFoodProduct(p, i) {
   const name = String(p.product_name_en || p.product_name || p.generic_name || '').trim();
   if (!name) return null;
   const brand = String(p.brands || '').split(',')[0].trim();
@@ -105,67 +204,146 @@ function mapProduct(p, i) {
   const macro = (k) => num(n[`${k}_100g`]) ?? num(n[`${k}_serving`]) ?? 0;
   const food = {
     id: `off:${p.code || i}`,
-    name,
-    brand,
-    category: inferCategory(name),
-    cuisine: 'online',
-    source: 'Open Food Facts',
-    sourceId: p.code || '',
-    sourceUrl: productUrl(p),
-    calories: kcal100,
-    calorieUnit: 'kcal',
-    basis: 'per 100 g',
-    servingSize: p.serving_size || p.quantity || '',
-    servingGrams: servG,
-    per100: {
-      kcal: kcal100,
-      protein: macro('proteins'),
-      carbs: macro('carbohydrates'),
-      fat: macro('fat')
-    },
-    estimated: true,
-    editable: true
+    name, brand,
+    category: inferCategory(name), cuisine: 'online', source: 'Open Food Facts',
+    sourceId: p.code || '', sourceUrl: productUrl(p), calories: servG ? kcal100 * (servG / 100) : kcal100,
+    calorieUnit: 'kcal', basis: servG ? 'per serving' : 'per 100 g', basisLabel: servG ? 'per serving' : 'per 100 g',
+    servingSize: p.serving_size || p.quantity || '', servingGrams: servG,
+    per100: { kcal: kcal100, protein: macro('proteins'), carbs: macro('carbohydrates'), fat: macro('fat') },
+    estimated: true, editable: true
   };
   food.confidence = confidence(p, food, servG);
   return food;
-}
-async function fetchJson(url, timeoutMs = TIMEOUT_MS) {
-  const timer = timeoutSignal(timeoutMs);
-  try {
-    const res = await fetch(url, {
-      method: 'GET',
-      headers: {
-        'Accept': 'application/json',
-        'User-Agent': USER_AGENT
-      },
-      signal: timer.signal
-    });
-    if (!res.ok) throw new Error(`upstream_${res.status}`);
-    return await res.json();
-  } finally {
-    timer.cancel();
-  }
 }
 async function openFoodFactsSearch(query) {
   const fields = ['code','product_name','product_name_en','generic_name','brands','serving_size','quantity','nutriments','url'].join(',');
   const url = `${OFF_SEARCH_URL}?search_simple=1&action=process&json=1&page_size=10&sort_by=popularity_key&fields=${encodeURIComponent(fields)}&search_terms=${encodeURIComponent(query)}`;
   const data = await fetchJson(url);
   const products = Array.isArray(data.products) ? data.products : [];
-  return products.map(mapProduct).filter(Boolean).slice(0, 8);
+  return products.map(mapOpenFoodProduct).filter(Boolean).slice(0, 8);
 }
-async function lookup(query) {
-  const queries = buildQueries(query);
-  let lastError = null;
-  for (const q of queries) {
-    try {
-      const results = await openFoodFactsSearch(q);
-      if (results.length) return { matchedQuery: q, results };
-    } catch (err) {
-      lastError = err;
+function curatedScore(food, query) {
+  const q = normalizeText(query);
+  const name = normalizeText(`${food.brand} ${food.name}`);
+  const aliases = [food.name, food.brand, ...(food.aliases || [])].map(normalizeText).join(' ');
+  if (!q) return 0;
+  if (name === q) return 100;
+  if (name.includes(q) || q.includes(name)) return 88;
+  const terms = q.split(' ').filter(Boolean);
+  let hits = 0;
+  for (const term of terms) if (aliases.includes(term) || name.includes(term)) hits++;
+  const base = hits / Math.max(terms.length, 1);
+  let score = Math.round(base * 70);
+  if (hits >= 2) score += 15;
+  if (normalizeText(food.brand).split(' ').some((b) => q.includes(b))) score += 10;
+  return Math.min(score, 95);
+}
+function curatedSearch(query) {
+  const variants = buildQueries(query);
+  const best = new Map();
+  for (const q of variants) {
+    for (const food of CURATED_RESTAURANTS) {
+      const score = curatedScore(food, q);
+      if (score >= 45) {
+        const current = best.get(food.id);
+        if (!current || score > current.score) best.set(food.id, { ...food, confidence: score >= 75 ? 'high' : 'medium', providerRank: 1, score });
+      }
     }
   }
-  if (lastError) throw lastError;
-  return { matchedQuery: queries[0] || query, results: [] };
+  return [...best.values()].sort((a, b) => b.score - a.score).slice(0, 6);
+}
+function nutrientValue(food, names) {
+  const list = Array.isArray(food.foodNutrients) ? food.foodNutrients : [];
+  const wanted = names.map((x) => x.toLowerCase());
+  for (const n of list) {
+    const nm = String(n.nutrientName || n.name || '').toLowerCase();
+    if (wanted.some((w) => nm.includes(w))) {
+      const val = num(n.value || n.amount);
+      if (val == null) continue;
+      const unit = String(n.unitName || n.unit || '').toUpperCase();
+      if (nm.includes('energy') && unit === 'KJ') return val / 4.184;
+      return val;
+    }
+  }
+  return null;
+}
+function mapUsdaFood(f, i) {
+  const name = String(f.description || '').trim();
+  if (!name) return null;
+  const kcal100 = nutrientValue(f, ['energy']);
+  if (kcal100 == null || kcal100 <= 0) return null;
+  const protein = nutrientValue(f, ['protein']) ?? 0;
+  const carbs = nutrientValue(f, ['carbohydrate']) ?? 0;
+  const fat = nutrientValue(f, ['total lipid', 'fat']) ?? 0;
+  const brand = String(f.brandOwner || f.brandName || '').trim();
+  const fdcId = f.fdcId || `usda-${i}`;
+  return {
+    id: `usda:${fdcId}`,
+    name: titleCase(name), brand,
+    category: inferCategory(name), cuisine: 'online', source: 'USDA FoodData Central',
+    sourceId: String(fdcId), sourceUrl: `https://fdc.nal.usda.gov/fdc-app.html#/food-details/${fdcId}/nutrients`,
+    calories: kcal100, calorieUnit: 'kcal', basis: 'per 100 g', basisLabel: 'per 100 g',
+    servingSize: '100 g', servingGrams: 100,
+    per100: { kcal: kcal100, protein, carbs, fat },
+    estimated: true, editable: true, confidence: brand ? 'medium' : 'low', providerRank: 3
+  };
+}
+function titleCase(s) {
+  return String(s || '').toLowerCase().replace(/\b\w/g, (m) => m.toUpperCase());
+}
+async function usdaSearch(query, env) {
+  const key = env && env.USDA_API_KEY;
+  if (!key) return [];
+  const url = `${USDA_SEARCH_URL}?api_key=${encodeURIComponent(key)}&query=${encodeURIComponent(query)}&pageSize=8`;
+  const data = await fetchJson(url, TIMEOUT_MS + 1500);
+  const foods = Array.isArray(data.foods) ? data.foods : [];
+  return foods.map(mapUsdaFood).filter(Boolean).slice(0, 6);
+}
+function dedupeResults(results) {
+  const out = [];
+  const seen = new Set();
+  for (const r of results) {
+    const key = normalizeText(`${r.source}:${r.brand}:${r.name}`).slice(0, 120);
+    const softKey = normalizeText(`${r.brand}:${r.name}`).slice(0, 120);
+    if (seen.has(key) || (r.source !== 'Curated Restaurant Pack' && seen.has(softKey))) continue;
+    seen.add(key); seen.add(softKey);
+    out.push(r);
+  }
+  return out;
+}
+function rankResults(results) {
+  const rank = { 'Curated Restaurant Pack': 1, 'Open Food Facts': 2, 'USDA FoodData Central': 3 };
+  const conf = { high: 1, medium: 2, low: 3 };
+  return results.sort((a, b) => (rank[a.source] || 9) - (rank[b.source] || 9) || (conf[a.confidence] || 9) - (conf[b.confidence] || 9) || (b.calories || 0) - (a.calories || 0));
+}
+async function lookup(query, env) {
+  const queries = buildQueries(query);
+  const upstream = [];
+  let lastError = null;
+  const curated = curatedSearch(query);
+  if (curated.length) upstream.push('Curated Restaurant Pack');
+
+  let off = [];
+  for (const q of queries) {
+    try {
+      off = await openFoodFactsSearch(q);
+      if (off.length) { upstream.push('Open Food Facts'); break; }
+    } catch (err) { lastError = err; }
+  }
+
+  let usda = [];
+  if (env && env.USDA_API_KEY) {
+    for (const q of queries.slice(0, 3)) {
+      try {
+        usda = await usdaSearch(q, env);
+        if (usda.length) { upstream.push('USDA FoodData Central'); break; }
+      } catch (err) { lastError = err; }
+    }
+  }
+
+  const results = rankResults(dedupeResults([...curated, ...off, ...usda])).slice(0, 12);
+  if (!results.length && lastError) throw lastError;
+  return { matchedQuery: queries[0] || query, upstream, results, usdaEnabled: !!(env && env.USDA_API_KEY) };
 }
 async function handleLookup(request, env, ctx, origin) {
   const url = new URL(request.url);
@@ -175,8 +353,8 @@ async function handleLookup(request, env, ctx, origin) {
 
   const canonical = normalizeQuery(q);
   const cacheUrl = new URL(request.url);
-  cacheUrl.pathname = '/__cache/lookup';
-  cacheUrl.search = `?q=${encodeURIComponent(canonical)}`;
+  cacheUrl.pathname = '/__cache/lookup-v140';
+  cacheUrl.search = `?q=${encodeURIComponent(canonical)}&usda=${env && env.USDA_API_KEY ? '1' : '0'}`;
   const cacheKey = new Request(cacheUrl.toString(), request);
   const cache = caches.default;
   const cached = await cache.match(cacheKey);
@@ -188,12 +366,13 @@ async function handleLookup(request, env, ctx, origin) {
   }
 
   const startedAt = Date.now();
-  const result = await lookup(q);
+  const result = await lookup(q, env);
   const body = {
     ok: true,
     version: APP_VERSION,
     provider: 'Calorie Tracker API',
-    upstream: 'Open Food Facts',
+    upstream: result.upstream,
+    usdaEnabled: result.usdaEnabled,
     query: q,
     normalizedQuery: canonical,
     matchedQuery: result.matchedQuery,
@@ -212,7 +391,7 @@ export default {
     const url = new URL(request.url);
     try {
       if (url.pathname === '/' || url.pathname === '') {
-        return json({ ok: true, service: 'Calorie Tracker API', version: APP_VERSION, endpoints: ['/lookup?q=cheeseburger'] }, 200, origin);
+        return json({ ok: true, service: 'Calorie Tracker API', version: APP_VERSION, endpoints: ['/lookup?q=cheeseburger'], providers: ['Curated Restaurant Pack', 'Open Food Facts', env && env.USDA_API_KEY ? 'USDA FoodData Central' : 'USDA FoodData Central (optional secret not configured)'] }, 200, origin);
       }
       if (url.pathname === '/lookup') return await handleLookup(request, env, ctx, origin);
       return json({ ok: false, error: 'not_found' }, 404, origin);
