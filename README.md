@@ -1,10 +1,12 @@
-# Calorie Tracker — v4.2.8d
+# Calorie Tracker — v4.2.8e
 
-## What changed in v4.2.8d
-- Applied a Settings-only micro mask fix from the stable v4.2.8b baseline.
-- Extended the sticky Active Target background mask upward by a few pixels to cover tiny top-edge bleed while scrolling Settings.
-- Did not change Settings sticky logic, Active Target position, Calories/Protein layout, or any other page UI.
-- Bumped the app version to `4.2.8d` and the service worker cache to `calorietrack-shell-v34d`.
+## What changed in v4.2.8e
+- Fixed the Goal-Based Target Engine recommendation logic.
+- The app no longer recommends a calorie target below the estimated BMR when profile data is complete.
+- Raw deficit math is still shown in the explanation, but the final `Target saran` is adjusted to the BMR safety floor when needed.
+- `Apply suggested target` and `Apply calories only` now use the adjusted safe recommendation.
+- No sticky/header UI logic was changed in this patch.
+- Bumped the app version to `4.2.8e` and the service worker cache to `calorietrack-shell-v34e`.
 
 
 ## What changed in v4.2.8b

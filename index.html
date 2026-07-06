@@ -497,7 +497,7 @@ body.settings-compact #view-settings .v421-target-box .l{font-size:9px;margin-bo
 body.settings-compact #view-settings .v421-target-box .v{font-size:15px}
 body.settings-compact #view-settings .v421-target-box .s{display:none}
 
-/* ============ V4.2.8d Settings Sticky Micro Mask Fix ============
+/* ============ V4.2.8e Safe Target Recommendation Fix ============
    Scoped to Settings only. No sticky logic/layout changes. Extends only the top
    mask by a few pixels to cover tiny scroll-content bleed near the status area. */
 body.settings-compact #view-settings .settings-sticky-target::before{
@@ -1117,7 +1117,7 @@ body.history-sticky-active #view-history .history-date-sticky-wrap::before{
    ================================================================ */
 (function(){
 'use strict';
-var APP_VERSION='4.2.8d';
+var APP_VERSION='4.2.8e';
 var SCHEMA_VERSION=1;
 var NS='calorietrack_id_';
 var K={settings:NS+'settings',logs:NS+'logs_v1',custom:NS+'customfoods_v1',templates:NS+'templates_v1',quick:NS+'quickaccess_v1',onlineCache:NS+'online_lookup_cache_v1',aiMemory:NS+'ai_memory_v1',barcodeCache:NS+'barcode_cache_v1',weight:NS+'weight_v1',mealPlans:NS+'meal_plans_v1',coach:NS+'coach_v1'};
@@ -3166,6 +3166,7 @@ function activityLabel(level){return ({sedentary:tx('Sedentary','Sedentary'),lig
 function goalModeLabel(mode){return ({lose_fat:tx('Lose fat','Turun lemak'),maintain:tx('Maintain healthy weight','Jaga berat sehat'),improve_health:tx('Improve health','Sehat & konsisten'),lean_gain:tx('Lean gain','Naik massa lean'),recomposition:tx('Recomposition','Rekomposisi'),manual:tx('Manual target','Target manual')})[mode]||tx('Lose fat','Turun lemak');}
 function sexLabel(sex){return ({male:tx('Male','Pria'),female:tx('Female','Wanita'),unspecified:tx('Not specified','Belum diisi')})[sex]||tx('Not specified','Belum diisi');}
 function proteinFactorForGoal(mode){return ({lose_fat:1.6,maintain:1.2,improve_health:1.3,lean_gain:1.8,recomposition:1.8,manual:1.4})[mode]||1.4;}
+function safeTargetFloorFromBmr(bmr){return bmr?Math.ceil(bmr/50)*50:1000;}
 function calculateGoalTarget(){
   ensureV330State();var p=S.weight.profile,tg=S.settings.targets||DEFAULTS.settings.targets;
   var weight=weightForToday(),height=isFinite(+p.heightCm)?+p.heightCm:null,age=isFinite(+p.age)?+p.age:null,sex=p.sex||'unspecified',mode=p.goalMode||'lose_fat';
@@ -3191,17 +3192,26 @@ function calculateGoalTarget(){
   if(mode==='lean_gain'&&rate<=0)rate=0.25;
   if(mode==='lose_fat'&&rate>=0)rate=-0.5;
   var adjustment=Math.round(rate*7700/7);
-  var suggested=Math.round(maintenance+adjustment);
-  var unclamped=suggested;suggested=Math.max(1000,suggested);
+  var rawSuggested=Math.round(maintenance+adjustment);
+  var unclamped=rawSuggested;
+  var safetyFloor=null,safetyAdjusted=false;
+  var suggested=Math.max(1000,rawSuggested);
+  if(hasProfile&&bmr&&mode!=='manual'){
+    safetyFloor=Math.max(1000,safeTargetFloorFromBmr(bmr));
+    if(suggested<safetyFloor){
+      safetyAdjusted=true;
+      suggested=safetyFloor;
+    }
+  }
   var proteinTarget=(mode==='manual')?(tg.protein||100):(weight?Math.round(weight*proteinFactorForGoal(mode)):tg.protein||100);
-  if(hasProfile&&bmr&&suggested<bmr*0.85)warnings.push({type:'danger',text:tx('Suggested calories are far below estimated BMR. Consider a slower target rate or ask a professional if unsure.','Saran kalori jauh di bawah estimasi BMR. Pertimbangkan rate yang lebih pelan atau konsultasi profesional jika ragu.')});
+  if(safetyAdjusted)warnings.push({type:(rawSuggested<bmr*0.9?'danger':'warn'),text:tx('The selected rate calculates '+fmtInt(rawSuggested)+' kcal/day, below estimated BMR '+fmtInt(bmr)+' kcal. The app adjusts the recommendation to '+fmtInt(suggested)+' kcal/day.','Rate yang dipilih menghasilkan '+fmtInt(rawSuggested)+' kkal/hari, di bawah estimasi BMR '+fmtInt(bmr)+' kkal. App menyesuaikan rekomendasi menjadi '+fmtInt(suggested)+' kkal/hari.')});
   if(Math.abs(adjustment)>750)warnings.push({type:'warn',text:tx('This weekly rate is aggressive. Use only if sustainable.','Rate mingguan ini agresif. Pakai hanya jika terasa sustainable.')});
   if(weight&&isFinite(+p.goalKg)){
     var gap=(+p.goalKg)-weight;
     if(mode==='lose_fat'&&gap>0)warnings.push({type:'warn',text:tx('Goal weight is above current weight while goal mode is Lose fat. Check your goal weight.','Target berat lebih tinggi dari berat sekarang sementara mode adalah Turun lemak. Cek ulang target berat.')});
     if(mode==='lean_gain'&&gap<0)warnings.push({type:'warn',text:tx('Goal weight is below current weight while goal mode is Lean gain. Check your goal weight.','Target berat lebih rendah dari berat sekarang sementara mode adalah Lean gain. Cek ulang target berat.')});
   }
-  return {hasProfile:hasProfile,weight:weight,height:height,age:age,sex:sex,mode:mode,bmr:bmr,tdee:tdee,maintenance:maintenance,rate:rate,adjustment:adjustment,suggested:suggested,unclamped:unclamped,proteinTarget:proteinTarget,warnings:warnings,method:method,activityFactor:activityFactor(p.activityLevel)};
+  return {hasProfile:hasProfile,weight:weight,height:height,age:age,sex:sex,mode:mode,bmr:bmr,tdee:tdee,maintenance:maintenance,rate:rate,adjustment:adjustment,rawSuggested:rawSuggested,suggested:suggested,unclamped:unclamped,safetyFloor:safetyFloor,safetyAdjusted:safetyAdjusted,proteinTarget:proteinTarget,warnings:warnings,method:method,activityFactor:activityFactor(p.activityLevel)};
 }
 function suggestedTargetKcal(){return calculateGoalTarget().suggested;}
 function rateLabel(rate){rate=+rate||0;if(rate<0)return tx('Lose ','Turun ')+fmt1(Math.abs(rate))+' kg/'+tx('week','minggu');if(rate>0)return tx('Gain ','Naik ')+fmt1(rate)+' kg/'+tx('week','minggu');return tx('Maintain weight','Jaga berat');}
@@ -3293,7 +3303,7 @@ function renderV330Settings(){
       '<div class="v420-box"><div class="l">'+tx('Adjustment','Adjustment')+'</div><div class="v num">'+(calc.adjustment>=0?'+':'')+fmtInt(calc.adjustment)+'</div><div class="s">'+goalModeLabel(calc.mode)+' · '+rateLabel(calc.rate)+'</div></div>'+ 
       '<div class="v420-box"><div class="l">'+tx('Suggested target','Target saran')+'</div><div class="v num">'+fmtInt(calc.suggested)+' '+t('unit_kkal')+'</div><div class="s">P '+fmtInt(calc.proteinTarget)+' g</div></div>'+ 
     '</div>'+ 
-    '<div class="v420-explain">'+tx('Why this target:','Dasar target:')+' <strong>'+esc(calc.method)+'</strong> → '+tx('maintenance','maintenance')+' <strong class="num">'+fmtInt(calc.maintenance)+' '+t('unit_kkal')+'</strong> '+tx('plus goal adjustment','ditambah adjustment goal')+' <strong class="num">'+(calc.adjustment>=0?'+':'')+fmtInt(calc.adjustment)+' '+t('unit_kkal')+'</strong> = <strong class="num">'+fmtInt(calc.suggested)+' '+t('unit_kkal')+'</strong>. '+tx('Protein target uses body weight and goal mode.','Target protein memakai berat badan dan mode goal.')+'</div>'+warnHtml+
+    '<div class="v420-explain">'+tx('Why this target:','Dasar target:')+' <strong>'+esc(calc.method)+'</strong> → '+tx('maintenance','maintenance')+' <strong class="num">'+fmtInt(calc.maintenance)+' '+t('unit_kkal')+'</strong> '+tx('plus goal adjustment','ditambah adjustment goal')+' <strong class="num">'+(calc.adjustment>=0?'+':'')+fmtInt(calc.adjustment)+' '+t('unit_kkal')+'</strong> = '+tx('raw calculation','hitung awal')+' <strong class="num">'+fmtInt(calc.rawSuggested||calc.suggested)+' '+t('unit_kkal')+'</strong>'+(calc.safetyAdjusted?'. '+tx('Because this is below the BMR safety floor','Karena ini di bawah batas aman BMR')+' <strong class="num">'+fmtInt(calc.safetyFloor)+' '+t('unit_kkal')+'</strong>, '+tx('the suggested target is adjusted to','target saran disesuaikan menjadi')+' <strong class="num">'+fmtInt(calc.suggested)+' '+t('unit_kkal')+'</strong>':'')+'. '+tx('Protein target uses body weight and goal mode.','Target protein memakai berat badan dan mode goal.')+'</div>'+warnHtml+
     '<div class="v421-actions"><button class="btn btn-primary primary-action" id="v420ApplyAll">'+tx('Apply suggested target','Pakai saran target')+'</button><button class="btn btn-secondary" id="v330LogWeight">'+tx("Log today's weight",'Catat berat hari ini')+'</button><button class="btn btn-ghost" id="v330SaveWeightGoal">'+tx('Save profile only','Simpan profil saja')+'</button><button class="btn btn-subtle" id="v330ApplyTarget">'+tx('Apply calories only','Pakai kalori saja')+'</button></div>'+
     '<div class="v330-note">'+tx('All profile and weight data stays local and is included in JSON backup. This is an estimate, not medical advice.','Semua profil dan data berat tetap lokal dan ikut backup JSON. Ini estimasi, bukan nasihat medis.')+'</div>';
 }
