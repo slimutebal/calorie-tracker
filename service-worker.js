@@ -2,7 +2,7 @@
    Strategi: cache-first untuk app shell (aplikasi 100% statis & lokal).
    Naikkan CACHE_VERSION setiap kali merilis perubahan file. */
 
-const CACHE_VERSION = 'calorietrack-shell-v34e';
+const CACHE_VERSION = 'calorietrack-shell-v34f';
 const SHELL = [
   './',
   './index.html',

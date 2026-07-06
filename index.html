@@ -302,6 +302,10 @@ select.input option:checked{background:#0A84FF;color:#fff}
 .btn-danger{background:rgba(255,59,48,.14);border:1px solid rgba(255,59,48,.32);color:var(--danger-text)}
 .btnrow{display:flex;gap:10px;margin-top:14px}
 .btnrow .btn{flex:1}
+.ai-source-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+.ai-source-grid .btn{min-height:50px}
+.ai-analyze-row{margin-top:10px}
+@media(max-width:380px){.ai-source-grid{grid-template-columns:1fr}.ai-source-grid .btn{min-height:46px}}
 .modal{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%) scale(.94);opacity:0;pointer-events:none;
   z-index:60;background:var(--card);border:1px solid var(--glass-border);border-radius:20px;padding:20px;width:min(88vw,360px);
   transition:all .2s ease;box-shadow:var(--shadow-elevated)}
@@ -497,7 +501,7 @@ body.settings-compact #view-settings .v421-target-box .l{font-size:9px;margin-bo
 body.settings-compact #view-settings .v421-target-box .v{font-size:15px}
 body.settings-compact #view-settings .v421-target-box .s{display:none}
 
-/* ============ V4.2.8e Safe Target Recommendation Fix ============
+/* ============ V4.2.8f AI Scan Photo Source UX ============
    Scoped to Settings only. No sticky logic/layout changes. Extends only the top
    mask by a few pixels to cover tiny scroll-content bleed near the status area. */
 body.settings-compact #view-settings .settings-sticky-target::before{
@@ -1079,11 +1083,15 @@ body.history-sticky-active #view-history .history-date-sticky-wrap::before{
         <span class="ai-mode-pill" id="aiProvider">Gemini + Workers AI</span>
       </div>
     </div>
-    <input type="file" id="aiFile" accept="image/*" capture="environment" hidden>
+    <input type="file" id="aiFileCamera" accept="image/*" capture="environment" hidden>
+    <input type="file" id="aiFileGallery" accept="image/*" hidden>
     <img id="aiPreview" class="ai-preview" alt="AI scan preview">
     <div class="ai-warning" data-i18n="ai_privacy_note">AI scan sends the selected image to the Calorie Tracker API and AI provider for analysis. Food logs, history, targets, settings, and backups remain local on this device. Images are not stored by the app backend.</div>
-    <div class="btnrow" style="margin-top:12px">
-      <button class="btn btn-ghost" id="aiPick" data-i18n="btn_choose_photo">Choose Photo</button>
+    <div class="ai-source-grid">
+      <button class="btn btn-ghost" id="aiTakePhoto" type="button" data-i18n="btn_take_photo">Take Photo</button>
+      <button class="btn btn-ghost" id="aiChoosePhoto" type="button" data-i18n="btn_choose_photo">Choose Photo</button>
+    </div>
+    <div class="btnrow ai-analyze-row">
       <button class="btn btn-primary" id="aiAnalyze" data-i18n="btn_analyze" disabled>Analyze</button>
     </div>
     <div id="aiStatus" class="tiny" style="margin-top:10px"></div>
@@ -1117,7 +1125,7 @@ body.history-sticky-active #view-history .history-date-sticky-wrap::before{
    ================================================================ */
 (function(){
 'use strict';
-var APP_VERSION='4.2.8e';
+var APP_VERSION='4.2.8f';
 var SCHEMA_VERSION=1;
 var NS='calorietrack_id_';
 var K={settings:NS+'settings',logs:NS+'logs_v1',custom:NS+'customfoods_v1',templates:NS+'templates_v1',quick:NS+'quickaccess_v1',onlineCache:NS+'online_lookup_cache_v1',aiMemory:NS+'ai_memory_v1',barcodeCache:NS+'barcode_cache_v1',weight:NS+'weight_v1',mealPlans:NS+'meal_plans_v1',coach:NS+'coach_v1'};
@@ -1294,7 +1302,7 @@ var I18N={
     ai_sub_meal:"Ambil atau pilih foto makanan. Konfirmasi estimasi sebelum disimpan.",
     ai_sub_label:"Ambil atau pilih foto label nutrisi. Edit hasil sebelum disimpan sebagai makanan custom.",
     ai_privacy_note:"AI scan mengirim gambar terpilih ke Calorie Tracker API dan penyedia AI untuk analisis. Catatan makanan, riwayat, target, pengaturan, dan backup tetap lokal di perangkat ini. Gambar tidak disimpan oleh backend app.",
-    btn_choose_photo:"Pilih Foto", btn_analyze:"Analisis", btn_save_today:"Simpan Hari Ini",
+    btn_take_photo:"Ambil Foto", btn_choose_photo:"Pilih Foto", btn_analyze:"Analisis", btn_save_today:"Simpan Hari Ini",
     btn_save_ai_template:"Simpan Template", btn_save_custom_food:"Simpan Custom Food",
     ai_no_image:"Pilih foto terlebih dahulu.", ai_analyzing:"Menganalisis gambar…", ai_failed:"AI scan gagal. Coba foto lebih jelas atau input manual.",
     ai_not_configured:"AI scan belum dikonfigurasi di backend.", ai_need_review:"Tinjau dan koreksi estimasi sebelum menyimpan.",
@@ -1428,7 +1436,7 @@ var I18N={
     ai_sub_meal:"Take or choose a food photo. Confirm the estimate before saving.",
     ai_sub_label:"Take or choose a nutrition label photo. Edit the result before saving as a custom food.",
     ai_privacy_note:"AI scan sends the selected image to the Calorie Tracker API and AI provider for analysis. Food logs, history, targets, settings, and backups remain local on this device. Images are not stored by the app backend.",
-    btn_choose_photo:"Choose Photo", btn_analyze:"Analyze", btn_save_today:"Save Today",
+    btn_take_photo:"Take Photo", btn_choose_photo:"Choose Photo", btn_analyze:"Analyze", btn_save_today:"Save Today",
     btn_save_ai_template:"Save Template", btn_save_custom_food:"Save Custom Food",
     ai_no_image:"Choose a photo first.", ai_analyzing:"Analyzing image…", ai_failed:"AI scan failed. Try a clearer photo or add manually.",
     ai_not_configured:"AI scan is not configured on the backend yet.", ai_need_review:"Review and correct estimates before saving.",
@@ -2116,7 +2124,8 @@ function logTemplate(tplId){
 var AI_SCAN={mode:'meal',file:null,dataUrl:'',base64:'',mimeType:'image/jpeg',items:[],warnings:[],provider:'',confirmed:false};
 function resetAiState(mode){
   AI_SCAN={mode:mode||'meal',file:null,dataUrl:'',base64:'',mimeType:'image/jpeg',items:[],warnings:[],provider:'',confirmed:false};
-  $('aiFile').value='';
+  if($('aiFileCamera'))$('aiFileCamera').value='';
+  if($('aiFileGallery'))$('aiFileGallery').value='';
   $('aiPreview').removeAttribute('src');$('aiPreview').style.display='none';
   $('aiAnalyze').disabled=true;$('aiStatus').textContent='';$('aiResults').innerHTML='';
   $('aiMealActions').style.display='none';$('aiLabelActions').style.display='none';
@@ -2329,13 +2338,16 @@ function startAiAnalyze(){
 }
 $('btnScanMeal').addEventListener('click',function(){openAiSheet('meal');});
 $('btnScanLabel').addEventListener('click',function(){openAiSheet('label');});
-$('aiPick').addEventListener('click',function(){$('aiFile').click();});
-$('aiFile').addEventListener('change',function(){
-  var file=this.files&&this.files[0];if(!file)return;
+function handleAiSelectedFile(input){
+  var file=input&&input.files&&input.files[0];if(!file)return;
   $('aiStatus').textContent=L()==='en'?'Preparing image…':'Menyiapkan gambar…';
   compressImageFile(file).then(function(img){AI_SCAN.file=file;AI_SCAN.dataUrl=img.dataUrl;AI_SCAN.base64=img.base64;AI_SCAN.mimeType=img.mimeType;$('aiPreview').src=img.dataUrl;$('aiPreview').style.display='block';$('aiAnalyze').disabled=false;$('aiStatus').textContent='';})
     .catch(function(){toast(t('toast_read_failed'));$('aiStatus').textContent=t('toast_read_failed');});
-});
+}
+$('aiTakePhoto').addEventListener('click',function(){var f=$('aiFileCamera');if(f){f.value='';f.click();}});
+$('aiChoosePhoto').addEventListener('click',function(){var f=$('aiFileGallery');if(f){f.value='';f.click();}});
+$('aiFileCamera').addEventListener('change',function(){handleAiSelectedFile(this);});
+$('aiFileGallery').addEventListener('change',function(){handleAiSelectedFile(this);});
 $('aiAnalyze').addEventListener('click',startAiAnalyze);
 $('aiCancel').addEventListener('click',closeLayers);$('aiCancel2').addEventListener('click',closeLayers);
 $('aiSaveLog').addEventListener('click',saveAiMealToLog);

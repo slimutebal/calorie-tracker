@@ -1,4 +1,13 @@
-# Calorie Tracker — v4.2.8e
+# Calorie Tracker — v4.2.8f
+
+## What changed in v4.2.8f
+
+- Improved AI image input UX for AI Meal Scan and AI Label Scan.
+- Split image source actions into `Take Photo` and `Choose Photo`.
+- `Take Photo` uses the mobile camera capture flow when supported.
+- `Choose Photo` uses the gallery/file picker flow.
+- AI analysis logic, backend image analysis, food logs, History, Settings, Add layout, Coach, and Today were not changed.
+- Bumped the app version to `4.2.8f` and the service worker cache to `calorietrack-shell-v34f`.
 
 ## What changed in v4.2.8e
 - Fixed the Goal-Based Target Engine recommendation logic.
